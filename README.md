@@ -1,15 +1,24 @@
 # generator-ledger-mobile-v2
 
-A multi-agent engineering project managed by [stackmind](https://github.com/stackmind/stackmind).
+Flutter mobile application for generator booking, inventory, vendor, billing, and admin workflows.
 
 ## Getting Started
 
-1. Review `AGENTS.md` for team rules and authority model
-2. Check `.sync/runtime/TREE.yaml` for current project state
-3. Start agent sessions
+1. Install Flutter 3.35.5 or newer with Dart 3.9.x.
+2. Run `flutter pub get`.
+3. Run `flutter analyze`.
+4. Run `flutter test`.
+5. Start the app with `flutter run`.
 
-## Runtime
+## Project Structure
 
-- **Version:** v1.0.0
-- **Agents:** See `AGENTS.md` for roster
-- **State:** `.sync/runtime/TREE.yaml`
+The `lib/` tree follows `ARCHITECTURE.md` section 2:
+
+- `core/` contains theme, routing, and application constants.
+- `shared/` contains reusable widgets and shared model definitions.
+- `features/` contains feature-first screens, widgets, and providers.
+- `data/` contains mock data and repository abstractions.
+
+## Runtime Notes
+
+This repository is managed by Stackmind. Review `AGENTS.md` before changing sync state or work-order files.

@@ -2,3 +2,14 @@ stitch_generator_ledger_design/
 .sync/
 AGENTS.md
 PLAN.md
+
+# Flutter/Dart generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# IDE and local machine files
+.idea/
+*.iml
