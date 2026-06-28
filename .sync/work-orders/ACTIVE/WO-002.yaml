@@ -1,0 +1,38 @@
+id: WO-002
+title: "Design System Implementation (AppTheme)"
+status: READY
+priority: P0
+milestone: M1-Foundation
+assigned_to: gemini
+created_by: claude
+created_at: "2026-06-28T18:55:00+05:30"
+depends_on: [WO-001]
+
+description: |
+  Implement the Genset Industrial Ledger design system as Flutter theme classes.
+  Translate ALL design tokens from design_tokens_json.json and DESIGN.md into
+  typed Dart constants. Build the ThemeData configuration.
+
+  CRITICAL: Follow AGENTS.md §DESIGN_SYSTEM_RULES exactly. No invented colors,
+  no guessed typography. Every value must trace to the design system.
+
+acceptance_criteria:
+  - AppColors class with all 11 color constants matching design tokens
+  - AppTypography class with all 6 text style definitions (Space Grotesk + Inter)
+  - AppDimensions class with radii (8, 12, 16, 9999), spacing (4px base), gutters (16px)
+  - AppTheme.lightTheme() returns a fully configured ThemeData
+  - google_fonts package used for Space Grotesk and Inter
+  - All values match ARCHITECTURE.md §3 (Design System → Flutter Mapping)
+  - flutter analyze passes
+
+files_to_create:
+  - lib/core/theme/app_colors.dart
+  - lib/core/theme/app_typography.dart
+  - lib/core/theme/app_dimensions.dart
+  - lib/core/theme/app_theme.dart
+
+references:
+  - stitch_generator_ledger_design/design_tokens_json.json
+  - stitch_generator_ledger_design/DESIGN.md
+  - ARCHITECTURE.md §3
+  - AGENTS.md §DESIGN_SYSTEM_RULES

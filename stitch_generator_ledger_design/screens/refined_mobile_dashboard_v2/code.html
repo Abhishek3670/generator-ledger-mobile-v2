@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Genset Industrial Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#1a1c1c",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "border-slate": "#cbd5e1",
+                        "surface": "#f9f9f9",
+                        "surface-container": "#eeeeee",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e8e8e8",
+                        "success-emerald": "#059669",
+                        "outline-variant": "#c6c6cd",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#5c4300",
+                        "on-primary": "#ffffff",
+                        "outline": "#76777d",
+                        "secondary-fixed-dim": "#bcc7de",
+                        "primary": "#000000",
+                        "on-primary-container": "#7c839b",
+                        "on-tertiary-fixed": "#261a00",
+                        "tertiary-fixed": "#ffdf9f",
+                        "surface-bright": "#f9f9f9",
+                        "text-secondary": "#475569",
+                        "primary-container": "#131b2e",
+                        "surface-tint": "#565e74",
+                        "on-tertiary-container": "#a87d00",
+                        "inverse-primary": "#bec6e0",
+                        "surface-container-low": "#f3f3f3",
+                        "primary-fixed-dim": "#bec6e0",
+                        "inverse-surface": "#2f3131",
+                        "primary-fixed": "#dae2fd",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "on-surface": "#1a1c1c",
+                        "secondary-container": "#d5e0f8",
+                        "secondary": "#545f73",
+                        "on-surface-variant": "#45464d",
+                        "tertiary-fixed-dim": "#f9bd22",
+                        "surface-variant": "#e2e2e2",
+                        "inverse-on-surface": "#f0f1f1",
+                        "surface-container-highest": "#e2e2e2",
+                        "background": "#f9f9f9",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#586377",
+                        "on-primary-fixed": "#131b2e",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#261a00",
+                        "surface-light": "#f8fafc",
+                        "danger-rose": "#dc2626",
+                        "tertiary": "#000000",
+                        "error": "#ba1a1a",
+                        "warning-amber": "#d97706",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dadada",
+                        "on-secondary-fixed": "#111c2d",
+                        "secondary-fixed": "#d8e3fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Space Grotesk"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Space Grotesk"],
+                        "display-lg": ["Space Grotesk"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.2em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #fafafa; }
+        .amber-accent { color: #f59e0b; } /* Fallback/helper class if needed */
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md pb-24 md:pb-0">
+<!-- TopAppBar -->
+<!-- Main Content Canvas -->
+<main class="px-md md:px-xl max-w-container-max mx-auto mt-md pb-24 gap-2">
+<!-- Overview Stats Grid -->
+<section class="grid grid-cols-3 gap-xs"><div class="bg-surface-container-lowest border border-border-slate rounded-lg shadow-sm p-2"><p class="font-label-caps text-[10px] text-text-secondary uppercase mb-1">Bookings</p><h3 class="font-headline-md text-headline-md text-primary leading-none">128</h3><p class="font-body-sm text-[10px] text-text-secondary mt-1">128 confirmed</p></div><div class="bg-surface-container-lowest border border-border-slate rounded-lg shadow-sm p-2"><p class="font-label-caps text-[10px] text-text-secondary uppercase mb-1">Gensets</p><h3 class="font-headline-md text-headline-md text-primary leading-none">33</h3><p class="font-body-sm text-[10px] text-text-secondary mt-1">33 active</p></div><div class="bg-surface-container-lowest border border-border-slate rounded-lg shadow-sm p-2"><p class="font-label-caps text-[10px] text-text-secondary uppercase mb-1">Vendors</p><h3 class="font-headline-md text-headline-md text-primary leading-none">50</h3><p class="font-body-sm text-[10px] text-text-secondary mt-1">50 partners</p></div></section>
+<!-- Vendor Bookings Section -->
+<section class="bg-surface-container-lowest border border-border-slate rounded-lg overflow-hidden shadow-sm">
+<div class="p-md border-b border-border-slate flex justify-between items-end">
+<div>
+<p class="font-label-caps text-label-caps text-text-secondary uppercase mb-xs">Calendar</p>
+<h2 class="font-headline-md text-headline-md text-primary">Vendor Bookings</h2>
+<p class="font-body-sm text-body-sm text-text-secondary mt-xs">Confirmed bookings by date.</p>
+</div>
+<div class="hidden md:block">
+<p class="font-body-sm text-body-sm text-text-secondary">Click a date to view details.</p>
+</div>
+</div>
+<!-- Mobile Optimized Weekly Calendar View Placeholder -->
+<div class="p-md bg-surface-light py-md">
+<div class="flex justify-between items-center mb-md">
+<div class="flex gap-1">
+<button class="bg-primary text-on-primary p-1 rounded"><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+<button class="bg-primary text-on-primary p-1 rounded"><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+<button class="bg-secondary text-on-secondary px-2 py-1 rounded font-label-caps text-label-caps">today</button>
+</div>
+<span class="font-headline-sm text-headline-sm">April 2026</span>
+<div class="hidden md:flex bg-primary rounded overflow-hidden">
+<button class="text-on-primary px-3 py-1 font-label-caps text-label-caps bg-on-primary-fixed-variant">month</button>
+<button class="text-on-primary px-3 py-1 font-label-caps text-label-caps">list</button>
+</div>
+</div>
+<!-- Weekly Grid (Mobile friendly snapshot) -->
+<div class="grid grid-cols-7 gap-px bg-border-slate border border-border-slate rounded">
+<!-- Headers -->
+<div class="bg-surface-container-lowest text-center font-headline-sm border-b border-border-slate text-headline-md py-md min-h-[80px] p-1">S</div>
+<div class="bg-surface-container-lowest text-center font-headline-sm border-b border-border-slate text-headline-md py-md min-h-[80px] p-1">M</div>
+<div class="bg-surface-container-lowest text-center font-headline-sm border-b border-border-slate text-headline-md py-md min-h-[80px] p-1">T</div>
+<div class="bg-surface-container-lowest text-center font-headline-sm border-b border-border-slate text-headline-md py-md min-h-[80px] p-1">W</div>
+<div class="bg-surface-container-lowest text-center font-headline-sm border-b border-border-slate text-headline-md py-md min-h-[80px] p-1">T</div>
+<div class="bg-surface-container-lowest text-center font-headline-sm border-b border-border-slate text-headline-md py-md min-h-[80px] p-1">F</div>
+<div class="bg-surface-container-lowest text-center font-headline-sm border-b border-border-slate text-headline-md py-md min-h-[80px] p-1">S</div>
+<!-- Days Row 1 (representing a dense week) -->
+<div class="bg-surface-light min-h-[80px] p-1"></div>
+<div class="bg-surface-light min-h-[80px] p-1"></div>
+<div class="bg-surface-light min-h-[80px] p-1"></div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">1</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">1 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">2</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">3 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">3</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">4</span>
+</div>
+<!-- Row 2 -->
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">5</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">6</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">8 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">7</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">8</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">9</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">10</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">12 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">11</span>
+</div>
+<!-- Row 3 -->
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">12</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">13</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">14</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">5 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">15</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">16</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">17</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">18</span>
+</div>
+<!-- Row 4 -->
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">19</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">1 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">20</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">10 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">21</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">5 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">22</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">1 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">23</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">2 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">24</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">1 bk</div>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">25</span>
+<div class="bg-primary text-on-primary rounded px-1 text-center truncate text-xs py-xs font-bold">6 bk</div>
+</div>
+<!-- Row 5 -->
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">26</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">27</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">28</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">29</span>
+</div>
+<div class="bg-surface-container-lowest flex flex-col justify-between min-h-[80px] p-1">
+<span class="text-right text-text-secondary text-body-sm font-bold">30</span>
+</div>
+<div class="bg-surface-light min-h-[80px] p-1"></div>
+<div class="bg-surface-light min-h-[80px] p-1"></div>
+</div>
+</div>
+</section><section class="bg-surface-container-lowest border border-border-slate rounded-lg shadow-sm p-md space-y-md mb-xl"><div class="flex justify-between items-center border-b border-border-slate pb-2 mb-md"><h3 class="font-headline-sm text-headline-sm text-primary">Bookings: 2026-04-20</h3><span class="text-label-caps font-label-caps text-text-secondary uppercase">10 Total</span></div><div class="space-y-2"><div class="border border-border-slate rounded-lg p-3 bg-surface-light flex justify-between items-center"><div class="space-y-1"><div class="flex items-center gap-2"><p class="font-bold text-primary text-body-sm">TEST (VEN036)</p><span class="text-[10px] font-label-caps bg-success-emerald text-white px-1.5 rounded">CONFIRMED</span></div><p class="text-[11px] text-text-secondary">ID: BKG-20260420-00001</p><div class="flex items-center gap-1 text-primary"><span class="material-symbols-outlined text-[14px]">electric_bolt</span><span class="text-[12px] font-medium">GEN-100KVA-02</span></div></div><span class="material-symbols-outlined text-text-secondary">chevron_right</span></div><div class="border border-border-slate rounded-lg p-3 bg-surface-light flex justify-between items-center"><div class="space-y-1"><div class="flex items-center gap-2"><p class="font-bold text-primary text-body-sm">Industrial Power Solutions</p><span class="text-[10px] font-label-caps bg-success-emerald text-white px-1.5 rounded">CONFIRMED</span></div><p class="text-[11px] text-text-secondary">ID: BKG-20260420-00002</p><div class="flex items-center gap-1 text-primary"><span class="material-symbols-outlined text-[14px]">electric_bolt</span><span class="text-[12px] font-medium">GEN-250KVA-05</span></div></div><span class="material-symbols-outlined text-text-secondary">chevron_right</span></div></div><button class="w-full py-2.5 mt-md bg-primary text-on-primary font-label-caps text-label-caps rounded-full uppercase shadow-sm">View All 10 Bookings</button></section>
+<!-- Quick Info -->
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="bg-slate-900/95 dark:bg-black/95 fixed bottom-0 w-full z-50 rounded-t-xl lg:hidden backdrop-blur-md border-t border-slate-800 shadow-lg flex justify-around items-center h-20 px-4 pb-safe"><a class="flex flex-col items-center justify-center bg-tertiary-fixed text-on-tertiary-fixed rounded-xl px-3 py-1 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-white active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">calendar_today</span>
+<span class="font-label-caps text-label-caps">Bookings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-white active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">electric_bolt</span>
+<span class="font-label-caps text-label-caps">Genset</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-white active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">group</span>
+<span class="font-label-caps text-label-caps">Vendors</span>
+</a></nav>
+
+
+</body></html>

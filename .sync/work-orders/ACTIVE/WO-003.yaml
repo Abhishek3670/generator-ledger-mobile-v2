@@ -1,0 +1,53 @@
+id: WO-003
+title: "Shared Component Library"
+status: READY
+priority: P0
+milestone: M1-Foundation
+assigned_to: gemini
+created_by: claude
+created_at: "2026-06-28T18:55:00+05:30"
+depends_on: [WO-002]
+
+description: |
+  Build the 12 shared UI components identified in PLAN.md §6.
+  Each component must use AppColors, AppTypography, and AppDimensions exclusively.
+  No hardcoded colors, font sizes, or radii.
+
+  Reference the HTML designs in stitch_generator_ledger_design/screens/ for
+  layout structure. Translate Tailwind classes into Flutter equivalents.
+
+acceptance_criteria:
+  - AppBottomNavBar — 4-tab nav (Dashboard, Bookings, Genset, Vendors) with active indicator
+  - AdminBottomNavBar — 3-tab nav (Health, Users, Integrations)
+  - FloatingSearchFAB — pill-shaped search bar + circular FAB, positioned bottom
+  - ExpandableFABMenu — FAB that expands vertically with sub-options + backdrop blur
+  - StatusBadge — pill-shaped, prefix icon (✓/⏱/✕), semantic colors per status
+  - DirectoryCard — white card, 1px border, rounded-lg, optional dark header row
+  - SectionHeader — label-caps category + display-lg/headline-md title + body description
+  - ModalScaffold — centered floating card, backdrop blur, sticky header/footer, close button
+  - SwipeActionCard — flutter_slidable wrapper with Modify (amber) and Delete (red) actions
+  - BackdropBlurOverlay — semi-transparent slate overlay with backdrop blur
+  - SideNavigationDrawer — drawer with user profile, nav links, settings/logout
+  - DarkHeaderCard — card header with primary bg, white text, flex row content
+  - All widgets documented with dartdoc comments
+  - flutter analyze passes
+
+files_to_create:
+  - lib/shared/widgets/app_bottom_nav_bar.dart
+  - lib/shared/widgets/admin_bottom_nav_bar.dart
+  - lib/shared/widgets/floating_search_fab.dart
+  - lib/shared/widgets/expandable_fab_menu.dart
+  - lib/shared/widgets/status_badge.dart
+  - lib/shared/widgets/directory_card.dart
+  - lib/shared/widgets/section_header.dart
+  - lib/shared/widgets/modal_scaffold.dart
+  - lib/shared/widgets/swipe_action_card.dart
+  - lib/shared/widgets/backdrop_blur_overlay.dart
+  - lib/shared/widgets/side_navigation_drawer.dart
+  - lib/shared/widgets/dark_header_card.dart
+
+references:
+  - PLAN.md §6 (Shared Component Catalog)
+  - ARCHITECTURE.md §3 (Design System Mapping)
+  - stitch_generator_ledger_design/component_specifications_guide.md
+  - stitch_generator_ledger_design/screens/ (all HTML references)

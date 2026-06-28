@@ -353,3 +353,56 @@ Escalate.
 # Runtime Version
 
 See .sync/RUNTIME_VERSION for version tracking.
+
+---
+
+# DESIGN_SYSTEM_RULES
+
+**CRITICAL:** Agents must strictly adhere to these design rules when building the Flutter mobile application. Do NOT invent new colors, typography, or UI patterns. Do not make assumptions or hallucinate styles.
+
+## 1. Color Palette (Strictly Enforced)
+Use these precise hex codes. Do NOT guess colors.
+- **Primary:** #0f172a (Slate-900) - Used for Top App Bars, structural elements, primary buttons.
+- **Primary Dark:** #1e293b
+- **Accent (Action):** #fbbf24 (Amber-400) - Strictly reserved for primary CTAs (e.g., "Create" or "Add").
+- **Backgrounds:** 
+  - Master Background: #fafafa
+  - Surface (Cards/Panels): #ffffff or #f9f9f9
+  - Surface Container/Alternating Rows: #f3f3f3
+- **Borders:** #cbd5e1 (Slate-200) - Use 1px solid borders for cards and inputs.
+- **Semantic Status:** 
+  - Success: #059669 (Emerald-600)
+  - Warning: #d97706 (Amber-600)
+  - Danger: #dc2626 (Red-600)
+
+## 2. Typography
+- **Display & Headlines:** Space Grotesk. Use for nav links, numeric stats, and app bars. (Headlines use tighter letter-spacing).
+- **Body & Inputs:** Inter (or system sans-serif). Use for all body copy, forms, and tabular data.
+- **Utility Labels:** Space Grotesk 11px (or 12px), 600 weight, uppercase with  .2em letter spacing.
+
+## 3. Shapes & Radii
+- **Structural Panels (Large cards/Dashboards):** 16px radius.
+- **Functional Elements (Inputs, small cards):** 8px radius.
+- **Interactive Widgets (Buttons, Badges, Avatars):** 9999px (Pill-shaped / fully rounded).
+
+## 4. Components & Elevation
+- **Elevation:** Flat aesthetic. Use 1px solid #cbd5e1 borders for elevation instead of heavy shadows. Exception: A single ultra-soft shadow (  1px 2px 0 rgba(15, 23, 42, 0.05)) can be used for stats cards.
+- **Buttons:**
+  - Primary: Pill-shaped, #0f172a background, white text.
+  - Accent (Create/Add): Pill-shaped, #fbbf24 background, dark navy text.
+  - Ghost/Secondary: Pill-shaped, 1px #cbd5e1 border, #475569 text.
+- **Status Badges:** Must be pill-shaped. MUST include a prefix icon for accessibility (e.g., ✓ Confirmed, ⏱ Pending, ✕ Cancelled).
+- **Inputs:** 1px border, 8px radius. On focus, transition to a solid #0f172a border with a soft glow.
+- **Alert Boxes:** Left-accented containers with a 4px solid vertical border.
+
+## 5. Layout
+- **Density:** High-density layout. Base spacing unit is 4px.
+- **Mobile Margins:** 16px gutters.
+
+**DO NOT DEVIATE from these specs.**
+
+## 6. Reference Material (stitch_generator_ledger_design)
+When implementing a specific screen or component in Flutter, agents MUST reference the exported designs in W:\Aatish\Stuff\generator-ledger-mobile-v2\stitch_generator_ledger_design\screens.
+- **HTML/Tailwind Mapping**: Read the index.html inside the relevant screen folder to understand the intended layout structure (Rows, Columns, Padding, Alignments). Translate the Tailwind CSS utility classes directly into Flutter Padding, Margin, SizedBox, Row, Column, and Expanded widgets.
+- **Tokens**: Reference design_tokens_json.json for exact mappings of colors and typography if there is any ambiguity.
+- **Component Guide**: Reference component_specifications_guide.md and implementation_handoff_guide.md to ensure modularity and correct component reuse.

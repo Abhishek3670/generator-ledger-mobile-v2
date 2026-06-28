@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Integrations - Generator Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&amp;family=Inter:wght@400&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "secondary": "#545f73",
+                        "on-surface": "#1a1c1c",
+                        "surface-dim": "#dadada",
+                        "on-tertiary-container": "#a87d00",
+                        "secondary-fixed": "#d8e3fb",
+                        "outline-variant": "#c6c6cd",
+                        "text-secondary": "#475569",
+                        "on-tertiary-fixed-variant": "#5c4300",
+                        "on-secondary-fixed": "#111c2d",
+                        "secondary-container": "#d5e0f8",
+                        "primary-container": "#131b2e",
+                        "surface-variant": "#e2e2e2",
+                        "inverse-surface": "#2f3131",
+                        "success-emerald": "#059669",
+                        "on-surface-variant": "#45464d",
+                        "primary": "#000000",
+                        "surface-container-highest": "#e2e2e2",
+                        "surface-bright": "#f9f9f9",
+                        "on-primary-fixed": "#131b2e",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#f9bd22",
+                        "on-background": "#1a1c1c",
+                        "on-primary-container": "#7c839b",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface-container": "#eeeeee",
+                        "secondary-fixed-dim": "#bcc7de",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "surface-light": "#f8fafc",
+                        "surface-container-low": "#f3f3f3",
+                        "error": "#ba1a1a",
+                        "warning-amber": "#d97706",
+                        "inverse-on-surface": "#f0f1f1",
+                        "tertiary": "#000000",
+                        "on-tertiary-fixed": "#261a00",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#586377",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#261a00",
+                        "primary-fixed-dim": "#bec6e0",
+                        "background": "#f9f9f9",
+                        "border-slate": "#cbd5e1",
+                        "on-tertiary": "#ffffff",
+                        "danger-rose": "#dc2626",
+                        "surface-container-high": "#e8e8e8",
+                        "surface": "#f9f9f9",
+                        "outline": "#76777d",
+                        "surface-tint": "#565e74",
+                        "inverse-primary": "#bec6e0",
+                        "primary-fixed": "#dae2fd",
+                        "tertiary-fixed": "#ffdf9f",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "unit": "4px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "container-max": "1200px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Space Grotesk"],
+                        "headline-sm": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.2em", "fontWeight": "600" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f9f9f9; color: #1a1c1c; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body class="font-body-md antialiased md:bg-surface-container-low min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant flex items-center justify-between px-md h-16 max-w-container-max mx-auto shadow-sm">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+<h1 class="font-headline-md text-primary tracking-tight">Generator Ledger</h1>
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow pt-16 pb-20 md:pb-0 md:pt-24 px-md md:px-lg max-w-container-max mx-auto w-full flex flex-col md:flex-row gap-lg items-center justify-center">
+<!-- NavigationDrawer (Visible on md+) -->
+<aside class="hidden md:flex flex-col h-[calc(100vh-6rem)] w-72 rounded-lg bg-surface border-r border-outline-variant shadow-sm py-lg px-md sticky top-24">
+<div class="flex items-center gap-sm mb-lg">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold">OP</div>
+<div>
+<h2 class="font-headline-sm text-primary">Fleet Manager</h2>
+<p class="font-body-sm text-text-secondary">Industrial Unit 04</p>
+<span class="font-label-caps text-xs text-text-secondary">Admin Status</span>
+</div>
+</div>
+<nav class="flex flex-col gap-unit">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">monitor_heart</span>
+<span class="font-body-md">System Health</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md">User Access</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-bold transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">extension</span>
+<span class="font-body-md">Integrations</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">database</span>
+<span class="font-body-md">Data Logs</span>
+</a>
+</nav>
+</aside>
+<!-- Content Canvas -->
+<section class="flex flex-col gap-lg justify-center">
+<div class="bg-surface rounded-xl border border-outline-variant p-lg md:p-xl shadow-sm mx-auto"><div class="flex flex-col items-center justify-center py-xl gap-md text-center">
+  <span class="material-symbols-outlined text-outline text-4xl" style="font-variation-settings: 'FILL' 0;">construction</span>
+  <div>
+    <h3 class="font-display-lg text-primary mb-xs">Coming Soon</h3>
+    <p class="font-body-md text-text-secondary max-w-md mx-auto">This integration module is currently under development for the industrial ledger system.</p>
+  </div>
+</div></div>
+<!-- Contextual Image Placeholder (as per prompt instructions, though maybe not strictly needed for this simple layout, adding for adherence to constraints if user expected it based on the image attached, though the image attached is just a UI screenshot) -->
+
+</section>
+</main>
+<!-- BottomNavBar (Visible on mobile) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-primary-container border-t border-outline-variant/30 backdrop-blur-md bg-primary-container/95 shadow-lg flex justify-around items-center px-sm pb-safe h-16"><a class="flex flex-col items-center justify-center text-on-primary-container/70 hover:text-on-primary-container transition-colors active:scale-90 w-16" href="#">
+<span class="material-symbols-outlined mb-xs">monitor_heart</span>
+<span class="font-label-caps text-[10px]">Health</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-primary-container/70 hover:text-on-primary-container transition-colors active:scale-90 w-16" href="#">
+<span class="material-symbols-outlined mb-xs">group</span>
+<span class="font-label-caps text-[10px]">Users</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-tertiary-fixed text-on-tertiary-fixed rounded-xl px-3 py-1 transition-colors active:scale-90 w-16" href="#">
+<span class="material-symbols-outlined mb-xs" style="font-variation-settings: 'FILL' 1;">extension</span>
+<span class="font-label-caps text-[10px]">Integ</span>
+</a>
+</nav>
+
+
+
+
+</body></html>

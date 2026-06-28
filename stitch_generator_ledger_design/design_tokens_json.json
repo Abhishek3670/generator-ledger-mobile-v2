@@ -1,0 +1,38 @@
+{
+  "name": "Genset Industrial Ledger",
+  "version": "1.0.0",
+  "tokens": {
+    "colors": {
+      "primary": "#0f172a",
+      "primary_dark": "#1e293b",
+      "accent": "#fbbf24",
+      "success": "#059669",
+      "warning": "#d97706",
+      "danger": "#dc2626",
+      "surface": "#f9f9f9",
+      "surface_container": "#f3f3f3",
+      "background": "#fafafa",
+      "border": "#cbd5e1"
+    },
+    "typography": {
+      "font_family_display": "Space Grotesk",
+      "font_family_body": "system-ui, -apple-system, sans-serif",
+      "base_font_size": "16px",
+      "headings": {
+        "h1": { "size": "24px", "weight": "700" },
+        "h2": { "size": "20px", "weight": "600" },
+        "label_caps": { "size": "12px", "weight": "600", "case": "uppercase" }
+      }
+    },
+    "spacing": {
+      "gutter": "16px",
+      "card_padding": "16px",
+      "gap_md": "24px"
+    },
+    "radius": {
+      "standard": "8px",
+      "modal": "12px",
+      "pill": "9999px"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+id: WO-001
+title: "Flutter Project Scaffold & Dependencies"
+status: READY
+priority: P0
+milestone: M1-Foundation
+assigned_to: codex
+created_by: claude
+created_at: "2026-06-28T18:55:00+05:30"
+depends_on: []
+
+description: |
+  Create the Flutter project and establish the folder structure defined in
+  ARCHITECTURE.md. Install all core dependencies.
+
+acceptance_criteria:
+  - Flutter project created with `flutter create` (package name: com.genset.ledger)
+  - Folder structure matches ARCHITECTURE.md §2 exactly
+  - All dependencies from ARCHITECTURE.md §6 added to pubspec.yaml
+  - `flutter analyze` passes with zero errors
+  - `flutter test` runs (even if no tests yet)
+  - README.md updated with setup instructions
+
+files_to_create:
+  - lib/main.dart
+  - lib/app.dart
+  - lib/core/theme/ (empty files with TODO)
+  - lib/core/routing/ (empty files with TODO)
+  - lib/shared/widgets/ (empty files with TODO)
+  - lib/shared/models/ (empty files with TODO)
+  - lib/features/ (directory structure per ARCHITECTURE.md)
+  - lib/data/mock/ (empty)
+  - lib/data/repositories/ (empty)
+
+references:
+  - ARCHITECTURE.md §2 (Project Structure)
+  - ARCHITECTURE.md §6 (Key Dependencies)

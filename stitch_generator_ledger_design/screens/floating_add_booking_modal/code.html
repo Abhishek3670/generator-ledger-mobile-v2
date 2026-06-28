@@ -1,0 +1,325 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Bookings Directory - Genset</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e8e8e8",
+                        "secondary-fixed": "#d8e3fb",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f0f1f1",
+                        "secondary": "#545f73",
+                        "secondary-fixed-dim": "#bcc7de",
+                        "inverse-primary": "#bec6e0",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "text-secondary": "#475569",
+                        "primary-fixed": "#dae2fd",
+                        "surface-dim": "#dadada",
+                        "on-surface-variant": "#45464d",
+                        "surface-light": "#f8fafc",
+                        "outline-variant": "#c6c6cd",
+                        "surface-container-highest": "#e2e2e2",
+                        "outline": "#76777d",
+                        "background": "#f9f9f9",
+                        "on-secondary-fixed": "#111c2d",
+                        "on-tertiary-fixed": "#261a00",
+                        "danger-rose": "#dc2626",
+                        "on-primary-fixed": "#131b2e",
+                        "secondary-container": "#d5e0f8",
+                        "on-tertiary-container": "#a87d00",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface-bright": "#f9f9f9",
+                        "on-tertiary-fixed-variant": "#5c4300",
+                        "surface-container": "#eeeeee",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-tertiary": "#ffffff",
+                        "success-emerald": "#059669",
+                        "border-slate": "#cbd5e1",
+                        "primary-container": "#131b2e",
+                        "inverse-surface": "#2f3131",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#7c839b",
+                        "tertiary-fixed": "#ffdf9f",
+                        "surface": "#f9f9f9",
+                        "surface-tint": "#565e74",
+                        "error-container": "#ffdad6",
+                        "on-background": "#1a1c1c",
+                        "surface-variant": "#e2e2e2",
+                        "on-surface": "#1a1c1c",
+                        "tertiary": "#000000",
+                        "on-error": "#ffffff",
+                        "warning-amber": "#d97706",
+                        "tertiary-container": "#261a00",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#f9bd22",
+                        "surface-container-low": "#f3f3f3",
+                        "primary": "#000000",
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#586377"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "md": "16px",
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "container-max": "1200px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "pb-safe": "160px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Space Grotesk"],
+                        "headline-sm": ["Space Grotesk"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Space Grotesk"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.2em", "fontWeight": "600" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md pb-[160px] overflow-hidden">
+<!-- Top Navigation (Desktop) / Header (Mobile) -->
+<!-- Main Content -->
+<main class="pt-24 px-md md:px-lg max-w-container-max mx-auto w-full flex flex-col gap-lg" style="padding-bottom: 160px;">
+<!-- Page Header -->
+<div class="flex flex-col gap-unit">
+<span class="font-label-caps text-label-caps text-text-secondary uppercase">Bookings</span>
+<h2 class="font-display-lg text-display-lg text-on-background">Bookings by Vendor</h2>
+<p class="font-body-md text-body-md text-text-secondary">Review active reservations and manage vendor schedules.</p>
+</div>
+<!-- Filters (Hidden on Mobile, shown on Desktop for context) -->
+<div class="hidden md:flex bg-surface-container-lowest border border-outline-variant rounded-lg p-md gap-md items-end shadow-sm">
+<div class="flex-1 flex flex-col gap-sm">
+<label class="font-label-caps text-label-caps text-text-secondary">Search</label>
+<div class="relative">
+<input class="w-full h-10 px-sm border border-outline-variant rounded focus:ring-1 focus:ring-primary-container focus:border-primary-container bg-transparent font-body-sm text-body-sm text-on-background outline-none" placeholder="Search vendor, booking ID..." type="text">
+</div>
+</div>
+<div class="w-48 flex flex-col gap-sm">
+<label class="font-label-caps text-label-caps text-text-secondary">Status</label>
+<div class="relative">
+<select class="w-full h-10 px-sm border border-outline-variant rounded focus:ring-1 focus:ring-primary-container focus:border-primary-container bg-transparent font-body-sm text-body-sm text-on-background outline-none appearance-none cursor-pointer">
+<option>All</option>
+<option>Confirmed</option>
+<option>Pending</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="w-48 flex flex-col gap-sm">
+<label class="font-label-caps text-label-caps text-text-secondary">Date From</label>
+<div class="relative">
+<input class="w-full h-10 px-sm border border-outline-variant rounded focus:ring-1 focus:ring-primary-container focus:border-primary-container bg-transparent font-body-sm text-body-sm text-on-background outline-none [&amp;::-webkit-calendar-picker-indicator]:opacity-0" type="date">
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none">calendar_today</span>
+</div>
+</div>
+<div class="w-48 flex flex-col gap-sm">
+<label class="font-label-caps text-label-caps text-text-secondary">Date To</label>
+<div class="relative">
+<input class="w-full h-10 px-sm border border-outline-variant rounded focus:ring-1 focus:ring-primary-container focus:border-primary-container bg-transparent font-body-sm text-body-sm text-on-background outline-none [&amp;::-webkit-calendar-picker-indicator]:opacity-0" type="date">
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none">calendar_today</span>
+</div>
+</div>
+<button class="h-10 px-md border border-outline-variant rounded font-label-caps text-label-caps text-text-secondary hover:bg-surface-container transition-colors">Clear</button>
+</div>
+<!-- Vendor Group 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-[0_1px_2px_0_rgba(15,23,42,0.05)]">
+<div class="bg-primary-container px-md py-sm flex justify-between items-center text-on-primary">
+<h3 class="font-headline-sm text-headline-sm">Abraar</h3>
+<span class="font-label-caps text-label-caps text-on-primary-container">VEN011</span>
+</div>
+<div class="flex flex-col">
+<!-- Mobile List Item 1 -->
+<div class="p-md border-b border-outline-variant flex flex-col gap-unit">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-text-secondary">2026-04-19</span>
+<div class="flex items-center gap-1 bg-success-emerald/10 text-success-emerald px-2 py-0.5 rounded-full font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                            Confirmed
+                        </div>
+</div>
+<span class="font-body-md text-body-md text-on-background">GEN-20KVA-3R-08 <span class="text-text-secondary">(20 kVA)</span></span>
+</div>
+<!-- Mobile List Item 2 -->
+<div class="p-md border-b border-outline-variant flex flex-col gap-unit">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-text-secondary">2026-04-20</span>
+<div class="flex items-center gap-1 bg-success-emerald/10 text-success-emerald px-2 py-0.5 rounded-full font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                            Confirmed
+                        </div>
+</div>
+<span class="font-body-md text-body-md text-on-background">GEN-20KVA-3R-08 <span class="text-text-secondary">(20 kVA)</span></span>
+</div>
+<!-- Mobile List Item 3 -->
+<div class="p-md flex flex-col gap-unit">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-text-secondary">2026-05-01</span>
+<div class="flex items-center gap-1 bg-success-emerald/10 text-success-emerald px-2 py-0.5 rounded-full font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                            Confirmed
+                        </div>
+</div>
+<span class="font-body-md text-body-md text-on-background">GEN-20KVA-BU-RB-05 <span class="text-text-secondary">(20 kVA)</span></span>
+</div>
+</div>
+</div>
+<!-- Vendor Group 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-[0_1px_2px_0_rgba(15,23,42,0.05)]">
+<div class="bg-primary-container px-md py-sm flex justify-between items-center text-on-primary">
+<h3 class="font-headline-sm text-headline-sm">Ankit Singh</h3>
+<span class="font-label-caps text-label-caps text-on-primary-container">VEN025</span>
+</div>
+<div class="flex flex-col">
+<!-- Mobile List Item 1 -->
+<div class="p-md border-b border-outline-variant flex flex-col gap-unit">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-text-secondary">2026-04-21</span>
+<div class="flex items-center gap-1 bg-success-emerald/10 text-success-emerald px-2 py-0.5 rounded-full font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                            Confirmed
+                        </div>
+</div>
+<span class="font-body-md text-body-md text-on-background">GEN-82KVA-BU-03 <span class="text-text-secondary">(82 kVA)</span></span>
+</div>
+<!-- Mobile List Item 2 -->
+<div class="p-md border-b border-outline-variant flex flex-col gap-unit">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-text-secondary">2026-04-25</span>
+<div class="flex items-center gap-1 bg-success-emerald/10 text-success-emerald px-2 py-0.5 rounded-full font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                            Confirmed
+                        </div>
+</div>
+<span class="font-body-md text-body-md text-on-background">GEN-82KVA-BU-03 <span class="text-text-secondary">(82 kVA)</span></span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Shell (Mobile) -->
+<div class="fixed bottom-24 left-6 right-6 z-50 flex gap-3 flex-row items-end md:hidden">
+<div class="relative flex-1 shadow-lg bg-surface-container-lowest border border-slate-300 flex items-center transition-all focus-within:ring-1 focus-within:ring-primary rounded-full h-14">
+<span class="material-symbols-outlined ml-4 text-text-secondary">search</span>
+<input class="w-full pl-2 pr-4 py-2 bg-transparent border-none focus:ring-0 font-body-sm text-body-sm h-full" placeholder="Search bookings..." type="text">
+</div>
+<button class="bg-slate-900 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div><nav class="md:hidden fixed bottom-0 left-0 w-full z-40 bg-surface-container-lowest border-t border-outline-variant flex justify-around items-center px-md py-sm shadow-lg pb-[calc(16px+env(safe-area-inset-bottom))]">
+<a class="flex flex-col items-center justify-center text-on-secondary-fixed-variant" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-[10px] mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-tertiary-fixed text-on-tertiary-fixed rounded-xl px-3 py-1 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: &quot;FILL&quot; 1;">calendar_today</span>
+<span class="font-label-caps text-[10px] mt-1">Bookings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-fixed-variant" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-caps text-[10px] mt-1">Vendors</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-fixed-variant" href="#">
+<span class="material-symbols-outlined">electric_bolt</span>
+<span class="font-label-caps text-[10px] mt-1">Genset</span>
+</a>
+</nav>
+<!-- Mobile Action Cluster (Search & FAB) -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8" id="booking-modal">
+<div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+<div class="relative bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border border-outline-variant flex flex-col">
+<div class="sticky top-0 bg-background z-10 px-md py-4 border-b border-outline-variant flex justify-between items-center">
+<div>
+<span class="font-label-caps text-label-caps text-text-secondary uppercase">Bookings</span>
+<h2 class="font-headline-md text-headline-md">Create Booking</h2>
+</div>
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors" onclick="document.getElementById('booking-modal').remove()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-md md:p-lg space-y-6">
+<section class="space-y-4">
+<div class="space-y-2">
+<label class="font-body-sm text-body-sm font-medium">Vendor <span class="text-danger-rose">*</span></label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-md font-body-md text-body-md focus:ring-2 focus:ring-primary-container/20 outline-none" placeholder="Search by vendor name or ID" type="text">
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h3 class="font-label-caps text-label-caps text-text-secondary border-b border-outline-variant pb-2">GENERATOR ASSIGNMENT</h3>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 border border-outline-variant rounded-full font-body-sm text-body-sm text-text-secondary hover:bg-surface-container transition-colors">Assign by Generator ID</button>
+<button class="px-4 py-2 bg-primary-container text-on-primary rounded-full font-body-sm text-body-sm font-medium">Assign by Capacity (Auto-assign)</button>
+</div>
+<div class="space-y-3">
+<label class="font-body-sm text-body-sm font-medium">Capacity (kVA)</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 border border-outline-variant rounded-full font-body-sm text-body-sm hover:border-primary-container">20 kVA</button>
+<button class="px-3 py-1.5 border border-outline-variant rounded-full font-body-sm text-body-sm hover:border-primary-container">30 kVA</button>
+<button class="px-3 py-1.5 border border-outline-variant rounded-full font-body-sm text-body-sm bg-surface-container-high font-medium">50 kVA</button>
+<button class="px-3 py-1.5 border border-outline-variant rounded-full font-body-sm text-body-sm hover:border-primary-container">100 kVA</button>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h3 class="font-label-caps text-label-caps text-text-secondary border-b border-outline-variant pb-2">BOOKING DATES</h3>
+<div class="bg-surface border border-outline-variant rounded-lg p-4">
+<div class="flex justify-between items-center mb-4">
+<span class="material-symbols-outlined cursor-pointer">chevron_left</span>
+<div class="font-headline-sm text-headline-sm">April 2026</div>
+<span class="material-symbols-outlined cursor-pointer">chevron_right</span>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center text-[12px] font-medium text-text-secondary mb-2">
+<div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center font-body-sm">
+<div class="p-2 text-outline-variant">31</div><div class="p-2">1</div><div class="p-2">2</div><div class="p-2">3</div><div class="p-2">4</div><div class="p-2">5</div><div class="p-2">6</div>
+<div class="p-2">7</div><div class="p-2">8</div><div class="p-2">9</div><div class="p-2">10</div><div class="p-2">11</div><div class="p-2">12</div><div class="p-2">13</div>
+<div class="p-2 border-2 border-primary-container rounded-full">14</div><div class="p-2 bg-surface-container-high">15</div><div class="p-2 bg-surface-container-high">16</div><div class="p-2 bg-surface-container-high">17</div><div class="p-2 bg-primary-container text-on-primary rounded-full">18</div><div class="p-2">19</div><div class="p-2">20</div>
+</div>
+</div>
+</section>
+<section class="space-y-2">
+<label class="font-body-sm text-body-sm font-medium">Optional Notes</label>
+<textarea class="w-full p-3 bg-surface border border-outline-variant rounded-md font-body-md text-body-md focus:ring-2 focus:ring-primary-container/20 outline-none resize-none" placeholder="Add any notes..." rows="3"></textarea>
+</section>
+</div>
+<div class="sticky bottom-0 bg-background p-md border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-3 bg-slate-900 text-white rounded-full font-headline-sm hover:bg-black transition-colors">Create Booking</button>
+<button class="flex-1 py-3 border border-outline-variant text-text-secondary rounded-full font-headline-sm hover:bg-surface-container transition-colors" onclick="document.getElementById('booking-modal').remove()">Cancel</button>
+</div>
+</div>
+</div></body></html>
