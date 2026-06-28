@@ -5,12 +5,15 @@ import 'app_dimensions.dart';
 import 'app_typography.dart';
 
 abstract final class AppTheme {
-  static ThemeData light() {
+  static ThemeData lightTheme() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       primary: AppColors.primary,
       secondary: AppColors.accent,
       surface: AppColors.surface,
+      error: AppColors.danger,
+      onSurface: const Color(0xFF1A1C1C),
+      outline: AppColors.border,
     );
 
     return ThemeData(

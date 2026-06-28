@@ -11,7 +11,7 @@ class LedgerApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Generator Ledger',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.lightTheme(),
       routerConfig: AppRouter.router,
     );
   }
