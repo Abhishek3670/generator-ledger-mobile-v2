@@ -1,1 +1,45 @@
-// TODO: Implement BackdropBlurOverlay in WO-003.
+import 'dart:ui';
+import 'package:flutter/material.dart';
+
+/// A semi-transparent overlay with a backdrop blur filter.
+///
+/// Typically used to dim and blur the background when a modal or expandable menu is active.
+class BackdropBlurOverlay extends StatelessWidget {
+  /// Controls the visibility of the overlay.
+  final bool isVisible;
+
+  /// Optional callback when the overlay background is tapped.
+  final VoidCallback? onTap;
+
+  /// Optional child widget to render on top of the blurred overlay.
+  final Widget? child;
+
+  /// Creates a [BackdropBlurOverlay].
+  const BackdropBlurOverlay({
+    super.key,
+    required this.isVisible,
+    this.onTap,
+    this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isVisible) return const SizedBox.shrink();
+
+    return Positioned.fill(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            child: Container(
+              color: const Color(0x660F172A), // Slate-900 color at 40% opacity
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
