@@ -52,7 +52,7 @@ class AppBottomNavBar extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.tertiaryFixed : Colors.transparent,
                     borderRadius: BorderRadius.circular(12), // rounded-xl
@@ -64,9 +64,9 @@ class AppBottomNavBar extends StatelessWidget {
                       Icon(
                         isSelected ? item.activeIcon : item.icon,
                         color: isSelected ? AppColors.onTertiaryFixed : AppColors.slate400,
-                        size: 24,
+                        size: 20,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         item.label,
                         style: AppTypography.labelCaps.copyWith(

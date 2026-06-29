@@ -1,5 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/drawer_provider.dart';
+import '../../shared/widgets/side_navigation_drawer.dart';
 import '../../shared/widgets/admin_bottom_nav_bar.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../features/vendors/screens/vendor_directory_screen.dart';
@@ -130,25 +134,99 @@ abstract final class AppRouter {
   );
 }
 
-class _OperationalShell extends StatelessWidget {
+class _OperationalShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const _OperationalShell({required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-        },
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDrawerOpen = ref.watch(drawerOpenProvider);
+
+    return Stack(
+      children: [
+        Scaffold(
+          body: navigationShell,
+          bottomNavigationBar: AppBottomNavBar(
+            currentIndex: navigationShell.currentIndex,
+            onTap: (index) {
+              navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              );
+            },
+          ),
+        ),
+        if (isDrawerOpen) ...[
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () {
+                ref.read(drawerOpenProvider.notifier).state = false;
+              },
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: SideNavigationDrawer(
+              variant: SideNavigationDrawerVariant.light,
+              currentRoute: _getRouteFromIndex(navigationShell.currentIndex),
+              onNavigate: (routePath) {
+                ref.read(drawerOpenProvider.notifier).state = false;
+                final index = _getIndexFromRoute(routePath);
+                if (index != -1) {
+                  navigationShell.goBranch(
+                    index,
+                    initialLocation: index == navigationShell.currentIndex,
+                  );
+                }
+              },
+              userName: 'Abhishek Sharma',
+              userRole: 'Fleet Manager',
+            ),
+          ),
+        ],
+      ],
     );
+  }
+
+  String _getRouteFromIndex(int index) {
+    switch (index) {
+      case 0:
+        return '/dashboard';
+      case 1:
+        return '/bookings';
+      case 2:
+        return '/generators';
+      case 3:
+        return '/vendors';
+      default:
+        return '/dashboard';
+    }
+  }
+
+  int _getIndexFromRoute(String route) {
+    switch (route) {
+      case '/dashboard':
+        return 0;
+      case '/bookings':
+        return 1;
+      case '/generators':
+        return 2;
+      case '/vendors':
+        return 3;
+      default:
+        return -1;
+    }
   }
 }
 

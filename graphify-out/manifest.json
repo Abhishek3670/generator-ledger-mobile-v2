@@ -68,8 +68,8 @@
     "hash": "350f7d37b44f493567c704d07b23d1ab"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\core\\theme\\app_colors.dart": {
-    "mtime": 1782735144.129666,
-    "hash": "28c756ce03a6acd5027da13740969cd2"
+    "mtime": 1782751494.5497997,
+    "hash": "40a635ebcce55bf35fbb69b2482afa7f"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\core\\theme\\app_dimensions.dart": {
     "mtime": 1782735146.9935179,
@@ -80,8 +80,8 @@
     "hash": "88a0e4c065d119438c5f148bc1a2e65b"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\core\\theme\\app_typography.dart": {
-    "mtime": 1782658143.200006,
-    "hash": "9a719f130524748aab3c0045212a94c7"
+    "mtime": 1782751497.1807766,
+    "hash": "cbd736db0214869cf3bb5b5e7caa2302"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\data\\mock\\mock_bookings.dart": {
     "mtime": 1782728230.6568823,
@@ -136,36 +136,48 @@
     "hash": "6d159cfb344ad32ddc44d64d34d7c59f"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\screens\\system_health_screen.dart": {
-    "mtime": 1782750433.789209,
-    "hash": "92b6f5227f1f2fd9361a2ae6ff746fac"
+    "mtime": 1782756007.700232,
+    "hash": "73ba82528cbd661e9606c6ae85dc6203"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\screens\\user_management_screen.dart": {
-    "mtime": 1782750438.6519895,
-    "hash": "72746eedb5e70fdfc6ff31a045e82c5a"
+    "mtime": 1782755899.7711096,
+    "hash": "9d1a8bf9634867ba16def00376041afe"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\create_user_modal.dart": {
+    "mtime": 1782757119.2615416,
+    "hash": "2a09b913e389a8d4ab79139e7123cfd3"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\delete_user_dialog.dart": {
+    "mtime": 1782755887.4693837,
+    "hash": "6092389ed2a8f4d4337fafd69d5c5012"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\edit_user_modal.dart": {
+    "mtime": 1782757121.3345308,
+    "hash": "4d28da50c954b6bf88a93cda30bf568e"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\metric_card.dart": {
-    "mtime": 1782655939.4529357,
-    "hash": "11a1a6d0ec94e1250f6055b4d0bc94e4"
+    "mtime": 1782751733.9288528,
+    "hash": "fa599736d48401efb030bc680f06acbc"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\permission_matrix.dart": {
-    "mtime": 1782655939.4551072,
-    "hash": "bd02fe615278befa9fb643f2855b5308"
+    "mtime": 1782751768.6840498,
+    "hash": "044599a63e4be7c228e63de0a0d15756"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\sparkline_chart.dart": {
-    "mtime": 1782655939.4540887,
-    "hash": "e9823471da098e81491366563cf29dca"
+    "mtime": 1782751738.884013,
+    "hash": "3f8f28585aa1ee63095c21cc3fe3bc38"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\user_card.dart": {
-    "mtime": 1782655939.4540887,
-    "hash": "452327eb6931b79bdc7f1e09be5914df"
+    "mtime": 1782751747.4437332,
+    "hash": "4fbde487cfd771d892ffb890a3e440a8"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\auth\\providers\\auth_provider.dart": {
     "mtime": 1782655891.5843017,
     "hash": "b12f96e389ea1fa92647b34d0bda348e"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\auth\\screens\\login_screen.dart": {
-    "mtime": 1782735151.471092,
-    "hash": "ea520992bfbf460a8ad57cef12ac712d"
+    "mtime": 1782751512.3771446,
+    "hash": "86082ccb9577c652ae983234fca08194"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\billing\\providers\\billing_provider.dart": {
     "mtime": 1782655939.4477255,
@@ -192,24 +204,24 @@
     "hash": "a54a30490066e84332363250898782c3"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\screens\\bookings_directory_screen.dart": {
-    "mtime": 1782728257.8193257,
-    "hash": "15886e56672a942825f1b6eca9eca832"
+    "mtime": 1782751683.0766537,
+    "hash": "64ef4a1a094600847733e44a0d494c3e"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\add_booking_modal.dart": {
-    "mtime": 1782655891.5992587,
-    "hash": "7245b4c4d491a810a288d6414a57d55d"
+    "mtime": 1782757123.0844197,
+    "hash": "e9c5e64d4cbf5f7a672b75db7de9fe29"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\booking_list_item.dart": {
-    "mtime": 1782728247.8937912,
-    "hash": "080ab87dc176bbd0d09e20ae61b60a30"
+    "mtime": 1782751667.274206,
+    "hash": "5d76e59642ac0112259ea0a07bb000b6"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\edit_booking_modal.dart": {
-    "mtime": 1782655891.5999277,
-    "hash": "554dc296ffff460c92b54eb932200c3b"
+    "mtime": 1782757125.9439366,
+    "hash": "f8943ec032f7976ed7920c2898ec7db3"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\vendor_booking_group.dart": {
-    "mtime": 1782735176.4552648,
-    "hash": "b5a24a7357705d882c0a80ecfa7c2562"
+    "mtime": 1782751671.7991788,
+    "hash": "128ce7459e26703bb9d0fdb0553325c8"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\dashboard\\providers\\dashboard_provider.dart": {
     "mtime": 1782655891.592625,
@@ -236,40 +248,60 @@
     "hash": "295627ea7465b2c96e290c2ee802f843"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\screens\\generators_directory_screen.dart": {
-    "mtime": 1782735192.3676312,
-    "hash": "d7c108c37a30c1c2c265ccd32655fae9"
+    "mtime": 1782755957.7526069,
+    "hash": "28c11a9a4ecd25503504feea8cd1d612"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\screens\\generator_detail_screen.dart": {
-    "mtime": 1782750424.08665,
-    "hash": "942ec641edb7fcb9bed876e343a6d621"
+    "mtime": 1782755968.4311182,
+    "hash": "de5f21ae58b4d1827d27359f093d1be4"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\add_generator_modal.dart": {
-    "mtime": 1782655891.6081848,
-    "hash": "0cc24c68b5256865b4bed182cc0ddf32"
+    "mtime": 1782757128.442654,
+    "hash": "63ddd54c0a1a9275fb8125a04291e1ff"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\edit_generator_modal.dart": {
+    "mtime": 1782757130.3478932,
+    "hash": "d4e3bf7cf39b22c786ea384fc8f38ae6"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\generator_action_menu.dart": {
+    "mtime": 1782755936.6735258,
+    "hash": "4306b27c1d1d68610f97ef4b15fdb9bb"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\generator_card.dart": {
-    "mtime": 1782735195.531929,
-    "hash": "dcc8ebe88bff577be75fb090819d9c87"
+    "mtime": 1782751706.6525705,
+    "hash": "541b5828fc10bac58dafef64f8be252c"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\generator_detail_modal.dart": {
-    "mtime": 1782655891.6097093,
-    "hash": "dffe7d72fea0348a1badf0d59bf5509e"
+    "mtime": 1782751765.7502806,
+    "hash": "167686d3c814a73abaa1c9c97bf5d928"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\inventory_group_section.dart": {
-    "mtime": 1782735159.8373864,
-    "hash": "1570005799f705d0750248caf80fda7f"
+    "mtime": 1782755952.6614232,
+    "hash": "56c1e98a8e9d5a1d949e89d69dae348b"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\providers\\vendors_provider.dart": {
     "mtime": 1782655939.4378843,
     "hash": "1aa00bde41e0a2d95dcfb15b7e5c60d4"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\screens\\vendor_directory_screen.dart": {
-    "mtime": 1782735167.6464071,
-    "hash": "328d3fd12d50ca561dc8cb56630b4f33"
+    "mtime": 1782755925.4782548,
+    "hash": "0d2b22082b5f68a8e11b18629c7cdf96"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\add_vendor_modal.dart": {
-    "mtime": 1782655939.4378843,
-    "hash": "1a36759d21573548c9d0fae3002cbcb2"
+    "mtime": 1782755996.6163232,
+    "hash": "d605acb31bb948269379e36bf891357b"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\delete_vendor_dialog.dart": {
+    "mtime": 1782755915.9637918,
+    "hash": "3f5086f1fec2ab3051f825bdc7a8795f"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\edit_vendor_modal.dart": {
+    "mtime": 1782757132.7035692,
+    "hash": "af345eaea8eabd896d6833a8d0d7e566"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\vendor_action_menu.dart": {
+    "mtime": 1782755919.0724723,
+    "hash": "5c5f28a6e273bae6fa7c2b287edcd39e"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\vendor_card.dart": {
     "mtime": 1782735198.401365,
@@ -300,36 +332,36 @@
     "hash": "7468a6ee503c4d01514179fd0afcaac5"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\admin_bottom_nav_bar.dart": {
-    "mtime": 1782721510.8080223,
-    "hash": "00faa749f27a0e5856be0632b72fd26d"
+    "mtime": 1782751550.195437,
+    "hash": "b34a2385a49ec9e7bc0ff72eae8b7c94"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\app_bottom_nav_bar.dart": {
-    "mtime": 1782735234.7756755,
-    "hash": "70252576ddb1b4915fc1b3595bc6b796"
+    "mtime": 1782756017.7918522,
+    "hash": "85fd0b824286cfb8cc5740dc89e002a0"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\backdrop_blur_overlay.dart": {
-    "mtime": 1782721517.732829,
-    "hash": "6fbbd410bba46adc2fb7b86f487a36b1"
+    "mtime": 1782756051.0924537,
+    "hash": "6081eb29415be06487fe72f3b5e750aa"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\dark_header_card.dart": {
     "mtime": 1782660098.1084013,
     "hash": "71466b45a2b33072596fb6f2f3b57fe8"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\directory_card.dart": {
-    "mtime": 1782660152.8870227,
-    "hash": "377fffbd6952c68915457d574a705da0"
+    "mtime": 1782756025.4638875,
+    "hash": "5a2d8ba3816027a9941e1e88b6091ff3"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\expandable_fab_menu.dart": {
     "mtime": 1782660086.3500228,
     "hash": "baf429a9653c059af9e69ceaa3038415"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\floating_search_fab.dart": {
-    "mtime": 1782722786.5725873,
-    "hash": "4d7d325096a2d52866a9e9cb404d72cc"
+    "mtime": 1782756029.6084168,
+    "hash": "58804cec863496cf22c1fc6fcc593f23"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\modal_scaffold.dart": {
-    "mtime": 1782721520.7497818,
-    "hash": "d6ada3ef09b835640c7e59468b8121ba"
+    "mtime": 1782756034.5303504,
+    "hash": "b361ab73d4fdcc268a28a5cc950ce1ea"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\section_header.dart": {
     "mtime": 1782660104.994207,
@@ -340,8 +372,8 @@
     "hash": "73cb646f5899b382247a79b75cc277b7"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\status_badge.dart": {
-    "mtime": 1782735179.722368,
-    "hash": "52d3a5e7b5a47ab1102a96cb10452c21"
+    "mtime": 1782756011.5736916,
+    "hash": "3c4e090d226333cf855da582754601d6"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\swipe_action_card.dart": {
     "mtime": 1782660111.8779144,
@@ -384,8 +416,8 @@
     "hash": "8059f5d27a19c556eeafb49b3f9b7bdd"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\bookings_directory_screen_test.dart": {
-    "mtime": 1782728309.537159,
-    "hash": "b072175d98daf277133d2b1a43bf5581"
+    "mtime": 1782751828.714531,
+    "hash": "c79eb9d9587aba7242cf8fb99dd3c1b6"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\dashboard_screen_test.dart": {
     "mtime": 1782723183.555479,
@@ -404,8 +436,8 @@
     "hash": "736a2301a5eb85b45b52d52480bf576c"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\vendor_directory_screen_test.dart": {
-    "mtime": 1782729419.2332115,
-    "hash": "1c74aa5853b06c509f29118f8f18a9de"
+    "mtime": 1782751830.7356856,
+    "hash": "32c28058df01d241d580b13ad6b21cb1"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\widget_test.dart": {
     "mtime": 1782723186.9774995,
@@ -476,8 +508,8 @@
     "hash": "ee2bde7f8dbfd9c921df30474844e002"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\docs\\ui-drift-report.md": {
-    "mtime": 1782749202.0761368,
-    "hash": "c2a232131d64235a424997f01b2faec3"
+    "mtime": 1782755191.1283207,
+    "hash": "35eaecbea069bf0e488adab60b166924"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\ios\\Runner\\Assets.xcassets\\LaunchImage.imageset\\README.md": {
     "mtime": 1759390186.2658305,

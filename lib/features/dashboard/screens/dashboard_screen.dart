@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
-import '../../../shared/widgets/side_navigation_drawer.dart';
+import '../../../core/providers/drawer_provider.dart';
 import '../widgets/calendar_view.dart';
 import '../widgets/daily_bookings_list.dart';
 import '../widgets/stats_grid.dart';
 
 /// The main dashboard landing screen after sign-in.
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
 
@@ -31,23 +32,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: AppColors.primary),
+          onPressed: () {
+            ref.read(drawerOpenProvider.notifier).state = true;
+          },
+        ),
         title: Text(
-          'DASHBOARD',
+          'Genset Industrial Ledger',
           style: AppTypography.headlineSmall.copyWith(
-            color: Colors.white,
+            color: AppColors.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      drawer: SideNavigationDrawer(
-        currentRoute: '/dashboard',
-        onNavigate: (routePath) {
-          context.go(routePath);
-        },
-        userName: 'Abhishek Sharma',
-        userRole: 'Fleet Manager',
+        backgroundColor: Colors.white,
+        elevation: 0,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(
+            color: AppColors.border,
+            height: 1,
+            thickness: 1,
+          ),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
