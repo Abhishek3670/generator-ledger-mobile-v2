@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 
 /// A semi-transparent overlay with a backdrop blur filter.
 ///
@@ -32,9 +33,9 @@ class BackdropBlurOverlay extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: ClipRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
             child: Container(
-              color: const Color(0x660F172A), // Slate-900 color at 40% opacity
+              color: AppColors.primary.withValues(alpha: 0.40), // Slate-900 color at 40% opacity
               child: child,
             ),
           ),

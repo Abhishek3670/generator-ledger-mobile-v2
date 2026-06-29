@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
+import '../widgets/create_user_modal.dart';
+import '../widgets/edit_user_modal.dart';
+import '../widgets/delete_user_dialog.dart';
 
 class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
@@ -13,6 +16,11 @@ class UserManagementScreen extends StatefulWidget {
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
   String _selectedUser = 'manohar';
+  bool _showCreateModal = false;
+  bool _showEditModal = false;
+  bool _showDeleteModal = false;
+  Map<String, String>? _selectedUserForEdit;
+  Map<String, String>? _selectedUserForDelete;
 
   final List<Map<String, String>> _users = [
     {
@@ -78,296 +86,380 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         userRole: 'Fleet Manager',
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Title and Header Action
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'User Management',
-                          style: AppTypography.displayLarge.copyWith(color: AppColors.primary),
+                  // Title and Header Action
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'User Management',
+                              style: AppTypography.displayLarge.copyWith(color: AppColors.primary),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Create users and control access roles.',
+                              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Create users and control access roles.',
-                          style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _showCreateModal = true;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: AppColors.primary,
+                          shape: const StadiumBorder(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         ),
-                      ],
-                    ),
+                        child: Text(
+                          'CREATE USER',
+                          style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Create user modal opening')),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: const StadiumBorder(),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    ),
-                    child: Text(
-                      'CREATE USER',
-                      style: AppTypography.labelCaps.copyWith(color: Colors.white, fontSize: 10),
-                    ),
+                  const SizedBox(height: 24),
+
+                  // Existing Users Header
+                  Text(
+                    'EXISTING USERS',
+                    style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                  const SizedBox(height: 8),
 
-              // Existing Users Header
-              Text(
-                'EXISTING USERS',
-                style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 8),
+                  // List of Users
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _users.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final user = _users[index];
+                      final initial = user['username']!.substring(0, 1).toUpperCase();
+                      final isOperator = user['role'] == 'operator';
+                      final isActive = user['status'] == 'ACTIVE';
 
-              // List of Users
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _users.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final user = _users[index];
-                  final initial = user['username']!.substring(0, 1).toUpperCase();
-                  final isOperator = user['role'] == 'operator';
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: AppColors.border),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
                           children: [
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: isOperator
-                                      ? AppColors.surfaceContainer
-                                      : AppColors.primary,
-                                  child: Text(
-                                    initial,
-                                    style: TextStyle(
-                                      color: isOperator ? AppColors.primary : Colors.white,
-                                      fontWeight: FontWeight.bold,
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: isOperator
+                                          ? AppColors.surfaceContainer
+                                          : AppColors.primary,
+                                      child: Text(
+                                        initial,
+                                        style: TextStyle(
+                                          color: isOperator ? AppColors.primary : Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          user['username']!,
+                                          style: AppTypography.headlineSmall.copyWith(color: AppColors.primary, fontSize: 16),
+                                        ),
+                                        Text(
+                                          user['role']!,
+                                          style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: isActive ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                                    borderRadius: BorderRadius.circular(9999),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isActive ? Icons.check : Icons.close,
+                                        size: 12,
+                                        color: isActive ? AppColors.success : AppColors.danger,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        user['status']!,
+                                        style: AppTypography.labelCaps.copyWith(
+                                          color: isActive ? AppColors.success : AppColors.danger,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Divider(color: AppColors.surfaceContainer, height: 1),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      user['username']!,
-                                      style: AppTypography.headlineSmall.copyWith(color: AppColors.primary, fontSize: 16),
+                                      'LAST LOGIN',
+                                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9),
                                     ),
+                                    const SizedBox(height: 2),
                                     Text(
-                                      user['role']!,
-                                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                      user['lastLogin']!,
+                                      style: AppTypography.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'CREATED',
+                                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      user['created']!,
+                                      style: AppTypography.bodySmall,
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFECFDF5),
-                                borderRadius: BorderRadius.circular(9999),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.check, size: 12, color: AppColors.success),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    user['status']!,
-                                    style: AppTypography.labelCaps.copyWith(color: AppColors.success, fontSize: 9, fontWeight: FontWeight.bold),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedUserForEdit = user;
+                                        _showEditModal = true;
+                                      });
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(color: AppColors.border),
+                                      shape: const StadiumBorder(),
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                    ),
+                                    child: Text(
+                                      'EDIT',
+                                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
+                                    ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        const Divider(color: AppColors.surfaceContainer, height: 1),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'LAST LOGIN',
-                                  style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  user['lastLogin']!,
-                                  style: AppTypography.bodySmall,
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'CREATED',
-                                  style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  user['created']!,
-                                  style: AppTypography.bodySmall,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedUserForDelete = user;
+                                        _showDeleteModal = true;
+                                      });
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(color: Color(0xFFFCA5A5)),
+                                      shape: const StadiumBorder(),
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                    ),
+                                    child: Text(
+                                      'DELETE',
+                                      style: AppTypography.labelCaps.copyWith(color: AppColors.danger, fontSize: 10),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: AppColors.border),
-                                  shape: const StadiumBorder(),
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                ),
-                                child: Text(
-                                  'EDIT',
-                                  style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFFFCA5A5)),
-                                  shape: const StadiumBorder(),
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                ),
-                                child: Text(
-                                  'DELETE',
-                                  style: AppTypography.labelCaps.copyWith(color: AppColors.danger, fontSize: 10),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-
-              // Access Control Header
-              Text(
-                'ACCESS CONTROL',
-                style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Permission Matrix',
-                    style: AppTypography.headlineMedium.copyWith(color: AppColors.primary),
-                  ),
-                  DropdownButton<String>(
-                    value: _selectedUser,
-                    underline: const SizedBox(),
-                    icon: const Icon(Icons.expand_more, color: AppColors.textSecondary),
-                    items: _users.map((user) {
-                      return DropdownMenuItem<String>(
-                        value: user['username'],
-                        child: Text(
-                          user['username']!,
-                          style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
                         ),
                       );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() {
-                          _selectedUser = val;
-                        });
-                      }
                     },
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Access Control Header
+                  Text(
+                    'ACCESS CONTROL',
+                    style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Permission Matrix',
+                        style: AppTypography.headlineMedium.copyWith(color: AppColors.primary),
+                      ),
+                      DropdownButton<String>(
+                        value: _users.any((u) => u['username'] == _selectedUser) ? _selectedUser : _users.first['username'],
+                        underline: const SizedBox(),
+                        icon: const Icon(Icons.expand_more, color: AppColors.textSecondary),
+                        items: _users.map((user) {
+                          return DropdownMenuItem<String>(
+                            value: user['username'],
+                            child: Text(
+                              user['username']!,
+                              style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _selectedUser = val;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Matrix Table Container
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: AppColors.border),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Table(
+                      columnWidths: const {
+                        0: FlexColumnWidth(4),
+                        1: FlexColumnWidth(2),
+                        2: FlexColumnWidth(2),
+                      },
+                      border: const TableBorder(
+                        horizontalInside: BorderSide(color: AppColors.surfaceContainer),
+                      ),
+                      children: [
+                        // Header Row
+                        TableRow(
+                          decoration: const BoxDecoration(color: AppColors.surfaceContainer),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Text('CAPABILITY', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9)),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Text('ADMIN', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9), textAlign: TextAlign.center),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Text('OPER', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9), textAlign: TextAlign.center),
+                            ),
+                          ],
+                        ),
+
+                        // Body Rows with Groups
+                        ..._buildTableRows(),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+            ),
 
-              // Matrix Table Container
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(4),
-                    1: FlexColumnWidth(2),
-                    2: FlexColumnWidth(2),
-                  },
-                  border: const TableBorder(
-                    horizontalInside: BorderSide(color: AppColors.surfaceContainer),
-                  ),
-                  children: [
-                    // Header Row
-                    TableRow(
-                      decoration: const BoxDecoration(color: AppColors.surfaceContainer),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text('CAPABILITY', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9)),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text('ADMIN', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9), textAlign: TextAlign.center),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text('OPER', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 9), textAlign: TextAlign.center),
-                        ),
-                      ],
-                    ),
-
-                    // Body Rows with Groups
-                    ..._buildTableRows(),
-                  ],
-                ),
+            // Modal Overlays
+            if (_showCreateModal)
+              CreateUserModal(
+                onClose: () => setState(() => _showCreateModal = false),
+                onSave: (newUser) {
+                  setState(() {
+                    _users.add(newUser);
+                    _showCreateModal = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('User "${newUser['username']}" created successfully')),
+                  );
+                },
               ),
-            ],
-          ),
+
+            if (_showEditModal && _selectedUserForEdit != null)
+              EditUserModal(
+                user: _selectedUserForEdit!,
+                onClose: () => setState(() {
+                  _showEditModal = false;
+                  _selectedUserForEdit = null;
+                }),
+                onSave: (updatedUser) {
+                  setState(() {
+                    final index = _users.indexWhere((u) => u['username'] == _selectedUserForEdit!['username']);
+                    if (index != -1) {
+                      _users[index] = updatedUser;
+                    }
+                    _showEditModal = false;
+                    _selectedUserForEdit = null;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('User "${updatedUser['username']}" updated successfully')),
+                  );
+                },
+              ),
+
+            if (_showDeleteModal && _selectedUserForDelete != null)
+              DeleteUserDialog(
+                user: _selectedUserForDelete!,
+                onClose: () => setState(() {
+                  _showDeleteModal = false;
+                  _selectedUserForDelete = null;
+                }),
+                onDelete: () {
+                  setState(() {
+                    _users.removeWhere((u) => u['username'] == _selectedUserForDelete!['username']);
+                    _showDeleteModal = false;
+                    _selectedUserForDelete = null;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('User deleted successfully')),
+                  );
+                },
+              ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        onPressed: () {
+          setState(() {
+            _showCreateModal = true;
+          });
+        },
+        backgroundColor: AppColors.accent,
+        foregroundColor: AppColors.primary,
         child: const Icon(Icons.add),
       ),
     );
@@ -398,8 +490,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         );
       }
 
-      final isAdminActive = _selectedUser == 'abhishek' || _selectedUser == 'owner';
-      final isOperActive = _selectedUser == 'manohar';
+      final activeUserMap = _users.firstWhere((u) => u['username'] == _selectedUser, orElse: () => _users.first);
+      final isAdminActive = activeUserMap['role'] == 'admin';
+      final isOperActive = activeUserMap['role'] == 'operator';
 
       final highlightAdmin = capability['admin'] == true && isAdminActive;
       final highlightOper = capability['oper'] == true && isOperActive;

@@ -168,7 +168,7 @@ class SystemHealthScreen extends StatelessWidget {
                 value: '12.7%',
                 description: 'Used 923.9 MB / Total 7,281.5 MB',
                 statusText: 'NORMAL',
-                lineColor: Colors.blue,
+                lineColor: AppColors.primary,
                 points: [35, 35, 35, 35, 35, 35, 35],
                 timeStart: '12:32:09',
                 timeEnd: '12:32:27',

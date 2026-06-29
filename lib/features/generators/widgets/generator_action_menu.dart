@@ -1,0 +1,56 @@
+import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../data/mock/mock_generators.dart';
+
+class GeneratorActionMenu extends StatelessWidget {
+  final MockGenerator generator;
+  final VoidCallback onClose;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final bool isVisible;
+
+  const GeneratorActionMenu({
+    super.key,
+    required this.generator,
+    required this.onClose,
+    required this.onEdit,
+    required this.onDelete,
+    this.isVisible = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ModalScaffold(
+      title: 'ACTIONS: ${generator.id.toUpperCase()}',
+      isVisible: isVisible,
+      onClose: onClose,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.edit, color: AppColors.primary),
+            title: Text('Edit Generator', style: AppTypography.bodyMedium),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            onTap: () {
+              onClose();
+              onEdit();
+            },
+          ),
+          const Divider(height: 1, color: AppColors.surfaceContainer),
+          ListTile(
+            leading: const Icon(Icons.delete, color: AppColors.danger),
+            title: Text('Delete Generator', style: AppTypography.bodyMedium.copyWith(color: AppColors.danger)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            onTap: () {
+              onClose();
+              onDelete();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}

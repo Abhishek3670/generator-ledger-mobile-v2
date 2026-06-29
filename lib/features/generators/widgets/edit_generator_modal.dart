@@ -5,39 +5,56 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 
-class AddGeneratorModal extends StatefulWidget {
+class EditGeneratorModal extends StatefulWidget {
+  final MockGenerator generator;
   final VoidCallback onClose;
   final Function(MockGenerator) onSave;
   final bool isVisible;
-  final String? initialCategory; // Optional: 'retailer', 'permanent', 'emergency'
 
-  const AddGeneratorModal({
+  const EditGeneratorModal({
     super.key,
+    required this.generator,
     required this.onClose,
     required this.onSave,
     this.isVisible = true,
-    this.initialCategory,
   });
 
   @override
-  State<AddGeneratorModal> createState() => _AddGeneratorModalState();
+  State<EditGeneratorModal> createState() => _EditGeneratorModalState();
 }
 
-class _AddGeneratorModalState extends State<AddGeneratorModal> {
+class _EditGeneratorModalState extends State<EditGeneratorModal> {
   final _formKey = GlobalKey<FormState>();
-  final _idController = TextEditingController();
-  final _typeController = TextEditingController();
-  final _notesController = TextEditingController();
-  String _selectedCapacity = '100';
+  late final TextEditingController _idController;
+  late final TextEditingController _typeController;
+  late final TextEditingController _notesController;
+  late String _selectedCapacity;
   String? _selectedCategory;
-  String _selectedStatus = 'active';
+  late String _selectedStatus;
 
   final List<String> _capacityOptions = const ['20', '30', '45', '50', '82', '100', '125'];
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.initialCategory;
+    _idController = TextEditingController(text: widget.generator.id);
+    _typeController = TextEditingController(text: widget.generator.type);
+    _notesController = TextEditingController(); // Notes are optional and start blank or can check if there are fields
+    _selectedCategory = widget.generator.category;
+    _selectedStatus = widget.generator.status;
+    
+    // Normalize capacity string (e.g., '250 kVA' or '250' -> select closest or extract number)
+    final numMatch = RegExp(r'\d+').firstMatch(widget.generator.capacity);
+    if (numMatch != null) {
+      final capVal = numMatch.group(0)!;
+      if (_capacityOptions.contains(capVal)) {
+        _selectedCapacity = capVal;
+      } else {
+        _selectedCapacity = _capacityOptions.last; // Default fallback
+      }
+    } else {
+      _selectedCapacity = '100';
+    }
   }
 
   @override
@@ -51,7 +68,7 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
   @override
   Widget build(BuildContext context) {
     return ModalScaffold(
-      title: 'ADD GENERATOR',
+      title: 'EDIT GENERATOR',
       isVisible: widget.isVisible,
       onClose: widget.onClose,
       body: Form(
@@ -70,7 +87,7 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
             ),
             const SizedBox(height: 16),
 
-            // Capacity Chips Selector
+            // Capacity Selector
             _buildFieldLabel('CAPACITY (kVA)'),
             const SizedBox(height: 8),
             Wrap(
@@ -192,14 +209,14 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
           ElevatedButton(
             onPressed: () {
               if (_formKey.currentState?.validate() ?? false) {
-                final newGen = MockGenerator(
+                final updatedGen = MockGenerator(
                   id: _idController.text.trim().toUpperCase(),
                   capacity: '$_selectedCapacity kVA',
                   type: _typeController.text.trim(),
                   status: _selectedStatus,
                   category: _selectedCategory!,
                 );
-                widget.onSave(newGen);
+                widget.onSave(updatedGen);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -208,7 +225,7 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
               shape: const StadiumBorder(),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: Text('CREATE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

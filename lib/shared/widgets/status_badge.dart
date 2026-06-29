@@ -43,23 +43,23 @@ class StatusBadge extends StatelessWidget {
 
     switch (type) {
       case StatusBadgeType.confirmed:
-        backgroundColor = const Color(0xFFD1FAE5); // Emerald-100
-        textColor = const Color(0xFF065F46); // Emerald-800
-        icon = Icons.check_circle_outline;
+        backgroundColor = AppColors.successBg;
+        textColor = AppColors.success;
+        icon = Icons.check;
         break;
       case StatusBadgeType.active:
-        backgroundColor = AppColors.success.withAlpha(26);
+        backgroundColor = AppColors.successBg;
         textColor = AppColors.success;
         icon = Icons.check;
         break;
       case StatusBadgeType.pending:
-        backgroundColor = const Color(0xFFFEF3C7); // Amber-100
-        textColor = const Color(0xFF92400E); // Amber-800
+        backgroundColor = AppColors.warningBg;
+        textColor = AppColors.warningText;
         icon = Icons.access_time;
         break;
       case StatusBadgeType.cancelled:
-        backgroundColor = const Color(0xFFFEE2E2); // Red-100
-        textColor = const Color(0xFF991B1B); // Red-800
+        backgroundColor = AppColors.dangerBg;
+        textColor = AppColors.dangerText;
         icon = Icons.cancel_outlined;
         break;
     }
@@ -79,7 +79,7 @@ class StatusBadge extends StatelessWidget {
             label,
             style: AppTypography.labelCaps.copyWith(
               color: textColor,
-              letterSpacing: 0.5, // Tighter for inline badge readability
+              fontWeight: FontWeight.bold,
               fontSize: 10,
             ),
           ),

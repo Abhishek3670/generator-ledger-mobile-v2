@@ -45,7 +45,7 @@ class DirectoryCard extends StatelessWidget {
           BoxShadow(
             offset: Offset(0, 1),
             blurRadius: 2,
-            color: Color(0x0D0F172A),
+            color: AppColors.shadowSoft,
           ),
         ],
       ),

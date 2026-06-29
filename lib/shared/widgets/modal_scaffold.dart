@@ -58,11 +58,11 @@ class ModalScaffold extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(AppDimensions.modalRadius),
                   border: Border.all(color: AppColors.border, width: 1),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      offset: Offset(0, 10),
+                      offset: const Offset(0, 10),
                       blurRadius: 30,
-                      color: Color(0x260F172A),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                     ),
                   ],
                 ),
@@ -77,9 +77,11 @@ class ModalScaffold extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
+                          const SizedBox(width: 40), // Balance for close button
                           Expanded(
                             child: Text(
                               title,
+                              textAlign: TextAlign.center,
                               style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
                             ),
                           ),

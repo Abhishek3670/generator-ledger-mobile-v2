@@ -6,6 +6,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
 import '../../../data/mock/mock_vendors.dart';
 import '../../../data/mock/mock_generators.dart';
+import '../widgets/edit_generator_modal.dart';
+import '../widgets/generator_action_menu.dart';
 
 class GeneratorDetailScreen extends StatefulWidget {
   final String generatorId;
@@ -26,6 +28,8 @@ class _GeneratorDetailScreenState extends State<GeneratorDetailScreen> {
 
   late List<MockBooking> _generatorBookings;
   late MockGenerator _generator;
+  bool _showActionMenu = false;
+  bool _showEditModal = false;
 
   @override
   void initState() {
@@ -150,12 +154,18 @@ class _GeneratorDetailScreenState extends State<GeneratorDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                _showActionMenu = true;
+              });
+            },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -560,6 +570,46 @@ class _GeneratorDetailScreenState extends State<GeneratorDetailScreen> {
             ],
           ),
         ),
+      ),
+
+          if (_showActionMenu)
+            GeneratorActionMenu(
+              generator: _generator,
+              onClose: () => setState(() => _showActionMenu = false),
+              onEdit: () {
+                setState(() {
+                  _showActionMenu = false;
+                  _showEditModal = true;
+                });
+              },
+              onDelete: () {
+                mockGenerators.removeWhere((g) => g.id == _generator.id);
+                context.pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Generator deleted successfully')),
+                );
+              },
+            ),
+
+          if (_showEditModal)
+            EditGeneratorModal(
+              generator: _generator,
+              onClose: () => setState(() => _showEditModal = false),
+              onSave: (updatedGen) {
+                setState(() {
+                  _generator = updatedGen;
+                  final idx = mockGenerators.indexWhere((g) => g.id == widget.generatorId);
+                  if (idx != -1) {
+                    mockGenerators[idx] = updatedGen;
+                  }
+                  _showEditModal = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Generator details updated successfully')),
+                );
+              },
+            ),
+        ],
       ),
     );
   }

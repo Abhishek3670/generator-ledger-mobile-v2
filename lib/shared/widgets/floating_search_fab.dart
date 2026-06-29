@@ -6,7 +6,7 @@ import '../../core/theme/app_typography.dart';
 /// A bottom-anchored action zone containing a pill-shaped search input and a circular Floating Action Button (FAB).
 ///
 /// Designed to follow the ergonomic component structure of directories.
-class FloatingSearchFAB extends StatelessWidget {
+class FloatingSearchFAB extends StatefulWidget {
   /// Hint text displayed in the search input field.
   final String searchHint;
 
@@ -33,6 +33,34 @@ class FloatingSearchFAB extends StatelessWidget {
   });
 
   @override
+  State<FloatingSearchFAB> createState() => _FloatingSearchFABState();
+}
+
+class _FloatingSearchFABState extends State<FloatingSearchFAB> {
+  late final FocusNode _focusNode;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppDimensions.mobileGutter),
@@ -44,23 +72,35 @@ class FloatingSearchFAB extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withAlpha(230),
                 borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
-                border: Border.all(color: AppColors.border, width: 1),
-                boxShadow: const [
-                  BoxShadow(
-                    offset: Offset(0, 1),
-                    blurRadius: 2,
-                    color: Color(0x0D0F172A),
-                  ),
+                border: Border.all(
+                  color: _isFocused ? AppColors.primary : AppColors.border,
+                  width: 1,
+                ),
+                boxShadow: [
+                  if (_isFocused)
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      blurRadius: 3,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 1),
+                    )
+                  else
+                    const BoxShadow(
+                      offset: Offset(0, 1),
+                      blurRadius: 2,
+                      color: AppColors.shadowSoft,
+                    ),
                 ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
                 child: TextField(
-                  controller: controller,
-                  onChanged: onSearchChanged,
+                  focusNode: _focusNode,
+                  controller: widget.controller,
+                  onChanged: widget.onSearchChanged,
                   style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
                   decoration: InputDecoration(
-                    hintText: searchHint,
+                    hintText: widget.searchHint,
                     hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
                     prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
                     border: InputBorder.none,
@@ -77,12 +117,12 @@ class FloatingSearchFAB extends StatelessWidget {
             width: 48,
             height: 48,
             child: FloatingActionButton(
-              onPressed: onFABPressed,
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              onPressed: widget.onFABPressed,
+              backgroundColor: AppColors.accent,
+              foregroundColor: AppColors.primary,
               elevation: 4,
               shape: const StadiumBorder(),
-              child: Icon(fabIcon),
+              child: Icon(widget.fabIcon),
             ),
           ),
         ],

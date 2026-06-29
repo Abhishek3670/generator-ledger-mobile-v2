@@ -5,35 +5,38 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_vendors.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 
-class AddVendorModal extends StatefulWidget {
+class EditVendorModal extends StatefulWidget {
+  final MockVendor vendor;
   final VoidCallback onClose;
   final Function(MockVendor) onSave;
   final bool isVisible;
-  final String? initialCategory; // Optional: 'retailer' or 'rental'
 
-  const AddVendorModal({
+  const EditVendorModal({
     super.key,
+    required this.vendor,
     required this.onClose,
     required this.onSave,
     this.isVisible = true,
-    this.initialCategory,
   });
 
   @override
-  State<AddVendorModal> createState() => _AddVendorModalState();
+  State<EditVendorModal> createState() => _EditVendorModalState();
 }
 
-class _AddVendorModalState extends State<AddVendorModal> {
+class _EditVendorModalState extends State<EditVendorModal> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _phoneController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _locationController;
+  late final TextEditingController _phoneController;
   String? _selectedCategory;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.initialCategory;
+    _nameController = TextEditingController(text: widget.vendor.name);
+    _locationController = TextEditingController(text: widget.vendor.location);
+    _phoneController = TextEditingController(text: widget.vendor.phone);
+    _selectedCategory = widget.vendor.category;
   }
 
   @override
@@ -47,7 +50,7 @@ class _AddVendorModalState extends State<AddVendorModal> {
   @override
   Widget build(BuildContext context) {
     return ModalScaffold(
-      title: 'ADD VENDOR',
+      title: 'EDIT VENDOR',
       isVisible: widget.isVisible,
       onClose: widget.onClose,
       body: Form(
@@ -93,7 +96,7 @@ class _AddVendorModalState extends State<AddVendorModal> {
             _buildFieldLabel('TYPE'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
+              value: _selectedCategory,
               hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
               decoration: _inputDecoration(),
               items: const [
@@ -127,23 +130,23 @@ class _AddVendorModalState extends State<AddVendorModal> {
           ElevatedButton(
             onPressed: () {
               if (_formKey.currentState?.validate() ?? false) {
-                final newVendor = MockVendor(
-                  id: 'VEN-${DateTime.now().millisecondsSinceEpoch}',
+                final updatedVendor = MockVendor(
+                  id: widget.vendor.id,
                   name: _nameController.text.trim(),
                   location: _locationController.text.trim(),
                   phone: _phoneController.text.trim(),
                   category: _selectedCategory!,
                 );
-                widget.onSave(newVendor);
+                widget.onSave(updatedVendor);
               }
             },
-             style: ElevatedButton.styleFrom(
+            style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
               foregroundColor: AppColors.primary,
               shape: const StadiumBorder(),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: Text('CREATE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
