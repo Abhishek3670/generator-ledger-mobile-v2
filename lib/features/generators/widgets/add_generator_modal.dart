@@ -119,7 +119,7 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
             _buildFieldLabel('CATEGORY'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
               decoration: _inputDecoration(),
               items: const [
@@ -149,7 +149,7 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
             _buildFieldLabel('STATUS'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: _inputDecoration(),
               items: const [
                 DropdownMenuItem<String>(

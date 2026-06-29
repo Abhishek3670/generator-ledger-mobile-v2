@@ -73,7 +73,7 @@ class _EditUserModalState extends State<EditUserModal> {
             _buildFieldLabel('ROLE'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: _inputDecoration(),
               items: const [
                 DropdownMenuItem(value: 'operator', child: Text('Operator')),
@@ -93,7 +93,7 @@ class _EditUserModalState extends State<EditUserModal> {
             _buildFieldLabel('STATUS'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: _inputDecoration(),
               items: const [
                 DropdownMenuItem(value: 'ACTIVE', child: Text('Active')),

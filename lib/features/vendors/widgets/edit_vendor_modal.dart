@@ -96,7 +96,7 @@ class _EditVendorModalState extends State<EditVendorModal> {
             _buildFieldLabel('TYPE'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
               decoration: _inputDecoration(),
               items: const [

@@ -1,1 +1,94 @@
-// TODO: Add mock bookings in the state management work order.
+class MockBooking {
+  final String id;
+  final String vendorId;
+  final String vendorName;
+  final String generatorId;
+  final String capacity;
+  final DateTime date;
+  final String status; // 'confirmed', 'pending', 'cancelled'
+
+  const MockBooking({
+    required this.id,
+    required this.vendorId,
+    required this.vendorName,
+    required this.generatorId,
+    required this.capacity,
+    required this.date,
+    required this.status,
+  });
+}
+
+final List<MockBooking> mockBookings = [
+  MockBooking(
+    id: 'BK-001',
+    vendorId: 'VEN011',
+    vendorName: 'Abraar',
+    generatorId: 'GEN-20KVA-3R-08',
+    capacity: '20 kVA',
+    date: DateTime.utc(2026, 4, 19),
+    status: 'confirmed',
+  ),
+  MockBooking(
+    id: 'BK-002',
+    vendorId: 'VEN011',
+    vendorName: 'Abraar',
+    generatorId: 'GEN-20KVA-3R-08',
+    capacity: '20 kVA',
+    date: DateTime.utc(2026, 4, 20),
+    status: 'confirmed',
+  ),
+  MockBooking(
+    id: 'BK-003',
+    vendorId: 'VEN011',
+    vendorName: 'Abraar',
+    generatorId: 'GEN-20KVA-BU-RB-05',
+    capacity: '20 kVA',
+    date: DateTime.utc(2026, 5, 1),
+    status: 'confirmed',
+  ),
+  MockBooking(
+    id: 'BK-004',
+    vendorId: 'VEN025',
+    vendorName: 'Ankit Singh',
+    generatorId: 'GEN-20KVA-3R-08',
+    capacity: '20 kVA',
+    date: DateTime.utc(2026, 4, 21),
+    status: 'confirmed',
+  ),
+  MockBooking(
+    id: 'BK-005',
+    vendorId: 'VEN089',
+    vendorName: 'Global Rentals Ltd',
+    generatorId: 'GEN-250KVA-XT',
+    capacity: '250 kVA',
+    date: DateTime.now(),
+    status: 'confirmed',
+  ),
+  MockBooking(
+    id: 'BK-006',
+    vendorId: 'VEN042',
+    vendorName: 'Apex Logistics',
+    generatorId: 'GEN-500KVA-MAX',
+    capacity: '500 kVA',
+    date: DateTime.now(),
+    status: 'pending',
+  ),
+  MockBooking(
+    id: 'BK-007',
+    vendorId: 'VEN089',
+    vendorName: 'Global Rentals Ltd',
+    generatorId: 'GEN-100KVA-ST',
+    capacity: '100 kVA',
+    date: DateTime.now().subtract(const Duration(days: 1)),
+    status: 'confirmed',
+  ),
+  MockBooking(
+    id: 'BK-008',
+    vendorId: 'VEN042',
+    vendorName: 'Apex Logistics',
+    generatorId: 'GEN-250KVA-XT',
+    capacity: '250 kVA',
+    date: DateTime.now().add(const Duration(days: 4)),
+    status: 'pending',
+  ),
+];

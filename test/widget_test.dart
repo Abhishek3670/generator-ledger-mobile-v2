@@ -6,6 +6,6 @@ void main() {
     await tester.pumpWidget(const LedgerApp());
     await tester.pump();
 
-    expect(find.text('Dashboard Screen'), findsNWidgets(2));
+    expect(find.text('DASHBOARD'), findsNWidgets(2));
   });
 }

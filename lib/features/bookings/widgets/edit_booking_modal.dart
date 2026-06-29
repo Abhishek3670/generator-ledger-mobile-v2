@@ -99,7 +99,7 @@ class _EditBookingModalState extends State<EditBookingModal> {
             _buildFieldLabel('VENDOR'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedVendorId,
+              initialValue: _selectedVendorId,
               hint: Text('Select Vendor', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
               decoration: _inputDecoration(),
               items: mockVendors.map((vendor) {
@@ -158,7 +158,7 @@ class _EditBookingModalState extends State<EditBookingModal> {
               _buildFieldLabel('GENERATOR'),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedGeneratorId,
+                initialValue: _selectedGeneratorId,
                 hint: Text('Select Generator', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
                 decoration: _inputDecoration(),
                 items: mockGenerators.map((gen) {

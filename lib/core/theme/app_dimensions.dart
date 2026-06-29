@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 abstract final class AppDimensions {
   static const spacingUnit = 4.0;
+  static const spacingXs = 4.0;
+  static const spacingXl = 32.0;
   static const mobileGutter = 16.0;
   static const structuralRadius = 16.0;
   static const functionalRadius = 8.0;

@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/widgets/admin_bottom_nav_bar.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
-import '../../shared/widgets/side_navigation_drawer.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_typography.dart';
+import '../../features/vendors/screens/vendor_directory_screen.dart';
+import '../../features/generators/screens/generators_directory_screen.dart';
+import '../../features/bookings/screens/bookings_directory_screen.dart';
+import '../../features/dashboard/screens/dashboard_screen.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/billing/screens/billing_preview_screen.dart';
+import '../../features/generators/screens/generator_detail_screen.dart';
+import '../../features/admin/screens/system_health_screen.dart';
+import '../../features/admin/screens/user_management_screen.dart';
+import '../../features/admin/screens/integrations_screen.dart';
 import 'route_names.dart';
 
 /// Full router configuration for the application.
@@ -25,18 +32,12 @@ abstract final class AppRouter {
       GoRoute(
         path: '/login',
         name: RouteNames.login,
-        builder: (context, state) => const _PlaceholderScreen(
-          title: 'Login Screen',
-          showDrawer: false,
-        ),
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/billing',
         name: RouteNames.billing,
-        builder: (context, state) => const _PlaceholderScreen(
-          title: 'Billing Preview',
-          showDrawer: false,
-        ),
+        builder: (context, state) => const BillingPreviewScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -48,10 +49,7 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/dashboard',
                 name: RouteNames.dashboard,
-                builder: (context, state) => const _PlaceholderScreen(
-                  title: 'Dashboard Screen',
-                  showDrawer: true,
-                ),
+                builder: (context, state) => const DashboardScreen(),
               ),
             ],
           ),
@@ -60,10 +58,7 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/bookings',
                 name: RouteNames.bookings,
-                builder: (context, state) => const _PlaceholderScreen(
-                  title: 'Bookings Directory',
-                  showDrawer: true,
-                ),
+                builder: (context, state) => const BookingsDirectoryScreen(),
               ),
             ],
           ),
@@ -72,20 +67,14 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/generators',
                 name: RouteNames.generators,
-                builder: (context, state) => const _PlaceholderScreen(
-                  title: 'Generators Directory',
-                  showDrawer: true,
-                ),
+                builder: (context, state) => const GeneratorsDirectoryScreen(),
                 routes: [
                   GoRoute(
                     path: ':id',
                     name: RouteNames.generatorDetail,
                     builder: (context, state) {
                       final id = state.pathParameters['id'] ?? '';
-                      return _PlaceholderScreen(
-                        title: 'Generator Detail ID: $id',
-                        showDrawer: false,
-                      );
+                      return GeneratorDetailScreen(generatorId: id);
                     },
                   ),
                 ],
@@ -97,10 +86,7 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/vendors',
                 name: RouteNames.vendors,
-                builder: (context, state) => const _PlaceholderScreen(
-                  title: 'Vendor Directory',
-                  showDrawer: true,
-                ),
+                builder: (context, state) => const VendorDirectoryScreen(),
               ),
             ],
           ),
@@ -116,10 +102,7 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/admin/health',
                 name: RouteNames.adminHealth,
-                builder: (context, state) => const _PlaceholderScreen(
-                  title: 'System Health Monitor',
-                  showDrawer: true,
-                ),
+                builder: (context, state) => const SystemHealthScreen(),
               ),
             ],
           ),
@@ -128,10 +111,7 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/admin/users',
                 name: RouteNames.adminUsers,
-                builder: (context, state) => const _PlaceholderScreen(
-                  title: 'User Management',
-                  showDrawer: true,
-                ),
+                builder: (context, state) => const UserManagementScreen(),
               ),
             ],
           ),
@@ -140,10 +120,7 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/admin/integrations',
                 name: RouteNames.adminIntegrations,
-                builder: (context, state) => const _PlaceholderScreen(
-                  title: 'Integrations Coming Soon',
-                  showDrawer: true,
-                ),
+                builder: (context, state) => const IntegrationsScreen(),
               ),
             ],
           ),
@@ -197,67 +174,4 @@ class _AdminShell extends StatelessWidget {
   }
 }
 
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final bool showDrawer;
 
-  const _PlaceholderScreen({
-    required this.title,
-    required this.showDrawer,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title, style: AppTypography.headlineSmall.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      drawer: showDrawer
-          ? SideNavigationDrawer(
-              currentRoute: location,
-              onNavigate: (routePath) {
-                if (routePath == '/billing') {
-                  context.push(routePath);
-                } else if (routePath.startsWith('/admin')) {
-                  context.go(routePath);
-                } else {
-                  context.go(routePath);
-                }
-              },
-              userName: 'Abhishek Sharma',
-              userRole: 'Fleet Manager',
-            )
-          : null,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: AppTypography.headlineMedium.copyWith(color: AppColors.primary),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Route Location: $location',
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-            ),
-            if (location == '/login') ...[
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  AppRouter.isLoggedIn = true;
-                  context.go('/dashboard');
-                },
-                child: const Text('Login Mock Action'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -27,9 +27,9 @@ class AdminBottomNavBar extends StatelessWidget {
       type: BottomNavigationBarType.fixed,
       backgroundColor: AppColors.primary,
       selectedItemColor: AppColors.accent,
-      unselectedItemColor: AppColors.textSecondary,
+      unselectedItemColor: AppColors.slate400,
       selectedLabelStyle: AppTypography.labelCaps.copyWith(color: AppColors.accent),
-      unselectedLabelStyle: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+      unselectedLabelStyle: AppTypography.labelCaps.copyWith(color: AppColors.slate400),
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.health_and_safety_outlined),
