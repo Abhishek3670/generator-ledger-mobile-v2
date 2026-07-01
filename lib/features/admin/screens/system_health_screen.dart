@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
+import '../providers/system_health_provider.dart';
+import '../widgets/health_metric_card.dart';
 
-class SystemHealthScreen extends StatelessWidget {
+class SystemHealthScreen extends ConsumerWidget {
   const SystemHealthScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final health = ref.watch(systemHealthProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -25,6 +30,7 @@ class SystemHealthScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
+              ref.read(systemHealthProvider.notifier).refresh();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Metrics refreshed')),
               );
@@ -98,7 +104,7 @@ class SystemHealthScreen extends StatelessWidget {
                                   const Icon(Icons.check_circle, color: AppColors.success, size: 14),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Healthy',
+                                    health.isHealthy ? 'Healthy' : 'Attention',
                                     style: AppTypography.labelCaps.copyWith(color: AppColors.success, fontSize: 10),
                                   ),
                                 ],
@@ -115,7 +121,8 @@ class SystemHealthScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '4/20/2026, 12:32:08 PM',
+                              '${health.lastChecked.month}/${health.lastChecked.day}/${health.lastChecked.year}, '
+                              '${health.lastChecked.hour.toString().padLeft(2, '0')}:${health.lastChecked.minute.toString().padLeft(2, '0')}:${health.lastChecked.second.toString().padLeft(2, '0')}',
                               style: AppTypography.bodySmall.copyWith(fontFamily: 'Courier', fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -140,7 +147,7 @@ class SystemHealthScreen extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        'postgresql://genset_user:***@postgres-db:5432/ledger_db',
+                        health.dbConnection,
                         style: AppTypography.bodySmall.copyWith(fontFamily: 'Courier', color: AppColors.primary),
                       ),
                     ),
@@ -150,39 +157,39 @@ class SystemHealthScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // CPU Usage Card
-              _buildMetricCard(
+              HealthMetricCard(
                 title: 'CPU USAGE',
-                value: '0.2%',
+                value: '${health.cpu.toStringAsFixed(1)}%',
                 description: 'System-wide CPU utilization.',
                 statusText: 'NORMAL',
                 lineColor: AppColors.primary,
-                points: [38, 38, 38, 38, 35, 38, 38],
+                points: health.cpuTrend,
                 timeStart: '12:32:09',
                 timeEnd: '12:32:27',
               ),
               const SizedBox(height: 16),
 
               // Memory Usage Card
-              _buildMetricCard(
+              HealthMetricCard(
                 title: 'MEMORY USAGE',
-                value: '12.7%',
+                value: '${health.memory.toStringAsFixed(1)}%',
                 description: 'Used 923.9 MB / Total 7,281.5 MB',
                 statusText: 'NORMAL',
                 lineColor: AppColors.primary,
-                points: [35, 35, 35, 35, 35, 35, 35],
+                points: health.memoryTrend,
                 timeStart: '12:32:09',
                 timeEnd: '12:32:27',
               ),
               const SizedBox(height: 16),
 
               // Temperature Card
-              _buildMetricCard(
+              HealthMetricCard(
                 title: 'TEMPERATURE',
-                value: '39.9°C',
+                value: '${health.temperature.toStringAsFixed(1)}°C',
                 description: 'Sensor: k10temp',
                 statusText: 'NORMAL',
                 lineColor: AppColors.danger,
-                points: [30, 30, 29, 29, 30, 20, 22, 25],
+                points: health.temperatureTrend,
                 timeStart: '12:32:09',
                 timeEnd: '12:32:27',
               ),
@@ -226,7 +233,7 @@ class SystemHealthScreen extends StatelessWidget {
                           style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
                         ),
                         Text(
-                          '4.0.2',
+                          health.appVersion,
                           style: AppTypography.bodySmall,
                         ),
                       ],
@@ -240,129 +247,4 @@ class SystemHealthScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String description,
-    required String statusText,
-    required Color lineColor,
-    required List<double> points,
-    required String timeStart,
-    required String timeEnd,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(9999),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                child: Text(
-                  statusText,
-                  style: const TextStyle(
-                    color: AppColors.success,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: AppTypography.displayLarge.copyWith(fontSize: 28, color: AppColors.primary),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            description,
-            style: AppTypography.bodySmall.copyWith(fontSize: 12, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          // Sparkline view
-          SizedBox(
-            height: 40,
-            child: CustomPaint(
-              painter: _SparklinePainter(points: points, lineColor: lineColor),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(timeStart, style: const TextStyle(fontSize: 8, color: AppColors.textSecondary)),
-              Text(timeEnd, style: const TextStyle(fontSize: 8, color: AppColors.textSecondary)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SparklinePainter extends CustomPainter {
-  final List<double> points;
-  final Color lineColor;
-
-  _SparklinePainter({required this.points, required this.lineColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-
-    final paintLine = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final paintGrid = Paint()
-      ..color = const Color(0xFFE2E8F0)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    // Draw reference grids
-    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), paintGrid);
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height), paintGrid);
-
-    final path = Path();
-    final xStep = size.width / (points.length - 1);
-    
-    // Scale points to fit the height (assuming points range 0..40 where 40 is bottom/0 offset)
-    const maxVal = 40.0;
-    
-    for (int i = 0; i < points.length; i++) {
-      final x = i * xStep;
-      // Invert Y coordinate because Flutter canvas 0,0 is top-left
-      final y = (points[i] / maxVal) * size.height;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    canvas.drawPath(path, paintLine);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -1,50 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/models/user.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
-import '../widgets/create_user_modal.dart';
+import '../providers/user_management_provider.dart';
+import '../modals/add_user_modal.dart';
 import '../widgets/edit_user_modal.dart';
 import '../widgets/delete_user_dialog.dart';
 
-class UserManagementScreen extends StatefulWidget {
+class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
 
   @override
-  State<UserManagementScreen> createState() => _UserManagementScreenState();
+  ConsumerState<UserManagementScreen> createState() => _UserManagementScreenState();
 }
 
-class _UserManagementScreenState extends State<UserManagementScreen> {
+class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   String _selectedUser = 'manohar';
   bool _showCreateModal = false;
   bool _showEditModal = false;
   bool _showDeleteModal = false;
   Map<String, String>? _selectedUserForEdit;
   Map<String, String>? _selectedUserForDelete;
-
-  final List<Map<String, String>> _users = [
-    {
-      'username': 'manohar',
-      'role': 'operator',
-      'status': 'ACTIVE',
-      'lastLogin': '2025-03-08',
-      'created': '2025-02-15',
-    },
-    {
-      'username': 'abhishek',
-      'role': 'admin',
-      'status': 'ACTIVE',
-      'lastLogin': '2025-04-20',
-      'created': '2025-02-09',
-    },
-    {
-      'username': 'owner',
-      'role': 'admin',
-      'status': 'ACTIVE',
-      'lastLogin': '2025-04-19',
-      'created': '2025-02-09',
-    },
-  ];
 
   final List<Map<String, dynamic>> _capabilities = [
     // System & Admin group
@@ -64,6 +43,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final users = ref.watch(userProvider).map((user) => user.toMap()).toList();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -145,10 +126,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _users.length,
+                    itemCount: users.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      final user = _users[index];
+                      final user = users[index];
                       final initial = user['username']!.substring(0, 1).toUpperCase();
                       final isOperator = user['role'] == 'operator';
                       final isActive = user['status'] == 'ACTIVE';
@@ -324,10 +305,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         style: AppTypography.headlineMedium.copyWith(color: AppColors.primary),
                       ),
                       DropdownButton<String>(
-                        value: _users.any((u) => u['username'] == _selectedUser) ? _selectedUser : _users.first['username'],
+                        value: users.any((u) => u['username'] == _selectedUser) ? _selectedUser : users.first['username'],
                         underline: const SizedBox(),
                         icon: const Icon(Icons.expand_more, color: AppColors.textSecondary),
-                        items: _users.map((user) {
+                        items: users.map((user) {
                           return DropdownMenuItem<String>(
                             value: user['username'],
                             child: Text(
@@ -386,7 +367,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         ),
 
                         // Body Rows with Groups
-                        ..._buildTableRows(),
+                        ..._buildTableRows(users),
                       ],
                     ),
                   ),
@@ -396,13 +377,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
             // Modal Overlays
             if (_showCreateModal)
-              CreateUserModal(
+              AddUserModal(
                 onClose: () => setState(() => _showCreateModal = false),
                 onSave: (newUser) {
-                  setState(() {
-                    _users.add(newUser);
-                    _showCreateModal = false;
-                  });
+                  ref.read(userProvider.notifier).addUser(User.fromMap(newUser));
+                  setState(() => _showCreateModal = false);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('User "${newUser['username']}" created successfully')),
                   );
@@ -417,11 +396,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   _selectedUserForEdit = null;
                 }),
                 onSave: (updatedUser) {
+                  ref.read(userProvider.notifier).updateUser(
+                        User.fromMap(updatedUser),
+                        _selectedUserForEdit!['username']!,
+                      );
                   setState(() {
-                    final index = _users.indexWhere((u) => u['username'] == _selectedUserForEdit!['username']);
-                    if (index != -1) {
-                      _users[index] = updatedUser;
-                    }
                     _showEditModal = false;
                     _selectedUserForEdit = null;
                   });
@@ -439,8 +418,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   _selectedUserForDelete = null;
                 }),
                 onDelete: () {
+                  ref
+                      .read(userProvider.notifier)
+                      .deleteUser(_selectedUserForDelete!['username']!);
                   setState(() {
-                    _users.removeWhere((u) => u['username'] == _selectedUserForDelete!['username']);
                     _showDeleteModal = false;
                     _selectedUserForDelete = null;
                   });
@@ -465,7 +446,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     );
   }
 
-  List<TableRow> _buildTableRows() {
+  List<TableRow> _buildTableRows(List<Map<String, String>> users) {
     final List<TableRow> rows = [];
     String currentGroup = '';
 
@@ -490,7 +471,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         );
       }
 
-      final activeUserMap = _users.firstWhere((u) => u['username'] == _selectedUser, orElse: () => _users.first);
+      final activeUserMap =
+          users.firstWhere((u) => u['username'] == _selectedUser, orElse: () => users.first);
       final isAdminActive = activeUserMap['role'] == 'admin';
       final isOperActive = activeUserMap['role'] == 'operator';
 
