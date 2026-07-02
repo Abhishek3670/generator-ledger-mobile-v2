@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ledger/features/generators/widgets/edit_generator_modal.dart';
+import 'package:ledger/features/generators/modals/edit_generator_modal.dart';
 import 'package:ledger/shared/models/generator.dart';
 
 void main() {

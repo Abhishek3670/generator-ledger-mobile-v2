@@ -7,7 +7,8 @@ import '../../../data/mock/mock_bookings.dart';
 import '../../../data/mock/mock_vendors.dart';
 import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
-
+import '../../../shared/widgets/assignment_mode_toggle.dart';
+import '../../../shared/widgets/capacity_chip_selector.dart';
 class AddBookingModal extends StatefulWidget {
   final VoidCallback onClose;
   final Function(MockBooking) onSave;
@@ -105,36 +106,9 @@ class _AddBookingModalState extends State<AddBookingModal> {
             // Assignment Mode Segmented Toggle
             _buildFieldLabel('GENERATOR ASSIGNMENT'),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => _assignmentMode = 'id'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _assignmentMode == 'id' ? AppColors.primary : AppColors.surfaceContainer,
-                      foregroundColor: _assignmentMode == 'id' ? Colors.white : AppColors.textSecondary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    child: Text('Generator ID', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => _assignmentMode = 'capacity'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _assignmentMode == 'capacity' ? AppColors.primary : AppColors.surfaceContainer,
-                      foregroundColor: _assignmentMode == 'capacity' ? Colors.white : AppColors.textSecondary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    child: Text('Capacity', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
+            AssignmentModeToggle(
+              currentMode: _assignmentMode,
+              onModeChanged: (mode) => setState(() => _assignmentMode = mode),
             ),
             const SizedBox(height: 16),
 
@@ -176,35 +150,14 @@ class _AddBookingModalState extends State<AddBookingModal> {
               // Capacity Radio Chips
               _buildFieldLabel('CAPACITY (kVA)'),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: const ['25', '50', '100', '250'].map((cap) {
-                  final isSelected = _selectedCapacity == cap;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCapacity = cap;
-                        _capacityController.text = '$cap kVA';
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : Colors.white,
-                        border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: 1),
-                        borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
-                      ),
-                      child: Text(
-                        cap,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: isSelected ? Colors.white : AppColors.textSecondary,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+              CapacityChipSelector(
+                selectedCapacity: _selectedCapacity,
+                onCapacitySelected: (cap) {
+                  setState(() {
+                    _selectedCapacity = cap;
+                    _capacityController.text = '$cap kVA';
+                  });
+                },
               ),
             ],
             const SizedBox(height: 16),

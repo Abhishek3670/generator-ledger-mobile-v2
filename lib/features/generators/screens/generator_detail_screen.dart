@@ -6,7 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
 import '../../../data/mock/mock_vendors.dart';
 import '../../../data/mock/mock_generators.dart';
-import '../widgets/edit_generator_modal.dart';
+import '../modals/edit_generator_modal.dart';
 import '../widgets/generator_action_menu.dart';
 
 class GeneratorDetailScreen extends StatefulWidget {

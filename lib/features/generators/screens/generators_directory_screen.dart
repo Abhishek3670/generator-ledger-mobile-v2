@@ -11,9 +11,9 @@ import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../widgets/inventory_group_section.dart';
-import '../widgets/add_generator_modal.dart';
-import '../widgets/edit_generator_modal.dart';
-import '../widgets/generator_detail_modal.dart';
+import '../modals/add_generator_modal.dart';
+import '../modals/edit_generator_modal.dart';
+import '../modals/generator_detail_modal.dart';
 import '../widgets/generator_action_menu.dart';
 import '../providers/generators_provider.dart';
 

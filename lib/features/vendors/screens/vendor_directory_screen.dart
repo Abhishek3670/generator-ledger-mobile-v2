@@ -10,9 +10,9 @@ import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../widgets/vendor_card.dart';
-import '../widgets/add_vendor_modal.dart';
-import '../widgets/edit_vendor_modal.dart';
-import '../widgets/delete_vendor_dialog.dart';
+import '../modals/add_vendor_modal.dart';
+import '../modals/edit_vendor_modal.dart';
+import '../../../shared/widgets/confirmation_dialog.dart';
 import '../widgets/vendor_action_menu.dart';
 import '../providers/vendors_provider.dart';
 
@@ -303,13 +303,16 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
 
             // Delete Vendor Dialog
             if (_showDeleteModal && _selectedVendorForDelete != null)
-              DeleteVendorDialog(
-                vendor: _selectedVendorForDelete!,
-                onClose: () => setState(() {
+              ConfirmationDialog(
+                title: 'DELETE VENDOR',
+                message: 'Are you sure you want to delete vendor "${_selectedVendorForDelete!.name}"? This action cannot be undone.',
+                confirmText: 'DELETE',
+                isDestructive: true,
+                onCancel: () => setState(() {
                   _showDeleteModal = false;
                   _selectedVendorForDelete = null;
                 }),
-                onDelete: () {
+                onConfirm: () {
                   ref
                       .read(vendorProvider.notifier)
                       .deleteVendor(_selectedVendorForDelete!.id);

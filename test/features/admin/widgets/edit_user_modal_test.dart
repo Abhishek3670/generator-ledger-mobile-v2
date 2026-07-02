@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ledger/features/admin/widgets/edit_user_modal.dart';
+import 'package:ledger/features/admin/modals/edit_user_modal.dart';
 
 void main() {
   testWidgets('EditUserModal renders successfully', (WidgetTester tester) async {

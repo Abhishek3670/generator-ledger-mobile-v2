@@ -5,7 +5,7 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
 import '../../../shared/widgets/status_badge.dart';
-
+import 'compact_booking_row.dart';
 /// List displaying mock bookings for the selected date inside a single compact bordered container.
 class DailyBookingsList extends StatelessWidget {
   /// The currently selected day.
@@ -96,79 +96,11 @@ class DailyBookingsList extends StatelessWidget {
               separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final booking = dailyBookings[index];
-                final statusType = _getStatusBadgeType(booking.status);
-
-                return Container(
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border, width: 1),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    booking.vendorName,
-                                    style: AppTypography.bodySmall.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                StatusBadge(
-                                  label: booking.status.toUpperCase(),
-                                  type: statusType,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'ID: ${booking.id}',
-                              style: AppTypography.labelCaps.copyWith(
-                                fontSize: 10,
-                                color: AppColors.textSecondary,
-                                letterSpacing: 0,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.electric_bolt,
-                                  size: 14,
-                                  color: AppColors.primary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  booking.generatorId,
-                                  style: AppTypography.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.primary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
+                return CompactBookingRow(
+                  booking: booking,
+                  onTap: () {
+                    // Navigate to booking details (omitted for now)
+                  },
                 );
               },
             ),
@@ -197,15 +129,5 @@ class DailyBookingsList extends StatelessWidget {
     );
   }
 
-  StatusBadgeType _getStatusBadgeType(String status) {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return StatusBadgeType.confirmed;
-      case 'pending':
-        return StatusBadgeType.pending;
-      case 'cancelled':
-      default:
-        return StatusBadgeType.cancelled;
-    }
-  }
+
 }

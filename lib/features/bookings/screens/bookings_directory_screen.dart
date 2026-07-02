@@ -9,7 +9,7 @@ import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../widgets/vendor_booking_group.dart';
-import '../widgets/add_booking_modal.dart';
+import '../modals/add_booking_modal.dart';
 import '../widgets/edit_booking_modal.dart';
 import '../providers/bookings_provider.dart';
 import '../../vendors/providers/vendors_provider.dart';

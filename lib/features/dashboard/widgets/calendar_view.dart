@@ -220,11 +220,16 @@ class _CalendarViewState extends State<CalendarView> {
                     return Expanded(
                       child: Container(
                         height: 80,
-                        color: Colors.white,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: AppColors.border, width: 1),
+                          ),
+                        ),
                         alignment: Alignment.center,
                         child: Text(
                           header,
-                          style: AppTypography.headlineSmall.copyWith(
+                          style: AppTypography.headlineMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),

@@ -4,7 +4,7 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
-
+import '../../../shared/widgets/capacity_chip_selector.dart';
 class AddGeneratorModal extends StatefulWidget {
   final VoidCallback onClose;
   final Function(MockGenerator) onSave;
@@ -32,7 +32,6 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
   String? _selectedCategory;
   String _selectedStatus = 'active';
 
-  final List<String> _capacityOptions = const ['25', '50', '100', '250'];
 
   @override
   void initState() {
@@ -73,34 +72,13 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
             // Capacity Chips Selector
             _buildFieldLabel('CAPACITY (kVA)'),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _capacityOptions.map((cap) {
-                final isSelected = _selectedCapacity == cap;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCapacity = cap;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : Colors.white,
-                      border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: 1),
-                      borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
-                    ),
-                    child: Text(
-                      cap,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isSelected ? Colors.white : AppColors.textSecondary,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            CapacityChipSelector(
+              selectedCapacity: _selectedCapacity,
+              onCapacitySelected: (cap) {
+                setState(() {
+                  _selectedCapacity = cap;
+                });
+              },
             ),
             const SizedBox(height: 16),
 

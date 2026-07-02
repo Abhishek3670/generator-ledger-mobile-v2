@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ledger/features/bookings/widgets/add_booking_modal.dart';
+import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
 
 void main() {
   testWidgets('AddBookingModal renders successfully', (WidgetTester tester) async {
