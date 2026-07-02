@@ -58,6 +58,7 @@ class _EditUserModalState extends State<EditUserModal> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _usernameController,
+              readOnly: true,
               style: AppTypography.bodyMedium,
               decoration: _inputDecoration(hintText: 'Enter username'),
               validator: (value) {

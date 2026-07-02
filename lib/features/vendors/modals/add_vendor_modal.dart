@@ -28,6 +28,7 @@ class _AddVendorModalState extends State<AddVendorModal> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _notesController = TextEditingController();
   String? _selectedCategory;
 
   @override
@@ -41,6 +42,7 @@ class _AddVendorModalState extends State<AddVendorModal> {
     _nameController.dispose();
     _locationController.dispose();
     _phoneController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -112,6 +114,17 @@ class _AddVendorModalState extends State<AddVendorModal> {
                 });
               },
               validator: (value) => value == null ? 'Please select a type' : null,
+            ),
+            const SizedBox(height: 16),
+
+            // Notes
+            _buildFieldLabel('NOTES (OPTIONAL)'),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _notesController,
+              maxLines: 3,
+              style: AppTypography.bodyMedium,
+              decoration: _inputDecoration(hintText: 'Add any relevant details...'),
             ),
           ],
         ),
