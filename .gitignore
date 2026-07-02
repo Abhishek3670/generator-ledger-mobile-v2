@@ -2,7 +2,7 @@ stitch_generator_ledger_design/
 .sync/
 AGENTS.md
 PLAN.md
-graphify-out/**
+graphify-out/
 screens
 
 # Flutter/Dart generated files
