@@ -219,12 +219,12 @@ class _CalendarViewState extends State<CalendarView> {
                   children: weekdayHeaders.map((header) {
                     return Expanded(
                       child: Container(
-                        height: 36,
+                        height: 80,
                         color: Colors.white,
                         alignment: Alignment.center,
                         child: Text(
                           header,
-                          style: AppTypography.labelCaps.copyWith(
+                          style: AppTypography.headlineSmall.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
