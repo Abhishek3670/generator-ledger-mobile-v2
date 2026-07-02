@@ -76,6 +76,7 @@ class _CalendarViewState extends State<CalendarView> {
     final weekdayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
@@ -216,14 +217,19 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 // Day Headers Row
                 Row(
-                  children: weekdayHeaders.map((header) {
+                  children: weekdayHeaders.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final header = entry.value;
                     return Expanded(
                       child: Container(
                         height: 80,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border(
-                            bottom: BorderSide(color: AppColors.border, width: 1),
+                            bottom: const BorderSide(color: AppColors.border, width: 1),
+                            right: index < 6
+                                ? const BorderSide(color: AppColors.border, width: 1)
+                                : BorderSide.none,
                           ),
                         ),
                         alignment: Alignment.center,
@@ -262,7 +268,14 @@ class _CalendarViewState extends State<CalendarView> {
                           return Expanded(
                             child: Container(
                               height: 80,
-                              color: AppColors.surface, // bg-surface-light / container-low
+                              decoration: BoxDecoration(
+                                color: AppColors.surface, // bg-surface-light / container-low
+                                border: Border(
+                                  right: dayIndex < 6
+                                      ? const BorderSide(color: AppColors.border, width: 1)
+                                      : BorderSide.none,
+                                ),
+                              ),
                               padding: const EdgeInsets.all(4.0),
                               alignment: Alignment.topRight,
                               child: Text(
@@ -293,6 +306,11 @@ class _CalendarViewState extends State<CalendarView> {
                                 color: isSelected
                                     ? AppColors.tertiaryFixed.withValues(alpha: 0.15)
                                     : Colors.white,
+                                border: Border(
+                                  right: dayIndex < 6
+                                      ? const BorderSide(color: AppColors.border, width: 1)
+                                      : BorderSide.none,
+                                ),
                               ),
                               padding: const EdgeInsets.all(4.0),
                               child: Column(

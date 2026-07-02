@@ -5,12 +5,12 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1212 nodes · 1473 edges · 125 communities (111 shown, 14 thin omitted)
+- 1212 nodes · 1473 edges · 124 communities (110 shown, 14 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 8 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f9bbd4fa`
+- Built from commit: `530ead4c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -111,7 +111,6 @@
 - [[_COMMUNITY_Community 93|Community 93]]
 - [[_COMMUNITY_Community 94|Community 94]]
 - [[_COMMUNITY_Community 95|Community 95]]
-- [[_COMMUNITY_Community 96|Community 96]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `package:flutter/material.dart` - 81 edges
@@ -137,7 +136,7 @@
 - `OnCreate()` --calls--> `SetChildContent()`  [INFERRED]
   windows/runner/flutter_window.cpp → windows/runner/win32_window.cpp
 
-## Communities (125 total, 14 thin omitted)
+## Communities (124 total, 14 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.04
@@ -189,11 +188,11 @@ Nodes (24): 2.1 Key Visual Discrepancies (Based on Available Screenshots), 2.2 M
 
 ### Community 12 - "Community 12"
 Cohesion: 0.1
-Nodes (20): ../modals/add_vendor_modal.dart, ../modals/edit_vendor_modal.dart, ../providers/vendors_provider.dart, build, dispose, initState, _onSearchChanged, _openAddVendorModal (+12 more)
+Nodes (20): ../modals/add_booking_modal.dart, ../providers/bookings_provider.dart, ../../shared/widgets/app_bottom_nav_bar.dart, ../../../shared/widgets/floating_search_fab.dart, ../../../shared/widgets/section_header.dart, ../../vendors/providers/vendors_provider.dart, BookingsDirectoryScreen, _BookingsDirectoryScreenState (+12 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.1
-Nodes (20): ../modals/add_booking_modal.dart, ../providers/bookings_provider.dart, ../../shared/widgets/app_bottom_nav_bar.dart, ../../../shared/widgets/floating_search_fab.dart, ../../../shared/widgets/section_header.dart, ../../vendors/providers/vendors_provider.dart, BookingsDirectoryScreen, _BookingsDirectoryScreenState (+12 more)
+Nodes (20): ../modals/add_vendor_modal.dart, ../modals/edit_vendor_modal.dart, ../providers/vendors_provider.dart, build, dispose, initState, _onSearchChanged, _openAddVendorModal (+12 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.1
@@ -217,11 +216,11 @@ Nodes (15): Acceptance Checklist, Mobile Dashboard Screenshot Drift Report, P0: 
 
 ### Community 19 - "Community 19"
 Cohesion: 0.13
-Nodes (14): build, _buildFieldLabel, dispose, EditBookingModal, _EditBookingModalState, Function, GestureDetector, Icon (+6 more)
+Nodes (14): compact_booking_row.dart, ../../../shared/widgets/directory_card.dart, build, _buildKeyValuePair, Column, CompactBookingRow, Container, DailyBookingsList (+6 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.13
-Nodes (14): compact_booking_row.dart, ../../../shared/widgets/directory_card.dart, build, _buildKeyValuePair, Column, CompactBookingRow, Container, DailyBookingsList (+6 more)
+Nodes (14): build, _buildFieldLabel, dispose, EditBookingModal, _EditBookingModalState, Function, GestureDetector, Icon (+6 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.13
@@ -229,11 +228,11 @@ Nodes (14): ../providers/system_health_provider.dart, build, _buildMetricCard, C
 
 ### Community 22 - "Community 22"
 Cohesion: 0.14
-Nodes (13): package:table_calendar/table_calendar.dart, build, CalendarView, _CalendarViewState, Container, _daysInMonth, Divider, Expanded (+5 more)
+Nodes (13): AddBookingModal, _AddBookingModalState, build, _buildFieldLabel, dispose, Function, GestureDetector, Icon (+5 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.14
-Nodes (13): AddBookingModal, _AddBookingModalState, build, _buildFieldLabel, dispose, Function, GestureDetector, Icon (+5 more)
+Nodes (13): package:table_calendar/table_calendar.dart, build, CalendarView, _CalendarViewState, Container, _daysInMonth, Divider, Expanded (+5 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.14
@@ -261,7 +260,7 @@ Nodes (12): build, _buildFieldLabel, dispose, EditGeneratorModal, _EditGenerator
 
 ### Community 30 - "Community 30"
 Cohesion: 0.15
-Nodes (12): ../../../shared/widgets/capacity_chip_selector.dart, build, _buildFieldLabel, dispose, EditGeneratorModal, _EditGeneratorModalState, Function, initState (+4 more)
+Nodes (12): ../../../shared/widgets/capacity_chip_selector.dart, AddGeneratorModal, _AddGeneratorModalState, build, _buildFieldLabel, dispose, Function, initState (+4 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.15
@@ -285,7 +284,7 @@ Nodes (11): build, _buildFieldLabel, dispose, EditUserModal, _EditUserModalState
 
 ### Community 36 - "Community 36"
 Cohesion: 0.17
-Nodes (11): AddGeneratorModal, _AddGeneratorModalState, build, _buildFieldLabel, dispose, Function, initState, _inputDecoration (+3 more)
+Nodes (11): build, _buildFieldLabel, dispose, EditGeneratorModal, _EditGeneratorModalState, Function, initState, _inputDecoration (+3 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.17
@@ -304,12 +303,12 @@ Cohesion: 0.17
 Nodes (11): build, _buildItem, dispose, ExpandableFABItem, ExpandableFABMenu, _ExpandableFABMenuState, initState, ScaleTransition (+3 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.18
-Nodes (10): build, Column, Container, didUpdateWidget, Function, _getPermissionDescription, initState, PermissionMatrix (+2 more)
-
-### Community 42 - "Community 42"
 Cohesion: 0.2
 Nodes (9): ../../core/theme/app_colors.dart, dart:ui, AppBottomNavBar, build, ClipRRect, GestureDetector, SizedBox, BackdropBlurOverlay (+1 more)
+
+### Community 42 - "Community 42"
+Cohesion: 0.18
+Nodes (10): build, Column, Container, didUpdateWidget, Function, _getPermissionDescription, initState, PermissionMatrix (+2 more)
 
 ### Community 43 - "Community 43"
 Cohesion: 0.18
@@ -317,39 +316,39 @@ Nodes (10): AddUserModal, _AddUserModalState, build, _buildFieldLabel, dispose, 
 
 ### Community 44 - "Community 44"
 Cohesion: 0.18
-Nodes (10): 1. Design Overview, 2. Screen Inventory & Component Mapping, 3. Frontend Architecture Recommendations, 4. Next Steps, A. Authentication, B. Core Management (Directories), C. Interaction Modals (Floating Forms), Core Visual Language: (+2 more)
+Nodes (8): package:flutter_test/flutter_test.dart, package:ledger/features/admin/modals/edit_user_modal.dart, package:ledger/features/admin/screens/integrations_screen.dart, package:ledger/features/generators/modals/add_generator_modal.dart, main, MaterialApp, main, main
 
 ### Community 45 - "Community 45"
-Cohesion: 0.2
-Nodes (8): ../../core/theme/app_typography.dart, AdminBottomNavBar, BottomNavigationBar, build, build, Column, SectionHeader, SizedBox
+Cohesion: 0.18
+Nodes (6): package:flutter/material.dart, package:google_fonts/google_fonts.dart, package:ledger/features/auth/screens/login_screen.dart, package:ledger/features/bookings/modals/add_booking_modal.dart, main, main
 
 ### Community 46 - "Community 46"
-Cohesion: 0.2
-Nodes (9): BoxShadow, build, dispose, FloatingSearchFAB, _FloatingSearchFABState, initState, _onFocusChange, Padding (+1 more)
+Cohesion: 0.18
+Nodes (10): 1. Design Overview, 2. Screen Inventory & Component Mapping, 3. Frontend Architecture Recommendations, 4. Next Steps, A. Authentication, B. Core Management (Directories), C. Interaction Modals (Floating Forms), Core Visual Language: (+2 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.2
-Nodes (7): package:flutter_test/flutter_test.dart, package:ledger/features/auth/screens/login_screen.dart, package:ledger/features/bookings/modals/add_booking_modal.dart, package:ledger/features/generators/modals/add_generator_modal.dart, main, main, main
+Nodes (8): ../../core/theme/app_typography.dart, AdminBottomNavBar, BottomNavigationBar, build, AssignmentModeToggle, build, Row, SizedBox
 
 ### Community 48 - "Community 48"
-Cohesion: 0.22
-Nodes (8): package:intl/intl.dart, BookingListItem, build, GestureDetector, _getStatusBadgeType, Padding, SizedBox, TextSpan
+Cohesion: 0.2
+Nodes (9): BoxShadow, build, dispose, FloatingSearchFAB, _FloatingSearchFABState, initState, _onFocusChange, Padding (+1 more)
 
 ### Community 49 - "Community 49"
 Cohesion: 0.22
-Nodes (8): 1. Global Navigation Components, 2. Shared UI Patterns, 3. High-Density Form Modals, Bottom Action Zone (Directories), Component Specification: Genset Industrial Ledger, Directory Cards (Vendors, Bookings, Gensets), Side Navigation Drawer (Global), Status Badges
+Nodes (8): package:intl/intl.dart, BookingListItem, build, GestureDetector, _getStatusBadgeType, Padding, SizedBox, TextSpan
 
 ### Community 50 - "Community 50"
-Cohesion: 0.25
-Nodes (7): generator_card.dart, build, Container, Function, GeneratorCard, InventoryGroupSection, SizedBox
+Cohesion: 0.22
+Nodes (8): 1. Global Navigation Components, 2. Shared UI Patterns, 3. High-Density Form Modals, Bottom Action Zone (Directories), Component Specification: Genset Industrial Ledger, Directory Cards (Vendors, Bookings, Gensets), Side Navigation Drawer (Global), Status Badges
 
 ### Community 51 - "Community 51"
 Cohesion: 0.25
-Nodes (7): package:go_router/go_router.dart, ../../../shared/widgets/side_navigation_drawer.dart, build, Icon, IntegrationsScreen, Scaffold, SizedBox
+Nodes (7): generator_card.dart, build, Container, Function, GeneratorCard, InventoryGroupSection, SizedBox
 
 ### Community 52 - "Community 52"
 Cohesion: 0.25
-Nodes (7): build, _buildDetailRow, Column, Divider, GeneratorDetailModal, ModalScaffold, SizedBox
+Nodes (7): package:go_router/go_router.dart, ../../../shared/widgets/side_navigation_drawer.dart, build, Icon, IntegrationsScreen, Scaffold, SizedBox
 
 ### Community 53 - "Community 53"
 Cohesion: 0.25
@@ -361,7 +360,7 @@ Nodes (7): build, Column, MetricSparkline, paint, shouldRepaint, SizedBox, _Spar
 
 ### Community 55 - "Community 55"
 Cohesion: 0.25
-Nodes (4): package:flutter/material.dart, package:google_fonts/google_fonts.dart, package:ledger/features/admin/modals/edit_user_modal.dart, main
+Nodes (7): build, _buildDetailRow, Column, Divider, GeneratorDetailModal, ModalScaffold, SizedBox
 
 ### Community 57 - "Community 57"
 Cohesion: 0.29
@@ -385,19 +384,19 @@ Nodes (5): ../../../data/mock/mock_generators.dart, addGenerator, deleteGenerato
 
 ### Community 62 - "Community 62"
 Cohesion: 0.33
-Nodes (5): modal_scaffold.dart, build, ConfirmationDialog, ModalScaffold, SizedBox
+Nodes (5): metric_sparkline.dart, build, Container, HealthMetricCard, SizedBox
 
 ### Community 63 - "Community 63"
 Cohesion: 0.33
-Nodes (5): metric_sparkline.dart, build, Container, HealthMetricCard, SizedBox
+Nodes (5): modal_scaffold.dart, build, ConfirmationDialog, ModalScaffold, SizedBox
 
 ### Community 64 - "Community 64"
 Cohesion: 0.33
-Nodes (5): ../../core/theme/app_dimensions.dart, build, CapacityChipSelector, GestureDetector, Wrap
+Nodes (5): backdrop_blur_overlay.dart, build, ModalScaffold, SizedBox, Stack
 
 ### Community 65 - "Community 65"
 Cohesion: 0.33
-Nodes (5): backdrop_blur_overlay.dart, build, ModalScaffold, SizedBox, Stack
+Nodes (5): ../../core/theme/app_dimensions.dart, build, Container, SizedBox, StatusBadge
 
 ### Community 66 - "Community 66"
 Cohesion: 0.33
@@ -421,7 +420,7 @@ Nodes (4): copyWith, _date, fromMap, User
 
 ### Community 72 - "Community 72"
 Cohesion: 0.4
-Nodes (4): AssignmentModeToggle, build, Row, SizedBox
+Nodes (4): build, Column, SectionHeader, SizedBox
 
 ### Community 73 - "Community 73"
 Cohesion: 0.4
@@ -437,11 +436,11 @@ Nodes (4): build, Container, DirectoryCard, SizedBox
 
 ### Community 76 - "Community 76"
 Cohesion: 0.4
-Nodes (4): build, Container, SizedBox, StatusBadge
+Nodes (4): build, CapacityChipSelector, GestureDetector, Wrap
 
 ### Community 77 - "Community 77"
 Cohesion: 0.4
-Nodes (4): package:ledger/features/admin/screens/system_health_screen.dart, package:ledger/features/admin/widgets/health_metric_card.dart, main, ProviderScope
+Nodes (4): package:ledger/features/admin/modals/add_user_modal.dart, package:ledger/features/admin/screens/user_management_screen.dart, main, ProviderScope
 
 ### Community 78 - "Community 78"
 Cohesion: 0.4
@@ -449,7 +448,7 @@ Nodes (4): directory_card.dart, build, DarkHeaderCard, DirectoryCard
 
 ### Community 79 - "Community 79"
 Cohesion: 0.4
-Nodes (4): package:ledger/features/admin/modals/add_user_modal.dart, package:ledger/features/admin/screens/user_management_screen.dart, main, ProviderScope
+Nodes (4): package:ledger/features/admin/screens/system_health_screen.dart, package:ledger/features/admin/widgets/health_metric_card.dart, main, ProviderScope
 
 ### Community 80 - "Community 80"
 Cohesion: 0.4
@@ -465,10 +464,6 @@ Nodes (3): package:ledger/features/vendors/modals/edit_vendor_modal.dart, packag
 
 ### Community 84 - "Community 84"
 Cohesion: 0.5
-Nodes (3): package:ledger/features/admin/screens/integrations_screen.dart, main, MaterialApp
-
-### Community 85 - "Community 85"
-Cohesion: 0.5
 Nodes (3): package:ledger/features/generators/modals/edit_generator_modal.dart, package:ledger/shared/models/generator.dart, main
 
 ## Knowledge Gaps
@@ -479,11 +474,11 @@ Nodes (3): package:ledger/features/generators/modals/edit_generator_modal.dart, 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `package:flutter/material.dart` connect `Community 55` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 9`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 26`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 32`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 45`, `Community 46`, `Community 47`, `Community 48`, `Community 50`, `Community 51`, `Community 52`, `Community 53`, `Community 54`, `Community 57`, `Community 58`, `Community 59`, `Community 62`, `Community 63`, `Community 64`, `Community 65`, `Community 67`, `Community 68`, `Community 72`, `Community 73`, `Community 74`, `Community 75`, `Community 76`, `Community 77`, `Community 78`, `Community 79`, `Community 83`, `Community 84`, `Community 85`?**
+- **Why does `package:flutter/material.dart` connect `Community 45` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 9`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 26`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 32`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 47`, `Community 48`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 54`, `Community 55`, `Community 57`, `Community 58`, `Community 59`, `Community 62`, `Community 63`, `Community 64`, `Community 65`, `Community 67`, `Community 68`, `Community 72`, `Community 73`, `Community 74`, `Community 75`, `Community 76`, `Community 77`, `Community 78`, `Community 79`, `Community 83`, `Community 84`?**
   _High betweenness centrality (0.190) - this node is a cross-community bridge._
-- **Why does `../../core/theme/app_colors.dart` connect `Community 42` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 40`, `Community 41`, `Community 43`, `Community 45`, `Community 46`, `Community 48`, `Community 50`, `Community 51`, `Community 52`, `Community 53`, `Community 54`, `Community 57`, `Community 58`, `Community 59`, `Community 62`, `Community 63`, `Community 64`, `Community 65`, `Community 72`, `Community 73`, `Community 74`, `Community 75`, `Community 76`?**
+- **Why does `../../core/theme/app_colors.dart` connect `Community 41` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 40`, `Community 42`, `Community 43`, `Community 47`, `Community 48`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 54`, `Community 55`, `Community 57`, `Community 58`, `Community 59`, `Community 62`, `Community 63`, `Community 64`, `Community 65`, `Community 72`, `Community 73`, `Community 74`, `Community 75`, `Community 76`?**
   _High betweenness centrality (0.076) - this node is a cross-community bridge._
-- **Why does `../../core/theme/app_typography.dart` connect `Community 45` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 46`, `Community 48`, `Community 50`, `Community 51`, `Community 52`, `Community 53`, `Community 58`, `Community 59`, `Community 62`, `Community 63`, `Community 64`, `Community 65`, `Community 72`, `Community 73`, `Community 75`, `Community 76`?**
+- **Why does `../../core/theme/app_typography.dart` connect `Community 47` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 48`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 55`, `Community 58`, `Community 59`, `Community 62`, `Community 63`, `Community 64`, `Community 65`, `Community 72`, `Community 73`, `Community 75`, `Community 76`?**
   _High betweenness centrality (0.064) - this node is a cross-community bridge._
 - **What connects `MainActivity`, `Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.`, `-registerWithRegistry` to the rest of the system?**
   _877 weakly-connected nodes found - possible documentation gaps or missing edges._

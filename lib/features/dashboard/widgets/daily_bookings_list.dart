@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
-import '../../../shared/widgets/status_badge.dart';
 import 'compact_booking_row.dart';
 /// List displaying mock bookings for the selected date inside a single compact bordered container.
 class DailyBookingsList extends StatelessWidget {
