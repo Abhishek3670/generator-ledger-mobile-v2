@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
 import '../../../core/providers/drawer_provider.dart';
+import '../providers/dashboard_provider.dart';
+import '../../../core/providers/booking_provider.dart';
 import '../widgets/calendar_view.dart';
 import '../widgets/daily_bookings_list.dart';
 import '../widgets/stats_grid.dart';
@@ -24,10 +25,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Standard mock summary counts matching HTML design spec values
-    const totalBookings = 128;
-    const totalGensets = 33;
-    const totalVendors = 50;
+    final summary = ref.watch(dashboardSummaryProvider);
+    final bookings = ref.watch(bookingProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -63,10 +62,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Stats summary grid
-              const StatsGrid(
-                totalBookings: totalBookings,
-                totalGensets: totalGensets,
-                totalVendors: totalVendors,
+              StatsGrid(
+                totalBookings: summary.totalBookings,
+                totalGensets: summary.totalGenerators,
+                totalVendors: summary.totalVendors,
               ),
               const SizedBox(height: 20),
 
@@ -74,7 +73,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               CalendarView(
                 selectedDay: _selectedDay,
                 focusedDay: _focusedDay,
-                bookings: mockBookings,
+                bookings: bookings,
                 onDaySelected: (selectedDay) {
                   setState(() {
                     _selectedDay = selectedDay;
@@ -87,7 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               // 3. Daily Bookings schedule list
               DailyBookingsList(
                 selectedDay: _selectedDay,
-                bookings: mockBookings,
+                bookings: bookings,
                 onViewAllPressed: () {
                   context.go('/bookings');
                 },

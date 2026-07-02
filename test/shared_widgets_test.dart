@@ -163,12 +163,13 @@ void main() {
     expect(find.text('Swipe Content'), findsOneWidget);
   });
 
-  testWidgets('SideNavigationDrawer renders successfully', (tester) async {
+  testWidgets('SideNavigationDrawer renders successfully in dashboard context', (tester) async {
     final scaffoldKey = GlobalKey<ScaffoldState>();
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         key: scaffoldKey,
         drawer: SideNavigationDrawer(
+          drawerContext: SideNavigationDrawerContext.dashboard,
           currentRoute: '/dashboard',
           onNavigate: (_) {},
           userName: 'Abhishek',
@@ -180,7 +181,63 @@ void main() {
     await tester.pump();
     expect(find.byType(SideNavigationDrawer), findsOneWidget);
     expect(find.text('Abhishek'), findsOneWidget);
+    expect(find.text('FLEET MANAGER'), findsOneWidget);
+    expect(find.text('Genset Ledger'), findsOneWidget);
+    expect(find.text('Billing Preview'), findsOneWidget);
+    expect(find.text('DASHBOARD'), findsNothing);
+  });
+
+  testWidgets('SideNavigationDrawer renders successfully in operational context', (tester) async {
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        key: scaffoldKey,
+        drawer: SideNavigationDrawer(
+          drawerContext: SideNavigationDrawerContext.operational,
+          currentRoute: '/bookings',
+          onNavigate: (_) {},
+          userName: 'Abhishek',
+          userRole: 'Fleet Manager',
+        ),
+      ),
+    ));
+    scaffoldKey.currentState?.openDrawer();
+    await tester.pump();
+    expect(find.byType(SideNavigationDrawer), findsOneWidget);
+    expect(find.text('Abhishek'), findsOneWidget);
     expect(find.text('Fleet Manager'), findsOneWidget);
+    expect(find.text('DASHBOARD'), findsOneWidget);
+    expect(find.text('BOOKINGS'), findsOneWidget);
+    expect(find.text('GENSETS'), findsOneWidget);
+    expect(find.text('VENDORS'), findsOneWidget);
+    expect(find.text('BILLING PREVIEW'), findsOneWidget);
+    expect(find.text('Genset Ledger'), findsNothing);
+  });
+
+  testWidgets('SideNavigationDrawer renders successfully in admin context', (tester) async {
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        key: scaffoldKey,
+        drawer: SideNavigationDrawer(
+          drawerContext: SideNavigationDrawerContext.admin,
+          currentRoute: '/admin/users',
+          onNavigate: (_) {},
+          userName: 'Abhishek',
+          userRole: 'Fleet Manager',
+        ),
+      ),
+    ));
+    scaffoldKey.currentState?.openDrawer();
+    await tester.pump();
+    expect(find.byType(SideNavigationDrawer), findsOneWidget);
+    expect(find.text('Abhishek'), findsOneWidget);
+    expect(find.text('Fleet Manager'), findsOneWidget);
+    expect(find.text('SYSTEM HEALTH'), findsOneWidget);
+    expect(find.text('USERS'), findsOneWidget);
+    expect(find.text('INTEGRATIONS'), findsOneWidget);
+    expect(find.text('EXIT ADMIN'), findsOneWidget);
+    expect(find.text('DASHBOARD'), findsNothing);
   });
 }
 

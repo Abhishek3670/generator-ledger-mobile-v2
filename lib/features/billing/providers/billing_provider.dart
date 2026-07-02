@@ -1,1 +1,1 @@
-// TODO: Implement billing provider in the state management work order.
+export '../../../core/providers/billing_provider.dart';

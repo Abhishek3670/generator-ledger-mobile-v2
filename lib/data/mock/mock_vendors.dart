@@ -1,18 +1,6 @@
-class MockVendor {
-  final String id;
-  final String name;
-  final String location;
-  final String phone;
-  final String category; // 'retailer', 'rental'
+import '../../shared/models/vendor.dart';
 
-  const MockVendor({
-    required this.id,
-    required this.name,
-    required this.location,
-    required this.phone,
-    required this.category,
-  });
-}
+typedef MockVendor = Vendor;
 
 final List<MockVendor> mockVendors = [
   const MockVendor(

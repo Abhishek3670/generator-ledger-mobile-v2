@@ -167,7 +167,10 @@ class _ExpandableFABMenuState extends State<ExpandableFABMenu> with SingleTicker
                     item.onPressed();
                   },
                   heroTag: 'expandable_item_$index',
-                  backgroundColor: Colors.white,
+                  backgroundColor: (item.label.toLowerCase().contains('add') ||
+                          item.label.toLowerCase().contains('create'))
+                      ? AppColors.accent
+                      : Colors.white,
                   foregroundColor: AppColors.primary,
                   shape: const StadiumBorder(),
                   elevation: 2,

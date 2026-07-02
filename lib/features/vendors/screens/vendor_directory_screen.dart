@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -13,19 +14,19 @@ import '../widgets/add_vendor_modal.dart';
 import '../widgets/edit_vendor_modal.dart';
 import '../widgets/delete_vendor_dialog.dart';
 import '../widgets/vendor_action_menu.dart';
+import '../providers/vendors_provider.dart';
 
 /// Directory screen listing Retailer and Rental vendors.
-class VendorDirectoryScreen extends StatefulWidget {
+class VendorDirectoryScreen extends ConsumerStatefulWidget {
   const VendorDirectoryScreen({super.key});
 
   @override
-  State<VendorDirectoryScreen> createState() => _VendorDirectoryScreenState();
+  ConsumerState<VendorDirectoryScreen> createState() => _VendorDirectoryScreenState();
 }
 
-class _VendorDirectoryScreenState extends State<VendorDirectoryScreen> {
+class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  late final List<MockVendor> _vendors;
   bool _showAddModal = false;
   bool _showEditModal = false;
   bool _showDeleteModal = false;
@@ -38,7 +39,6 @@ class _VendorDirectoryScreenState extends State<VendorDirectoryScreen> {
   @override
   void initState() {
     super.initState();
-    _vendors = List.from(mockVendors);
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -65,7 +65,8 @@ class _VendorDirectoryScreenState extends State<VendorDirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     // Filter vendors based on search query
-    final filteredVendors = _vendors.where((vendor) {
+    final vendors = ref.watch(vendorProvider);
+    final filteredVendors = vendors.where((vendor) {
       if (_searchQuery.isEmpty) return true;
       return vendor.name.toLowerCase().contains(_searchQuery) ||
           vendor.id.toLowerCase().contains(_searchQuery) ||
@@ -272,10 +273,8 @@ class _VendorDirectoryScreenState extends State<VendorDirectoryScreen> {
                 initialCategory: _modalInitialCategory,
                 onClose: () => setState(() => _showAddModal = false),
                 onSave: (newVendor) {
-                  setState(() {
-                    _vendors.insert(0, newVendor);
-                    _showAddModal = false;
-                  });
+                  ref.read(vendorProvider.notifier).addVendor(newVendor);
+                  setState(() => _showAddModal = false);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Vendor added successfully')),
                   );
@@ -291,11 +290,8 @@ class _VendorDirectoryScreenState extends State<VendorDirectoryScreen> {
                   _selectedVendorForEdit = null;
                 }),
                 onSave: (updatedVendor) {
+                  ref.read(vendorProvider.notifier).updateVendor(updatedVendor);
                   setState(() {
-                    final index = _vendors.indexWhere((v) => v.id == _selectedVendorForEdit!.id);
-                    if (index != -1) {
-                      _vendors[index] = updatedVendor;
-                    }
                     _showEditModal = false;
                     _selectedVendorForEdit = null;
                   });
@@ -314,8 +310,10 @@ class _VendorDirectoryScreenState extends State<VendorDirectoryScreen> {
                   _selectedVendorForDelete = null;
                 }),
                 onDelete: () {
+                  ref
+                      .read(vendorProvider.notifier)
+                      .deleteVendor(_selectedVendorForDelete!.id);
                   setState(() {
-                    _vendors.removeWhere((v) => v.id == _selectedVendorForDelete!.id);
                     _showDeleteModal = false;
                     _selectedVendorForDelete = null;
                   });

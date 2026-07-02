@@ -1,1 +1,1 @@
-// TODO: Implement generators provider in the state management work order.
+export '../../../core/providers/generator_provider.dart';

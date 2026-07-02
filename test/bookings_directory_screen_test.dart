@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ledger/features/bookings/screens/bookings_directory_screen.dart';
 import 'package:ledger/features/bookings/widgets/vendor_booking_group.dart';
 import 'package:ledger/shared/widgets/floating_search_fab.dart';
 
 void main() {
   testWidgets('BookingsDirectoryScreen renders successfully with all elements', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: BookingsDirectoryScreen(),
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(
+        home: BookingsDirectoryScreen(),
+      ),
     ));
 
     // Verify Title & Header
@@ -26,8 +29,10 @@ void main() {
   });
 
   testWidgets('BookingsDirectoryScreen filters by search text input', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: BookingsDirectoryScreen(),
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(
+        home: BookingsDirectoryScreen(),
+      ),
     ));
 
     // Initially multiple vendor booking groups should exist

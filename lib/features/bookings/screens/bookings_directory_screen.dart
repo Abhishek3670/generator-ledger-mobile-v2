@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
-import '../../../data/mock/mock_vendors.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../widgets/vendor_booking_group.dart';
 import '../widgets/add_booking_modal.dart';
 import '../widgets/edit_booking_modal.dart';
+import '../providers/bookings_provider.dart';
+import '../../vendors/providers/vendors_provider.dart';
 
 /// Directory screen listing bookings grouped by vendor.
-class BookingsDirectoryScreen extends StatefulWidget {
+class BookingsDirectoryScreen extends ConsumerStatefulWidget {
   const BookingsDirectoryScreen({super.key});
 
   @override
-  State<BookingsDirectoryScreen> createState() => _BookingsDirectoryScreenState();
+  ConsumerState<BookingsDirectoryScreen> createState() => _BookingsDirectoryScreenState();
 }
 
-class _BookingsDirectoryScreenState extends State<BookingsDirectoryScreen> {
+class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  late final List<MockBooking> _bookings;
   bool _showAddModal = false;
   MockBooking? _editingBooking;
 
   @override
   void initState() {
     super.initState();
-    _bookings = List.from(mockBookings);
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -50,7 +50,9 @@ class _BookingsDirectoryScreenState extends State<BookingsDirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     // Filter bookings based on search query
-    final filteredBookings = _bookings.where((booking) {
+    final bookings = ref.watch(bookingProvider);
+    final vendors = ref.watch(vendorProvider);
+    final filteredBookings = bookings.where((booking) {
       if (_searchQuery.isEmpty) return true;
       return booking.vendorName.toLowerCase().contains(_searchQuery) ||
           booking.vendorId.toLowerCase().contains(_searchQuery) ||
@@ -103,16 +105,16 @@ class _BookingsDirectoryScreenState extends State<BookingsDirectoryScreen> {
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: mockVendors.length,
+                    itemCount: vendors.length,
                     separatorBuilder: (context, index) {
-                      final vendor = mockVendors[index];
+                      final vendor = vendors[index];
                       final vendorBookings = filteredBookings
                           .where((b) => b.vendorId == vendor.id)
                           .toList();
                       return vendorBookings.isEmpty ? const SizedBox.shrink() : const SizedBox(height: 20);
                     },
                     itemBuilder: (context, index) {
-                      final vendor = mockVendors[index];
+                      final vendor = vendors[index];
                       final vendorBookings = filteredBookings
                           .where((b) => b.vendorId == vendor.id)
                           .toList();
@@ -175,10 +177,8 @@ class _BookingsDirectoryScreenState extends State<BookingsDirectoryScreen> {
               AddBookingModal(
                 onClose: () => setState(() => _showAddModal = false),
                 onSave: (newBooking) {
-                  setState(() {
-                    _bookings.insert(0, newBooking);
-                    _showAddModal = false;
-                  });
+                  ref.read(bookingProvider.notifier).addBooking(newBooking);
+                  setState(() => _showAddModal = false);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Booking added successfully')),
                   );
@@ -191,13 +191,8 @@ class _BookingsDirectoryScreenState extends State<BookingsDirectoryScreen> {
                 booking: _editingBooking!,
                 onClose: () => setState(() => _editingBooking = null),
                 onSave: (updatedBooking) {
-                  setState(() {
-                    final index = _bookings.indexWhere((b) => b.id == updatedBooking.id);
-                    if (index != -1) {
-                      _bookings[index] = updatedBooking;
-                    }
-                    _editingBooking = null;
-                  });
+                  ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
+                  setState(() => _editingBooking = null);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Booking updated successfully')),
                   );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
@@ -14,16 +15,17 @@ import '../widgets/add_generator_modal.dart';
 import '../widgets/edit_generator_modal.dart';
 import '../widgets/generator_detail_modal.dart';
 import '../widgets/generator_action_menu.dart';
+import '../providers/generators_provider.dart';
 
 /// Directory screen listing fleet generators grouped by inventory categories.
-class GeneratorsDirectoryScreen extends StatefulWidget {
+class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
   const GeneratorsDirectoryScreen({super.key});
 
   @override
-  State<GeneratorsDirectoryScreen> createState() => _GeneratorsDirectoryScreenState();
+  ConsumerState<GeneratorsDirectoryScreen> createState() => _GeneratorsDirectoryScreenState();
 }
 
-class _GeneratorsDirectoryScreenState extends State<GeneratorsDirectoryScreen> {
+class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryScreen> {
   final _searchController = TextEditingController();
   final _dateController = TextEditingController();
   String _searchQuery = '';
@@ -31,7 +33,6 @@ class _GeneratorsDirectoryScreenState extends State<GeneratorsDirectoryScreen> {
   late final FocusNode _dateFocusNode;
   bool _isDateFocused = false;
 
-  late final List<MockGenerator> _generators;
   bool _showAddModal = false;
   bool _showEditModal = false;
   bool _showActionMenu = false;
@@ -43,7 +44,6 @@ class _GeneratorsDirectoryScreenState extends State<GeneratorsDirectoryScreen> {
   @override
   void initState() {
     super.initState();
-    _generators = List.from(mockGenerators);
     _searchController.addListener(_onSearchChanged);
     _dateFocusNode = FocusNode();
     _dateFocusNode.addListener(_onDateFocusChange);
@@ -96,7 +96,8 @@ class _GeneratorsDirectoryScreenState extends State<GeneratorsDirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     // Filter mock generators based on search query
-    final filteredGenerators = _generators.where((gen) {
+    final generators = ref.watch(generatorProvider);
+    final filteredGenerators = generators.where((gen) {
       if (_searchQuery.isEmpty) return true;
       return gen.id.toLowerCase().contains(_searchQuery) ||
           gen.capacity.toLowerCase().contains(_searchQuery) ||
@@ -321,10 +322,8 @@ class _GeneratorsDirectoryScreenState extends State<GeneratorsDirectoryScreen> {
                 initialCategory: _modalInitialCategory,
                 onClose: () => setState(() => _showAddModal = false),
                 onSave: (newGen) {
-                  setState(() {
-                    _generators.insert(0, newGen);
-                    _showAddModal = false;
-                  });
+                  ref.read(generatorProvider.notifier).addGenerator(newGen);
+                  setState(() => _showAddModal = false);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Generator added successfully')),
                   );
@@ -340,11 +339,8 @@ class _GeneratorsDirectoryScreenState extends State<GeneratorsDirectoryScreen> {
                   _selectedGeneratorForEdit = null;
                 }),
                 onSave: (updatedGen) {
+                  ref.read(generatorProvider.notifier).updateGenerator(updatedGen);
                   setState(() {
-                    final index = _generators.indexWhere((g) => g.id == _selectedGeneratorForEdit!.id);
-                    if (index != -1) {
-                      _generators[index] = updatedGen;
-                    }
                     _showEditModal = false;
                     _selectedGeneratorForEdit = null;
                   });
@@ -386,9 +382,7 @@ class _GeneratorsDirectoryScreenState extends State<GeneratorsDirectoryScreen> {
                 },
                 onDelete: () {
                   final gen = _selectedGeneratorForAction!;
-                  setState(() {
-                    _generators.removeWhere((g) => g.id == gen.id);
-                  });
+                  ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Generator deleted successfully')),
                   );

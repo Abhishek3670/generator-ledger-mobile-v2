@@ -1,1 +1,1 @@
-// TODO: Implement user management provider in the state management work order.
+export '../../../core/providers/user_provider.dart';

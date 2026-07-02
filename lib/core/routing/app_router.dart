@@ -178,7 +178,12 @@ class _OperationalShell extends ConsumerWidget {
             top: 0,
             bottom: 0,
             child: SideNavigationDrawer(
-              variant: SideNavigationDrawerVariant.light,
+              variant: navigationShell.currentIndex == 0
+                  ? SideNavigationDrawerVariant.light
+                  : SideNavigationDrawerVariant.dark,
+              drawerContext: navigationShell.currentIndex == 0
+                  ? SideNavigationDrawerContext.dashboard
+                  : SideNavigationDrawerContext.operational,
               currentRoute: _getRouteFromIndex(navigationShell.currentIndex),
               onNavigate: (routePath) {
                 ref.read(drawerOpenProvider.notifier).state = false;

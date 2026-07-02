@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ledger/features/vendors/screens/vendor_directory_screen.dart';
 import 'package:ledger/features/vendors/widgets/vendor_card.dart';
 import 'package:ledger/shared/widgets/floating_search_fab.dart';
@@ -7,8 +8,10 @@ import 'package:ledger/shared/widgets/expandable_fab_menu.dart';
 
 void main() {
   testWidgets('VendorDirectoryScreen renders successfully with all elements', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: VendorDirectoryScreen(),
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(
+        home: VendorDirectoryScreen(),
+      ),
     ));
 
     // Verify Title & Header
@@ -31,8 +34,10 @@ void main() {
   });
 
   testWidgets('VendorDirectoryScreen filters list using search field query', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: VendorDirectoryScreen(),
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(
+        home: VendorDirectoryScreen(),
+      ),
     ));
 
     // Initially all mock items render

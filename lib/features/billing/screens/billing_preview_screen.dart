@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
+import '../providers/billing_provider.dart';
+import '../../bookings/providers/bookings_provider.dart';
 
-class BillingPreviewScreen extends StatefulWidget {
+class BillingPreviewScreen extends ConsumerStatefulWidget {
   const BillingPreviewScreen({super.key});
 
   @override
-  State<BillingPreviewScreen> createState() => _BillingPreviewScreenState();
+  ConsumerState<BillingPreviewScreen> createState() => _BillingPreviewScreenState();
 }
 
-class _BillingPreviewScreenState extends State<BillingPreviewScreen> {
+class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
   final TextEditingController _dateFromController = TextEditingController(text: '01-04-2026');
   final TextEditingController _dateToController = TextEditingController(text: '30-04-2026');
   final TextEditingController _searchController = TextEditingController();
@@ -61,7 +64,7 @@ class _BillingPreviewScreenState extends State<BillingPreviewScreen> {
     }
 
     setState(() {
-      _filteredBookings = mockBookings.where((booking) {
+      _filteredBookings = ref.read(bookingProvider).where((booking) {
         if (booking.status != 'confirmed') return false;
         // Check date range inclusive
         final bookingDate = DateTime.utc(booking.date.year, booking.date.month, booking.date.day);
@@ -95,6 +98,7 @@ class _BillingPreviewScreenState extends State<BillingPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹ ', decimalDigits: 2);
+    ref.watch(billingProvider);
 
     // Apply search filter to the bookings loaded in date range
     final searchQuery = _searchController.text.toLowerCase().trim();

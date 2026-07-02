@@ -179,7 +179,7 @@ class _AddBookingModalState extends State<AddBookingModal> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: const ['20', '30', '50', '100'].map((cap) {
+                children: const ['25', '50', '100', '250'].map((cap) {
                   final isSelected = _selectedCapacity == cap;
                   return GestureDetector(
                     onTap: () {

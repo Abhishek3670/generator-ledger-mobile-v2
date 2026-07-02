@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ledger/features/generators/screens/generators_directory_screen.dart';
 import 'package:ledger/features/generators/widgets/inventory_group_section.dart';
 import 'package:ledger/shared/widgets/floating_search_fab.dart';
@@ -7,8 +8,10 @@ import 'package:ledger/shared/widgets/expandable_fab_menu.dart';
 
 void main() {
   testWidgets('GeneratorsDirectoryScreen renders successfully with all elements', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: GeneratorsDirectoryScreen(),
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(
+        home: GeneratorsDirectoryScreen(),
+      ),
     ));
 
     // Verify Title & Header
@@ -32,8 +35,10 @@ void main() {
   });
 
   testWidgets('GeneratorsDirectoryScreen filters list using search field query', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: GeneratorsDirectoryScreen(),
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(
+        home: GeneratorsDirectoryScreen(),
+      ),
     ));
 
     // Initially all mock items render

@@ -21,9 +21,9 @@ void main() {
 
     // Verify StatsGrid exists
     expect(find.byType(StatsGrid), findsOneWidget);
-    expect(find.text('128'), findsOneWidget);
-    expect(find.text('33'), findsOneWidget);
-    expect(find.text('50'), findsOneWidget);
+    expect(find.text('8 confirmed'), findsOneWidget);
+    expect(find.text('4 active'), findsOneWidget);
+    expect(find.text('9 partners'), findsOneWidget);
 
     // Verify CalendarView exists
     expect(find.byType(CalendarView), findsOneWidget);

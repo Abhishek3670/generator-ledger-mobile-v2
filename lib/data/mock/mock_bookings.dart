@@ -1,22 +1,6 @@
-class MockBooking {
-  final String id;
-  final String vendorId;
-  final String vendorName;
-  final String generatorId;
-  final String capacity;
-  final DateTime date;
-  final String status; // 'confirmed', 'pending', 'cancelled'
+import '../../shared/models/booking.dart';
 
-  const MockBooking({
-    required this.id,
-    required this.vendorId,
-    required this.vendorName,
-    required this.generatorId,
-    required this.capacity,
-    required this.date,
-    required this.status,
-  });
-}
+typedef MockBooking = Booking;
 
 final List<MockBooking> mockBookings = [
   MockBooking(

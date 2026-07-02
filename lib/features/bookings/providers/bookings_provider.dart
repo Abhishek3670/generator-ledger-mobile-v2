@@ -1,1 +1,1 @@
-// TODO: Implement bookings provider in the state management work order.
+export '../../../core/providers/booking_provider.dart';

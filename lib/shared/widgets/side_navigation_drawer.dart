@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
 enum SideNavigationDrawerVariant { light, dark }
+enum SideNavigationDrawerContext { dashboard, operational, admin }
 
 /// A side navigation drawer with support for dark/light themes.
 ///
@@ -11,6 +12,9 @@ enum SideNavigationDrawerVariant { light, dark }
 class SideNavigationDrawer extends StatelessWidget {
   /// The variant of the drawer (light or dark).
   final SideNavigationDrawerVariant variant;
+
+  /// The context of the drawer (dashboard, operational, or admin).
+  final SideNavigationDrawerContext? drawerContext;
 
   /// The currently active route name or path.
   final String currentRoute;
@@ -37,6 +41,7 @@ class SideNavigationDrawer extends StatelessWidget {
   const SideNavigationDrawer({
     super.key,
     this.variant = SideNavigationDrawerVariant.dark,
+    this.drawerContext,
     required this.currentRoute,
     required this.onNavigate,
     this.onSettingsPressed,
@@ -46,9 +51,23 @@ class SideNavigationDrawer extends StatelessWidget {
     this.avatarUrl,
   });
 
+  SideNavigationDrawerContext _deriveContext(String route, SideNavigationDrawerVariant varOption) {
+    if (route.startsWith('/admin')) {
+      return SideNavigationDrawerContext.admin;
+    }
+    if (route == '/dashboard') {
+      return SideNavigationDrawerContext.dashboard;
+    }
+    if (varOption == SideNavigationDrawerVariant.light) {
+      return SideNavigationDrawerContext.dashboard;
+    }
+    return SideNavigationDrawerContext.operational;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isLight = variant == SideNavigationDrawerVariant.light;
+    final activeContext = drawerContext ?? _deriveContext(currentRoute, variant);
+    final isLight = activeContext == SideNavigationDrawerContext.dashboard;
 
     return Drawer(
       width: 280,
@@ -135,47 +154,7 @@ class SideNavigationDrawer extends StatelessWidget {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                children: isLight
-                    ? [
-                        _buildLightNavLink(
-                          context: context,
-                          icon: Icons.receipt_long_outlined,
-                          label: 'Billing Preview',
-                          routePath: '/billing',
-                        ),
-                      ]
-                    : [
-                        _buildNavLink(
-                          context: context,
-                          icon: Icons.dashboard_outlined,
-                          label: 'DASHBOARD',
-                          routePath: '/dashboard',
-                        ),
-                        _buildNavLink(
-                          context: context,
-                          icon: Icons.assignment_outlined,
-                          label: 'BOOKINGS',
-                          routePath: '/bookings',
-                        ),
-                        _buildNavLink(
-                          context: context,
-                          icon: Icons.electric_bolt_outlined,
-                          label: 'GENSETS',
-                          routePath: '/generators',
-                        ),
-                        _buildNavLink(
-                          context: context,
-                          icon: Icons.business_outlined,
-                          label: 'VENDORS',
-                          routePath: '/vendors',
-                        ),
-                        _buildNavLink(
-                          context: context,
-                          icon: Icons.analytics_outlined,
-                          label: 'BILLING PREVIEW',
-                          routePath: '/billing',
-                        ),
-                      ],
+                children: _buildNavLinks(context, activeContext),
               ),
             ),
 
@@ -242,6 +221,79 @@ class SideNavigationDrawer extends StatelessWidget {
     );
   }
 
+  List<Widget> _buildNavLinks(BuildContext context, SideNavigationDrawerContext activeContext) {
+    if (activeContext == SideNavigationDrawerContext.dashboard) {
+      return [
+        _buildLightNavLink(
+          context: context,
+          icon: Icons.receipt_long_outlined,
+          label: 'Billing Preview',
+          routePath: '/billing',
+        ),
+      ];
+    } else if (activeContext == SideNavigationDrawerContext.admin) {
+      return [
+        _buildNavLink(
+          context: context,
+          icon: Icons.health_and_safety_outlined,
+          label: 'SYSTEM HEALTH',
+          routePath: '/admin/health',
+        ),
+        _buildNavLink(
+          context: context,
+          icon: Icons.people_outline,
+          label: 'USERS',
+          routePath: '/admin/users',
+        ),
+        _buildNavLink(
+          context: context,
+          icon: Icons.extension_outlined,
+          label: 'INTEGRATIONS',
+          routePath: '/admin/integrations',
+        ),
+        _buildNavLink(
+          context: context,
+          icon: Icons.dashboard_outlined,
+          label: 'EXIT ADMIN',
+          routePath: '/dashboard',
+        ),
+      ];
+    } else {
+      return [
+        _buildNavLink(
+          context: context,
+          icon: Icons.dashboard_outlined,
+          label: 'DASHBOARD',
+          routePath: '/dashboard',
+        ),
+        _buildNavLink(
+          context: context,
+          icon: Icons.assignment_outlined,
+          label: 'BOOKINGS',
+          routePath: '/bookings',
+        ),
+        _buildNavLink(
+          context: context,
+          icon: Icons.electric_bolt_outlined,
+          label: 'GENSETS',
+          routePath: '/generators',
+        ),
+        _buildNavLink(
+          context: context,
+          icon: Icons.business_outlined,
+          label: 'VENDORS',
+          routePath: '/vendors',
+        ),
+        _buildNavLink(
+          context: context,
+          icon: Icons.analytics_outlined,
+          label: 'BILLING PREVIEW',
+          routePath: '/billing',
+        ),
+      ];
+    }
+  }
+
   Widget _buildNavLink({
     required BuildContext context,
     required IconData icon,
@@ -303,11 +355,13 @@ class SideNavigationDrawer extends StatelessWidget {
               size: 20,
             ),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: AppTypography.bodySmall.copyWith(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
             ),
           ],

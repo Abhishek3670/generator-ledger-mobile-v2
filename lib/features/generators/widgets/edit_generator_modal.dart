@@ -32,7 +32,7 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
   String? _selectedCategory;
   late String _selectedStatus;
 
-  final List<String> _capacityOptions = const ['20', '30', '45', '50', '82', '100', '125'];
+  final List<String> _capacityOptions = const ['25', '50', '100', '250'];
 
   @override
   void initState() {
@@ -142,15 +142,33 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
               items: const [
                 DropdownMenuItem<String>(
                   value: 'retailer',
-                  child: Text('Retailer', style: TextStyle(fontSize: 14)),
+                  child: Row(
+                    children: [
+                      Icon(Icons.storefront, size: 18, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Text('Retailer', style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
                 ),
                 DropdownMenuItem<String>(
                   value: 'permanent',
-                  child: Text('Permanent', style: TextStyle(fontSize: 14)),
+                  child: Row(
+                    children: [
+                      Icon(Icons.domain, size: 18, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Text('Permanent', style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
                 ),
                 DropdownMenuItem<String>(
                   value: 'emergency',
-                  child: Text('Emergency', style: TextStyle(fontSize: 14)),
+                  child: Row(
+                    children: [
+                      Icon(Icons.emergency_outlined, size: 18, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Text('Emergency', style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
                 ),
               ],
               onChanged: (value) {

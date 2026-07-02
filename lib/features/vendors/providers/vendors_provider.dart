@@ -1,1 +1,1 @@
-// TODO: Implement vendors provider in the state management work order.
+export '../../../core/providers/vendor_provider.dart';

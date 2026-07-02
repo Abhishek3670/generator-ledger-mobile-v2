@@ -1,20 +1,6 @@
-class MockGenerator {
-  final String id;
-  final String capacity;
-  final String type;
-  final String status; // 'active', 'offline'
-  final String category; // 'retailer', 'permanent', 'emergency'
-  final String? assignedVendor; // for permanent gensets
+import '../../shared/models/generator.dart';
 
-  const MockGenerator({
-    required this.id,
-    required this.capacity,
-    required this.type,
-    required this.status,
-    required this.category,
-    this.assignedVendor,
-  });
-}
+typedef MockGenerator = Generator;
 
 final List<MockGenerator> mockGenerators = [
   const MockGenerator(
