@@ -88,8 +88,8 @@
     "hash": "213f97fd0f0027756af26f073efe4a20"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\core\\routing\\app_router.dart": {
-    "mtime": 1782758827.0928936,
-    "hash": "6d21310b979c70da342827b7c5f852be"
+    "mtime": 1782945013.739475,
+    "hash": "2dc9ba111baeaf8e2d166592b0b6a709"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\core\\routing\\route_names.dart": {
     "mtime": 1782660524.999452,
@@ -159,6 +159,10 @@
     "mtime": 1782934244.1583304,
     "hash": "055bbe13e0d88b40a8c8b825d2365352"
   },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\modals\\edit_user_modal.dart": {
+    "mtime": 1782999654.2679842,
+    "hash": "fec7d9b7394d04b4082045689c7a1f21"
+  },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\providers\\system_health_provider.dart": {
     "mtime": 1782760866.6547568,
     "hash": "0ccbfc12f46d49986be1a1bda2010437"
@@ -176,20 +180,12 @@
     "hash": "af3544e6155df0e7ff436cf095410355"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\screens\\user_management_screen.dart": {
-    "mtime": 1782934221.750872,
-    "hash": "8b15e3053944889235e41a241158953e"
+    "mtime": 1782991899.9094472,
+    "hash": "b5968542b01f8d488c06e3474dc8689f"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\create_user_modal.dart": {
     "mtime": 1782757119.2615416,
     "hash": "2a09b913e389a8d4ab79139e7123cfd3"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\delete_user_dialog.dart": {
-    "mtime": 1782755887.4693837,
-    "hash": "6092389ed2a8f4d4337fafd69d5c5012"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\edit_user_modal.dart": {
-    "mtime": 1782757121.3345308,
-    "hash": "4d28da50c954b6bf88a93cda30bf568e"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\admin\\widgets\\health_metric_card.dart": {
     "mtime": 1782934203.5821064,
@@ -243,25 +239,25 @@
     "mtime": 1782655939.4442475,
     "hash": "6ad30435fb268160333801bf815c2090"
   },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\modals\\add_booking_modal.dart": {
+    "mtime": 1782991836.7511916,
+    "hash": "8c9c5ef96295d1eee0601f5b01efc164"
+  },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\providers\\bookings_provider.dart": {
     "mtime": 1782760866.6456203,
     "hash": "2f7bbb213e7bba43d307c2a85b56f258"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\screens\\bookings_directory_screen.dart": {
-    "mtime": 1782931215.6798196,
-    "hash": "170ee8235a6479fd5aaab4c4a4e77d69"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\add_booking_modal.dart": {
-    "mtime": 1782757123.0844197,
-    "hash": "e9c5e64d4cbf5f7a672b75db7de9fe29"
+    "mtime": 1782992059.3889866,
+    "hash": "b539ce02291109498179d6d9a1e808d5"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\booking_list_item.dart": {
     "mtime": 1782751667.274206,
     "hash": "5d76e59642ac0112259ea0a07bb000b6"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\edit_booking_modal.dart": {
-    "mtime": 1782757125.9439366,
-    "hash": "f8943ec032f7976ed7920c2898ec7db3"
+    "mtime": 1782945173.307117,
+    "hash": "abc89a17e6230f9baee453fab5751a8e"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\bookings\\widgets\\vendor_booking_group.dart": {
     "mtime": 1782751671.7991788,
@@ -276,36 +272,44 @@
     "hash": "03d97fb0e4235c26db132c5299892116"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\dashboard\\widgets\\calendar_view.dart": {
-    "mtime": 1782758870.2834365,
-    "hash": "952456f8b1eccae616be3644c1ed0c08"
+    "mtime": 1782991641.7162251,
+    "hash": "b7d1f8c4193fcc88c14733a362b725b2"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\dashboard\\widgets\\compact_booking_row.dart": {
+    "mtime": 1782999651.9350226,
+    "hash": "6e8aeab03645d59afd1d2cf3616a6311"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\dashboard\\widgets\\daily_bookings_list.dart": {
-    "mtime": 1782758845.7690172,
-    "hash": "5a29e2835f42b172fb3556ae52e15a5a"
+    "mtime": 1782992109.2822676,
+    "hash": "5568526c9f2a791b339e4a3cdbd771ee"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\dashboard\\widgets\\stats_grid.dart": {
     "mtime": 1782735171.182794,
     "hash": "1ac6864f0b1d89a60a209eba0f48b14b"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\modals\\add_generator_modal.dart": {
+    "mtime": 1782992060.9658122,
+    "hash": "f5baf786cbce2b32d3b80ff3c0edd7c7"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\modals\\edit_generator_modal.dart": {
+    "mtime": 1782999657.4211657,
+    "hash": "9483cfb190362288462e0127e831d152"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\modals\\generator_detail_modal.dart": {
+    "mtime": 1782751765.7502806,
+    "hash": "167686d3c814a73abaa1c9c97bf5d928"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\providers\\generators_provider.dart": {
     "mtime": 1782760866.6431355,
     "hash": "d0604fd1991a0c017feebdadc1791961"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\screens\\generators_directory_screen.dart": {
-    "mtime": 1782760922.264628,
-    "hash": "b6cc3d571dbd92e0d30ccaae5e9553f3"
+    "mtime": 1782991984.5203032,
+    "hash": "76efd4a609b9ce9f43a9b9787532ab07"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\screens\\generator_detail_screen.dart": {
-    "mtime": 1782755968.4311182,
-    "hash": "de5f21ae58b4d1827d27359f093d1be4"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\add_generator_modal.dart": {
-    "mtime": 1782757128.442654,
-    "hash": "63ddd54c0a1a9275fb8125a04291e1ff"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\edit_generator_modal.dart": {
-    "mtime": 1782757130.3478932,
-    "hash": "d4e3bf7cf39b22c786ea384fc8f38ae6"
+    "mtime": 1782992060.2837636,
+    "hash": "05b413562c0e51ad438a25c3e2dd1ff6"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\generator_action_menu.dart": {
     "mtime": 1782755936.6735258,
@@ -315,33 +319,25 @@
     "mtime": 1782751706.6525705,
     "hash": "541b5828fc10bac58dafef64f8be252c"
   },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\generator_detail_modal.dart": {
-    "mtime": 1782751765.7502806,
-    "hash": "167686d3c814a73abaa1c9c97bf5d928"
-  },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\generators\\widgets\\inventory_group_section.dart": {
     "mtime": 1782755952.6614232,
     "hash": "56c1e98a8e9d5a1d949e89d69dae348b"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\modals\\add_vendor_modal.dart": {
+    "mtime": 1782999660.6245873,
+    "hash": "7c97b4b766a820327b414b0884f2fd57"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\modals\\edit_vendor_modal.dart": {
+    "mtime": 1782757132.7035692,
+    "hash": "af345eaea8eabd896d6833a8d0d7e566"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\providers\\vendors_provider.dart": {
     "mtime": 1782760866.640354,
     "hash": "27d3094a5682b040f138e6622dc9e033"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\screens\\vendor_directory_screen.dart": {
-    "mtime": 1782760902.1949334,
-    "hash": "855bfadaab45b568164a54b7ba77b1a7"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\add_vendor_modal.dart": {
-    "mtime": 1782755996.6163232,
-    "hash": "d605acb31bb948269379e36bf891357b"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\delete_vendor_dialog.dart": {
-    "mtime": 1782755915.9637918,
-    "hash": "3f5086f1fec2ab3051f825bdc7a8795f"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\edit_vendor_modal.dart": {
-    "mtime": 1782757132.7035692,
-    "hash": "af345eaea8eabd896d6833a8d0d7e566"
+    "mtime": 1782991984.5987408,
+    "hash": "00968179a06ae479de66e317065fc873"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\features\\vendors\\widgets\\vendor_action_menu.dart": {
     "mtime": 1782755919.0724723,
@@ -383,9 +379,21 @@
     "mtime": 1782758850.2893727,
     "hash": "cbfb81cd2d6b8349df1e772d1ed316fd"
   },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\assignment_mode_toggle.dart": {
+    "mtime": 1782991812.5116005,
+    "hash": "c832ea2a9a87b746738f41956dd1563a"
+  },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\backdrop_blur_overlay.dart": {
     "mtime": 1782756051.0924537,
     "hash": "6081eb29415be06487fe72f3b5e750aa"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\capacity_chip_selector.dart": {
+    "mtime": 1782991812.6402402,
+    "hash": "4850952acb1c070bd4f8dc1d746bc74a"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\confirmation_dialog.dart": {
+    "mtime": 1782992060.9829473,
+    "hash": "d04ca9bb4c0d80a6337477c48d50844a"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\dark_header_card.dart": {
     "mtime": 1782660098.1084013,
@@ -396,8 +404,8 @@
     "hash": "5a2d8ba3816027a9941e1e88b6091ff3"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\expandable_fab_menu.dart": {
-    "mtime": 1782660086.3500228,
-    "hash": "baf429a9653c059af9e69ceaa3038415"
+    "mtime": 1782945109.1968126,
+    "hash": "953782d4678f012fd259e40a186ea4a2"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\floating_search_fab.dart": {
     "mtime": 1782756029.6084168,
@@ -412,8 +420,8 @@
     "hash": "56150779bbc643eec3845178b31e914d"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\side_navigation_drawer.dart": {
-    "mtime": 1782758902.5102234,
-    "hash": "0f24629541b49496000b49169dc08033"
+    "mtime": 1782945055.879493,
+    "hash": "01d735779d44b13a50c574a16a378f29"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\lib\\shared\\widgets\\status_badge.dart": {
     "mtime": 1782756011.5736916,
@@ -460,44 +468,64 @@
     "hash": "8059f5d27a19c556eeafb49b3f9b7bdd"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\bookings_directory_screen_test.dart": {
-    "mtime": 1782931287.1985347,
-    "hash": "85e189c7f30ef6f279acc7832b858d5d"
+    "mtime": 1782992078.847158,
+    "hash": "e99e0809ea9adaee29dbe84649f6ec72"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\dashboard_screen_test.dart": {
-    "mtime": 1782931315.76662,
-    "hash": "f6180ad3e638bbad946e90849820c235"
+    "mtime": 1782992078.849538,
+    "hash": "cb95ea5b16b43b362a5bd6930cedb62e"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\generators_directory_screen_test.dart": {
-    "mtime": 1782931287.1995344,
-    "hash": "da86e27291b02ac91adccf32fe1da436"
+    "mtime": 1782992078.8510468,
+    "hash": "5b1872eb74b2e093c61d4bc2140e3fe5"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\login_screen_test.dart": {
-    "mtime": 1782722733.328473,
-    "hash": "8f7268408d755c44832e37de4196902c"
+    "mtime": 1782992078.8530462,
+    "hash": "d0412b615652f35d2634a776fe61a511"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\shared_widgets_test.dart": {
-    "mtime": 1782660119.5542457,
-    "hash": "736a2301a5eb85b45b52d52480bf576c"
+    "mtime": 1782992078.858863,
+    "hash": "b0d8f204790323108c29036675a9772d"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\vendor_directory_screen_test.dart": {
-    "mtime": 1782931287.2005339,
-    "hash": "a13be24d6e087d3caa54dd47f4de8920"
+    "mtime": 1782992078.8618631,
+    "hash": "7e2676bdc99eea982cff52eb5488ae43"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\widget_test.dart": {
-    "mtime": 1782758940.709934,
-    "hash": "02a5a58f662e321fbf1638244b9b1abd"
+    "mtime": 1782992078.8628662,
+    "hash": "3ac48383c6fedd7b71a335529c466191"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\admin\\integrations_screen_test.dart": {
-    "mtime": 1782934264.2924585,
-    "hash": "7e12fd77b56c6f6c29c46ddbf05116e2"
+    "mtime": 1782992078.8649702,
+    "hash": "a9b320e75c8d09af17aa6783ecea7ea7"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\admin\\system_health_screen_test.dart": {
-    "mtime": 1782934281.6128008,
-    "hash": "7343cbce09e9b0785ddf58d484776094"
+    "mtime": 1782992078.8671486,
+    "hash": "db5c9c8d8a0e1cca2f1d9eb47e46f29a"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\admin\\user_management_screen_test.dart": {
-    "mtime": 1782934286.0118454,
-    "hash": "24e5675190f83cefff73689b3841d057"
+    "mtime": 1782992078.869149,
+    "hash": "3777072645a2807481c744879c4e5a96"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\admin\\widgets\\edit_user_modal_test.dart": {
+    "mtime": 1782992078.8701499,
+    "hash": "4707ef20f3c8a2f6b2b012b10d6605ad"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\bookings\\widgets\\add_booking_modal_test.dart": {
+    "mtime": 1782992078.8721497,
+    "hash": "4bc363950b602ddebbf6a07a4ac6858f"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\generators\\widgets\\add_generator_modal_test.dart": {
+    "mtime": 1782992078.8746545,
+    "hash": "c5b93d23572dd4dcd317ae788d37ad01"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\generators\\widgets\\edit_generator_modal_test.dart": {
+    "mtime": 1782992078.8762932,
+    "hash": "5bd8d099eee95fd0faa49ed4b2720964"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\test\\features\\vendors\\widgets\\edit_vendor_modal_test.dart": {
+    "mtime": 1782992078.8782926,
+    "hash": "2e19ee847962149a34334990ba8902b0"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\windows\\flutter\\generated_plugin_registrant.cc": {
     "mtime": 1782655448.7115757,
@@ -540,8 +568,8 @@
     "hash": "7569387d58711ab975940f4df3b4bcda"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\AGENTS.md": {
-    "mtime": 1782639939.043851,
-    "hash": "45a4d85cbe89d82b53e830b5f39d3b2c"
+    "mtime": 1782946815.5115528,
+    "hash": "414f422a7e632a0c8bfebdf978334a9b"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\analysis_options.yaml": {
     "mtime": 1782655434.6939297,
@@ -562,6 +590,14 @@
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\README.md": {
     "mtime": 1782655955.1828032,
     "hash": "ee2bde7f8dbfd9c921df30474844e002"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\docs\\ENHANCED_UI_VERIFICATION_REPORT.md": {
+    "mtime": 1782944308.9378357,
+    "hash": "8e3f61b17f3127b9dc062518e864f873"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\docs\\FINAL_UI_VERIFICATION_REPORT.md": {
+    "mtime": 1782938553.351492,
+    "hash": "dda2853d2924ecbc2832496580377252"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\docs\\mobile_dashboard_with_side_navigation_screenshot_drift_report.md": {
     "mtime": 1782758454.9240103,
@@ -587,6 +623,10 @@
     "mtime": 1759390186.2705617,
     "hash": "30cc1614b16214b66c014af09ba699eb"
   },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\genset_industrial_ledger\\DESIGN.md": {
+    "mtime": 1782638030.8086028,
+    "hash": "cb139765d831bf2974e8e8604723c688"
+  },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\component_specifications_guide.md": {
     "mtime": 1782637753.2081828,
     "hash": "00d67e2a923545e85749132b2a8f4e7d"
@@ -603,10 +643,6 @@
     "mtime": 1782638030.4384146,
     "hash": "a97201a8043960ce9978a2c623084176"
   },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_add_booking_modal\\code.html": {
-    "mtime": 1782638030.5257764,
-    "hash": "f973cc0b3ff673ec229b13f4b1a0e562"
-  },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_add_booking_modal_updated\\code.html": {
     "mtime": 1782638030.4703767,
     "hash": "ee0e23ffca853c089356eab11467c66b"
@@ -622,10 +658,6 @@
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_edit_booking_modal\\code.html": {
     "mtime": 1782638030.4067674,
     "hash": "72b5f154af9112e7745497947884a209"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_generator_detail_modal\\code.html": {
-    "mtime": 1782638030.610052,
-    "hash": "83bdfdaa84f0ec8d11d07e8fabc70714"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\generator_detail_view\\code.html": {
     "mtime": 1782638030.6355226,
@@ -815,13 +847,45 @@
     "mtime": 1759390273.6784465,
     "hash": "04e7b6ef05346c70b663ca1d97de3ad5"
   },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\aligned_mobile_bookings_directory\\image.png": {
+    "mtime": 1782941315.369056,
+    "hash": "4ecdfb58ee1dc0717bdcfa7f86ef8363"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\floating_add_booking_modal_updated\\image.png": {
+    "mtime": 1782941391.3793483,
+    "hash": "f6546eb4baa4b81050ef03a403f7fe71"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\floating_add_vendor_modal\\image.png": {
+    "mtime": 1782941484.8135793,
+    "hash": "71f0eee2edf4e55464816d0ffe990d39"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\floating_edit_booking_modal\\image.png": {
+    "mtime": 1782941533.085385,
+    "hash": "442f01cb9816b976f3c4454f9a3c48a5"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\generator_detail_view\\image.png": {
+    "mtime": 1782941569.493054,
+    "hash": "f9db352bf54b3923f6c7d8483f5a05c1"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\mobile_billing_preview\\image.png": {
+    "mtime": 1782941757.263752,
+    "hash": "ad096412ebc353be1a9ee52a6b5a9f9e"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\mobile_vendor_directory_with_backdrop_blur\\image.png": {
+    "mtime": 1782941784.9044614,
+    "hash": "0fe6a6ada970e7443bce2b9384edd848"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\refined_mobile_dashboard_v2\\image.png": {
+    "mtime": 1782941816.3553216,
+    "hash": "84ed56e11f5f849655b14f1024cb7c4b"
+  },
+  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\screens\\updated_generators_directory_with_vertical_action_menu\\image.png": {
+    "mtime": 1782941852.408383,
+    "hash": "93e68afa0e8462982a1096727cbcce1d"
+  },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\aligned_mobile_bookings_directory\\screen.png": {
     "mtime": 1782638030.4519558,
     "hash": "b8bfcf860759628c7c7e69ad9372d9f7"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_add_booking_modal\\screen.png": {
-    "mtime": 1782638030.5379815,
-    "hash": "40c2357849f57d28a3af66d7109da390"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_add_booking_modal_updated\\screen.png": {
     "mtime": 1782638030.480542,
@@ -838,10 +902,6 @@
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_edit_booking_modal\\screen.png": {
     "mtime": 1782638030.419155,
     "hash": "2625ca730ce89c96e4a5a0528819a3e8"
-  },
-  "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\floating_generator_detail_modal\\screen.png": {
-    "mtime": 1782638030.620258,
-    "hash": "b2cde9a236d97ff175b6c395e8f59cc2"
   },
   "W:\\Aatish\\Stuff\\generator-ledger-mobile-v2\\stitch_generator_ledger_design\\screens\\generator_detail_view\\screen.png": {
     "mtime": 1782638030.6455443,
