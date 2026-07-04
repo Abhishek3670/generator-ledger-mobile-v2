@@ -1,34 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
+import '../../auth/providers/auth_provider.dart';
 
-class IntegrationsScreen extends StatelessWidget {
+class IntegrationsScreen extends ConsumerWidget {
   const IntegrationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'INTEGRATIONS',
-          style: AppTypography.headlineSmall.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
       drawer: SideNavigationDrawer(
         currentRoute: '/admin/integrations',
         onNavigate: (routePath) {
           context.go(routePath);
         },
-        userName: 'Abhishek Sharma',
-        userRole: 'Fleet Manager',
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
       ),
       body: SafeArea(
         child: Padding(

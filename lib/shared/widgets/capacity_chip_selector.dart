@@ -6,14 +6,20 @@ import '../../core/theme/app_typography.dart';
 /// A reusable widget for selecting generator capacities via chips.
 class CapacityChipSelector extends StatelessWidget {
   final List<String> capacities;
-  final String selectedCapacity;
-  final ValueChanged<String> onCapacitySelected;
+  final String? selectedCapacity;
+  final List<String>? selectedCapacities;
+  final ValueChanged<String>? onCapacitySelected;
+  final ValueChanged<List<String>>? onCapacitiesChanged;
+  final bool isMultiSelect;
 
   const CapacityChipSelector({
     super.key,
     this.capacities = const ['25', '50', '100', '250'],
-    required this.selectedCapacity,
-    required this.onCapacitySelected,
+    this.selectedCapacity,
+    this.selectedCapacities,
+    this.onCapacitySelected,
+    this.onCapacitiesChanged,
+    this.isMultiSelect = false,
   });
 
   @override
@@ -22,9 +28,31 @@ class CapacityChipSelector extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: capacities.map((cap) {
-        final isSelected = selectedCapacity == cap;
+        final isSelected = isMultiSelect
+            ? (selectedCapacities?.contains(cap) ?? false)
+            : selectedCapacity == cap;
+
         return GestureDetector(
-          onTap: () => onCapacitySelected(cap),
+          onTap: () {
+            if (isMultiSelect) {
+              if (onCapacitiesChanged != null) {
+                final current = List<String>.from(selectedCapacities ?? []);
+                if (current.contains(cap)) {
+                  // Ensure at least one must be selected
+                  if (current.length > 1) {
+                    current.remove(cap);
+                  }
+                } else {
+                  current.add(cap);
+                }
+                onCapacitiesChanged!(current);
+              }
+            } else {
+              if (onCapacitySelected != null) {
+                onCapacitySelected!(cap);
+              }
+            }
+          },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -33,7 +61,7 @@ class CapacityChipSelector extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
             ),
             child: Text(
-              cap,
+              isMultiSelect && !cap.endsWith('kVA') ? '$cap kVA' : cap,
               style: AppTypography.bodySmall.copyWith(
                 color: isSelected ? Colors.white : AppColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

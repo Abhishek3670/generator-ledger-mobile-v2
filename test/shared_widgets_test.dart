@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ledger/features/auth/providers/auth_provider.dart';
+import 'package:ledger/shared/models/user.dart';
 import 'package:ledger/shared/widgets/admin_bottom_nav_bar.dart';
 import 'package:ledger/shared/widgets/app_bottom_nav_bar.dart';
 import 'package:ledger/shared/widgets/backdrop_blur_overlay.dart';
@@ -238,6 +241,90 @@ void main() {
     expect(find.text('INTEGRATIONS'), findsOneWidget);
     expect(find.text('EXIT ADMIN'), findsOneWidget);
     expect(find.text('DASHBOARD'), findsNothing);
+  });
+
+  testWidgets('SideNavigationDrawer does not render role text when empty', (tester) async {
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        key: scaffoldKey,
+        drawer: SideNavigationDrawer(
+          drawerContext: SideNavigationDrawerContext.dashboard,
+          currentRoute: '/dashboard',
+          onNavigate: (_) {},
+          userName: 'John Doe',
+          userRole: '',
+        ),
+      ),
+    ));
+    scaffoldKey.currentState?.openDrawer();
+    await tester.pump();
+    expect(find.byType(SideNavigationDrawer), findsOneWidget);
+    expect(find.text('John Doe'), findsOneWidget);
+    // Role text should not render when empty. Since isLight defaults to false in dashboard if context isn't specified,
+    // and dashboard context makes isLight=true, let's verify no text widget contains empty string or label styling is missing
+    expect(find.text(''), findsNothing);
+  });
+
+  testWidgets('SideNavigationDrawer renders different roles successfully', (tester) async {
+    final roles = ['Admin', 'Manager', 'Operator', 'Viewer'];
+    for (final role in roles) {
+      final scaffoldKey = GlobalKey<ScaffoldState>();
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          key: scaffoldKey,
+          drawer: SideNavigationDrawer(
+            drawerContext: SideNavigationDrawerContext.operational,
+            currentRoute: '/bookings',
+            onNavigate: (_) {},
+            userName: 'User A',
+            userRole: role,
+          ),
+        ),
+      ));
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pump();
+      expect(find.text(role), findsOneWidget);
+    }
+  });
+
+  testWidgets('SideNavigationDrawer integrates dynamically with authProvider', (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith((ref) => User(
+              username: 'Manohar L.',
+              role: 'Operator',
+              status: 'ACTIVE',
+              lastLogin: DateTime.now(),
+              createdAt: DateTime.now(),
+            )),
+      ],
+    );
+
+    // To test inside MaterialApp routing, we can use UncontrolledProviderScope
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, child) {
+                final user = ref.watch(authProvider);
+                return SideNavigationDrawer(
+                  currentRoute: '/bookings',
+                  userName: user?.username ?? '',
+                  userRole: user?.role ?? '',
+                  onNavigate: (_) {},
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Manohar L.'), findsOneWidget);
+    expect(find.text('Operator'), findsOneWidget);
   });
 }
 

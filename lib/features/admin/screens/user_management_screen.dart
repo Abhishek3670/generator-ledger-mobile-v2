@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/user.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../providers/user_management_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../modals/add_user_modal.dart';
 import '../modals/edit_user_modal.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
@@ -44,27 +45,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final users = ref.watch(userProvider).map((user) => user.toMap()).toList();
+    final currentUser = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'USER ACCESS',
-          style: AppTypography.headlineSmall.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
       drawer: SideNavigationDrawer(
         currentRoute: '/admin/users',
         onNavigate: (routePath) {
           context.go(routePath);
         },
-        userName: 'Abhishek Sharma',
-        userRole: 'Fleet Manager',
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
       ),
       body: SafeArea(
         child: Stack(

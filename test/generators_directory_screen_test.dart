@@ -15,7 +15,6 @@ void main() {
     ));
 
     // Verify Title & Header
-    expect(find.text('FLEET'), findsOneWidget);
     expect(find.text('DIRECTORY'), findsOneWidget);
     expect(find.text('Generators'), findsOneWidget);
 

@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/providers/drawer_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../../../core/providers/booking_provider.dart';
 import '../widgets/calendar_view.dart';
@@ -30,31 +28,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: AppColors.primary),
-          onPressed: () {
-            ref.read(drawerOpenProvider.notifier).state = true;
-          },
-        ),
-        title: Text(
-          'Genset Industrial Ledger',
-          style: AppTypography.headlineSmall.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(
-            color: AppColors.border,
-            height: 1,
-            thickness: 1,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.mobileGutter),

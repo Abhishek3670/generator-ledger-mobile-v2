@@ -1,8 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
-import 'backdrop_blur_overlay.dart';
 
 /// An expandable Floating Action Button (FAB) menu item.
 class ExpandableFABItem {
@@ -52,6 +52,7 @@ class _ExpandableFABMenuState extends State<ExpandableFABMenu> with SingleTicker
   late final AnimationController _animationController;
   late final Animation<double> _expandAnimation;
   bool _isOpen = false;
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
@@ -70,6 +71,7 @@ class _ExpandableFABMenuState extends State<ExpandableFABMenu> with SingleTicker
 
   @override
   void dispose() {
+    _hideOverlay();
     _animationController.dispose();
     super.dispose();
   }
@@ -79,47 +81,124 @@ class _ExpandableFABMenuState extends State<ExpandableFABMenu> with SingleTicker
       _isOpen = !_isOpen;
       if (_isOpen) {
         _animationController.forward();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _isOpen) {
+            _showOverlay();
+          }
+        });
       } else {
-        _animationController.reverse();
+        _animationController.reverse().then((_) {
+          if (mounted && !_isOpen) {
+            _hideOverlay();
+          }
+        });
       }
     });
   }
 
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return;
+
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    _overlayEntry = OverlayEntry(
+      builder: (overlayContext) {
+        return AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            final screenWidth = MediaQuery.of(context).size.width;
+            final screenHeight = MediaQuery.of(context).size.height;
+            final rightPadding = screenWidth - (offset.dx + size.width);
+            final bottomPadding = screenHeight - (offset.dy + size.height);
+
+            return Stack(
+              children: [
+                // Full-screen backdrop blur
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: _toggleMenu,
+                    behavior: HitTestBehavior.opaque,
+                    child: FadeTransition(
+                      opacity: _animationController,
+                      child: ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                          child: Container(
+                            color: AppColors.primary.withValues(alpha: 0.20),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Floating menu items and active FAB positioned exactly on top of the original FAB
+                Positioned(
+                  right: rightPadding,
+                  bottom: bottomPadding,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Sub-actions
+                      SizeTransition(
+                        sizeFactor: _expandAnimation,
+                        child: FadeTransition(
+                          opacity: _expandAnimation,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: List.generate(widget.items.length, (index) {
+                                final item = widget.items[index];
+                                return _buildItem(item, index);
+                              }),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      // Active/expanded primary FAB
+                      FloatingActionButton(
+                        onPressed: _toggleMenu,
+                        backgroundColor: AppColors.primaryDark,
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(),
+                        elevation: 4,
+                        child: Icon(widget.expandedIcon),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomRight,
-      clipBehavior: Clip.none,
-      children: [
-        // Backdrop overlay
-        BackdropBlurOverlay(
-          isVisible: _isOpen,
-          onTap: _toggleMenu,
-        ),
-
-        // Menu items stack
-        Padding(
-          padding: const EdgeInsets.only(bottom: 64.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(widget.items.length, (index) {
-              final item = widget.items[index];
-              return _buildItem(item, index);
-            }),
-          ),
-        ),
-
-        // Primary FAB
-        FloatingActionButton(
-          onPressed: _toggleMenu,
-          backgroundColor: _isOpen ? AppColors.primaryDark : AppColors.accent,
-          foregroundColor: _isOpen ? Colors.white : AppColors.primary,
-          shape: const StadiumBorder(),
-          elevation: 4,
-          child: Icon(_isOpen ? widget.expandedIcon : widget.collapsedIcon),
-        ),
-      ],
+    return FloatingActionButton(
+      onPressed: _toggleMenu,
+      backgroundColor: _isOpen ? AppColors.primaryDark : AppColors.accent,
+      foregroundColor: _isOpen ? Colors.white : AppColors.primary,
+      shape: const StadiumBorder(),
+      elevation: 4,
+      child: Icon(_isOpen ? widget.expandedIcon : widget.collapsedIcon),
     );
   }
 

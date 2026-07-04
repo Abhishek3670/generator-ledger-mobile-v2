@@ -15,6 +15,7 @@ import '../modals/edit_vendor_modal.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
 import '../widgets/vendor_action_menu.dart';
 import '../providers/vendors_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// Directory screen listing Retailer and Rental vendors.
 class VendorDirectoryScreen extends ConsumerStatefulWidget {
@@ -66,6 +67,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
   Widget build(BuildContext context) {
     // Filter vendors based on search query
     final vendors = ref.watch(vendorProvider);
+    final currentUser = ref.watch(authProvider);
     final filteredVendors = vendors.where((vendor) {
       if (_searchQuery.isEmpty) return true;
       return vendor.name.toLowerCase().contains(_searchQuery) ||
@@ -78,24 +80,13 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'VENDORS',
-          style: AppTypography.headlineSmall.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
       drawer: SideNavigationDrawer(
         currentRoute: '/vendors',
         onNavigate: (routePath) {
           context.go(routePath);
         },
-        userName: 'Abhishek Sharma',
-        userRole: 'Fleet Manager',
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
       ),
       floatingActionButton: ExpandableFABMenu(
         items: [

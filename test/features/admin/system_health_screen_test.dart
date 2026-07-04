@@ -17,7 +17,6 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify title and headers
-    expect(find.text('SYSTEM HEALTH'), findsOneWidget);
     expect(find.text('Live Server Metrics'), findsOneWidget);
     expect(find.text('APPLICATION STATUS'), findsOneWidget);
 

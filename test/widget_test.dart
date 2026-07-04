@@ -7,7 +7,6 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: LedgerApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Genset Industrial Ledger'), findsOneWidget);
     expect(find.text('DASHBOARD'), findsOneWidget);
   });
 }

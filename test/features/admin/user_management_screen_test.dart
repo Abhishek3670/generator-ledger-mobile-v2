@@ -17,7 +17,6 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Title
-    expect(find.text('USER ACCESS'), findsOneWidget);
     expect(find.text('User Management'), findsOneWidget);
 
     // Verify presence of default mock users from userProvider

@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/drawer_provider.dart';
 import '../../shared/widgets/side_navigation_drawer.dart';
 import '../../shared/widgets/admin_bottom_nav_bar.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
@@ -16,6 +14,7 @@ import '../../features/generators/screens/generator_detail_screen.dart';
 import '../../features/admin/screens/system_health_screen.dart';
 import '../../features/admin/screens/user_management_screen.dart';
 import '../../features/admin/screens/integrations_screen.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import 'route_names.dart';
 
 /// Full router configuration for the application.
@@ -141,66 +140,39 @@ class _OperationalShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDrawerOpen = ref.watch(drawerOpenProvider);
+    final currentUser = ref.watch(authProvider);
 
-    return Stack(
-      children: [
-        Scaffold(
-          body: navigationShell,
-          bottomNavigationBar: AppBottomNavBar(
-            currentIndex: navigationShell.currentIndex,
-            onTap: (index) {
-              navigationShell.goBranch(
-                index,
-                initialLocation: index == navigationShell.currentIndex,
-              );
-            },
-          ),
-        ),
-        if (isDrawerOpen) ...[
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () {
-                ref.read(drawerOpenProvider.notifier).state = false;
-              },
-              child: ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            child: SideNavigationDrawer(
-              variant: navigationShell.currentIndex == 0
-                  ? SideNavigationDrawerVariant.light
-                  : SideNavigationDrawerVariant.dark,
-              drawerContext: navigationShell.currentIndex == 0
-                  ? SideNavigationDrawerContext.dashboard
-                  : SideNavigationDrawerContext.operational,
-              currentRoute: _getRouteFromIndex(navigationShell.currentIndex),
-              onNavigate: (routePath) {
-                ref.read(drawerOpenProvider.notifier).state = false;
-                final index = _getIndexFromRoute(routePath);
-                if (index != -1) {
-                  navigationShell.goBranch(
-                    index,
-                    initialLocation: index == navigationShell.currentIndex,
-                  );
-                }
-              },
-              userName: 'Abhishek Sharma',
-              userRole: 'Fleet Manager',
-            ),
-          ),
-        ],
-      ],
+    return Scaffold(
+      drawer: SideNavigationDrawer(
+        variant: navigationShell.currentIndex == 0
+            ? SideNavigationDrawerVariant.light
+            : SideNavigationDrawerVariant.dark,
+        drawerContext: navigationShell.currentIndex == 0
+            ? SideNavigationDrawerContext.dashboard
+            : SideNavigationDrawerContext.operational,
+        currentRoute: _getRouteFromIndex(navigationShell.currentIndex),
+        onNavigate: (routePath) {
+          final index = _getIndexFromRoute(routePath);
+          if (index != -1) {
+            navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            );
+          }
+        },
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
+      ),
+      body: navigationShell,
+      bottomNavigationBar: AppBottomNavBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) {
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
+      ),
     );
   }
 

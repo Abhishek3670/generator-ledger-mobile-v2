@@ -16,6 +16,7 @@ import '../modals/edit_generator_modal.dart';
 import '../modals/generator_detail_modal.dart';
 import '../widgets/generator_action_menu.dart';
 import '../providers/generators_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// Directory screen listing fleet generators grouped by inventory categories.
 class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
@@ -97,6 +98,7 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
   Widget build(BuildContext context) {
     // Filter mock generators based on search query
     final generators = ref.watch(generatorProvider);
+    final currentUser = ref.watch(authProvider);
     final filteredGenerators = generators.where((gen) {
       if (_searchQuery.isEmpty) return true;
       return gen.id.toLowerCase().contains(_searchQuery) ||
@@ -110,24 +112,13 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'FLEET',
-          style: AppTypography.headlineSmall.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
       drawer: SideNavigationDrawer(
         currentRoute: '/generators',
         onNavigate: (routePath) {
           context.go(routePath);
         },
-        userName: 'Abhishek Sharma',
-        userRole: 'Fleet Manager',
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
       ),
       floatingActionButton: ExpandableFABMenu(
         items: [

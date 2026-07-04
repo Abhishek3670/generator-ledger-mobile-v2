@@ -15,33 +15,66 @@ class AssignmentModeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isIdSelected = currentMode == 'id';
+    final isCapacitySelected = currentMode == 'capacity';
+
     return Row(
       children: [
+        // Assign by Generator ID
         Expanded(
-          child: ElevatedButton(
-            onPressed: () => onModeChanged('id'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: currentMode == 'id' ? AppColors.primary : AppColors.surfaceContainer,
-              foregroundColor: currentMode == 'id' ? Colors.white : AppColors.textSecondary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              padding: const EdgeInsets.symmetric(vertical: 10),
+          child: GestureDetector(
+            onTap: () => onModeChanged('id'),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: isIdSelected ? AppColors.primary : Colors.white,
+                border: Border.all(
+                  color: isIdSelected ? AppColors.primary : AppColors.border,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(9999),
+              ),
+              child: Text(
+                'Assign by Generator ID',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isIdSelected ? Colors.white : AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-            child: Text('Generator ID', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
+        // Assign by Capacity (Auto-assign)
         Expanded(
-          child: ElevatedButton(
-            onPressed: () => onModeChanged('capacity'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: currentMode == 'capacity' ? AppColors.primary : AppColors.surfaceContainer,
-              foregroundColor: currentMode == 'capacity' ? Colors.white : AppColors.textSecondary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              padding: const EdgeInsets.symmetric(vertical: 10),
+          child: GestureDetector(
+            onTap: () => onModeChanged('capacity'),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: isCapacitySelected ? AppColors.primary : Colors.white,
+                border: Border.all(
+                  color: isCapacitySelected ? AppColors.primary : AppColors.border,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(9999),
+              ),
+              child: Text(
+                'Assign by Capacity (Auto-assign)',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isCapacitySelected ? Colors.white : AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-            child: Text('Capacity', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold)),
           ),
         ),
       ],

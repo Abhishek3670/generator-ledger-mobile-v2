@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../providers/system_health_provider.dart';
 import '../widgets/health_metric_card.dart';
+import '../../auth/providers/auth_provider.dart';
 
 class SystemHealthScreen extends ConsumerWidget {
   const SystemHealthScreen({super.key});
@@ -13,38 +14,17 @@ class SystemHealthScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final health = ref.watch(systemHealthProvider);
+    final currentUser = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'SYSTEM HEALTH',
-          style: AppTypography.headlineSmall.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () {
-              ref.read(systemHealthProvider.notifier).refresh();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Metrics refreshed')),
-              );
-            },
-          ),
-        ],
-      ),
       drawer: SideNavigationDrawer(
         currentRoute: '/admin/health',
         onNavigate: (routePath) {
           context.go(routePath);
         },
-        userName: 'Abhishek Sharma',
-        userRole: 'Fleet Manager',
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -58,9 +38,25 @@ class SystemHealthScreen extends ConsumerWidget {
                 style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 4),
-              Text(
-                'Live Server Metrics',
-                style: AppTypography.displayLarge.copyWith(color: AppColors.primary),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Live Server Metrics',
+                      style: AppTypography.displayLarge.copyWith(color: AppColors.primary),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: AppColors.primary),
+                    onPressed: () {
+                      ref.read(systemHealthProvider.notifier).refresh();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Metrics refreshed')),
+                      );
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(

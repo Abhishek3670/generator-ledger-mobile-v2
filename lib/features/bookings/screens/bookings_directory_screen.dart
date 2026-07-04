@@ -13,6 +13,7 @@ import '../modals/add_booking_modal.dart';
 import '../widgets/edit_booking_modal.dart';
 import '../providers/bookings_provider.dart';
 import '../../vendors/providers/vendors_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// Directory screen listing bookings grouped by vendor.
 class BookingsDirectoryScreen extends ConsumerStatefulWidget {
@@ -52,6 +53,7 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
     // Filter bookings based on search query
     final bookings = ref.watch(bookingProvider);
     final vendors = ref.watch(vendorProvider);
+    final currentUser = ref.watch(authProvider);
     final filteredBookings = bookings.where((booking) {
       if (_searchQuery.isEmpty) return true;
       return booking.vendorName.toLowerCase().contains(_searchQuery) ||
@@ -61,24 +63,13 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'BOOKINGS',
-          style: AppTypography.headlineSmall.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
       drawer: SideNavigationDrawer(
         currentRoute: '/bookings',
         onNavigate: (routePath) {
           context.go(routePath);
         },
-        userName: 'Abhishek Sharma',
-        userRole: 'Fleet Manager',
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
       ),
       body: SafeArea(
         child: Stack(

@@ -119,17 +119,18 @@ class SideNavigationDrawer extends StatelessWidget {
                                 color: isLight ? AppColors.primary : Colors.white,
                               ),
                             ),
-                            Text(
-                              isLight ? userRole.toUpperCase() : userRole,
-                              style: isLight
-                                  ? AppTypography.labelCaps.copyWith(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11,
-                                    )
-                                  : AppTypography.bodySmall.copyWith(
-                                      color: Colors.white70,
-                                    ),
-                            ),
+                            if (userRole.isNotEmpty)
+                              Text(
+                                isLight ? userRole.toUpperCase() : userRole,
+                                style: isLight
+                                    ? AppTypography.labelCaps.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 11,
+                                      )
+                                    : AppTypography.bodySmall.copyWith(
+                                        color: Colors.white70,
+                                      ),
+                              ),
                           ],
                         ),
                       ),

@@ -15,7 +15,6 @@ void main() {
     ));
 
     // Verify Title & Header
-    expect(find.text('VENDORS'), findsOneWidget); // AppBar only (BottomNavBar consolidated to shell)
     expect(find.text('DIRECTORY'), findsOneWidget);
     expect(find.text('Vendors'), findsOneWidget);
 

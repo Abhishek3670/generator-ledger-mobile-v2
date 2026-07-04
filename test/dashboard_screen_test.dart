@@ -17,7 +17,6 @@ void main() {
 
     // Verify Dashboard Scaffold components
     expect(find.byType(DashboardScreen), findsOneWidget);
-    expect(find.text('Genset Industrial Ledger'), findsOneWidget);
 
     // Verify StatsGrid exists
     expect(find.byType(StatsGrid), findsOneWidget);

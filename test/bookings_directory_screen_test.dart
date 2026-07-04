@@ -14,7 +14,6 @@ void main() {
     ));
 
     // Verify Title & Header
-    expect(find.text('BOOKINGS'), findsOneWidget); // AppBar only (BottomNavBar consolidated to shell)
     expect(find.text('DIRECTORY'), findsOneWidget);
     expect(find.text('Bookings by Vendor'), findsOneWidget);
     expect(find.text('Review active reservations and manage vendor schedules.'), findsOneWidget);
