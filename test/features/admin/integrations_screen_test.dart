@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
-          home: IntegrationsScreen(),
+          home: Scaffold(body: IntegrationsScreen()),
         ),
       ),
     );

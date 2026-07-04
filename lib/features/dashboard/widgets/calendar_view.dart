@@ -154,7 +154,7 @@ class _CalendarViewState extends State<CalendarView> {
                           _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1, 1);
                         });
                       },
-                      icon: const Icon(Icons.chevron_left, color: AppColors.primary, size: 20),
+                      icon: const Icon(Icons.chevron_left, size: 20),
                       style: IconButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -169,7 +169,7 @@ class _CalendarViewState extends State<CalendarView> {
                           _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1, 1);
                         });
                       },
-                      icon: const Icon(Icons.chevron_right, color: AppColors.primary, size: 20),
+                      icon: const Icon(Icons.chevron_right, size: 20),
                       style: IconButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,

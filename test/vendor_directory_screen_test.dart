@@ -10,7 +10,7 @@ void main() {
   testWidgets('VendorDirectoryScreen renders successfully with all elements', (tester) async {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
-        home: VendorDirectoryScreen(),
+        home: Scaffold(body: VendorDirectoryScreen()),
       ),
     ));
 
@@ -35,7 +35,7 @@ void main() {
   testWidgets('VendorDirectoryScreen filters list using search field query', (tester) async {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
-        home: VendorDirectoryScreen(),
+        home: Scaffold(body: VendorDirectoryScreen()),
       ),
     ));
 

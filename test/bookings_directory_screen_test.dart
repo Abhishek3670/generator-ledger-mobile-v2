@@ -9,7 +9,7 @@ void main() {
   testWidgets('BookingsDirectoryScreen renders successfully with all elements', (tester) async {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
-        home: BookingsDirectoryScreen(),
+        home: Scaffold(body: BookingsDirectoryScreen()),
       ),
     ));
 
@@ -30,7 +30,7 @@ void main() {
   testWidgets('BookingsDirectoryScreen filters by search text input', (tester) async {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
-        home: BookingsDirectoryScreen(),
+        home: Scaffold(body: BookingsDirectoryScreen()),
       ),
     ));
 

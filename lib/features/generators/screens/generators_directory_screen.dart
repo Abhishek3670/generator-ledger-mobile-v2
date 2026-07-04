@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -9,14 +8,12 @@ import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/expandable_fab_menu.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
-import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../widgets/inventory_group_section.dart';
 import '../modals/add_generator_modal.dart';
 import '../modals/edit_generator_modal.dart';
 import '../modals/generator_detail_modal.dart';
 import '../widgets/generator_action_menu.dart';
 import '../providers/generators_provider.dart';
-import '../../auth/providers/auth_provider.dart';
 
 /// Directory screen listing fleet generators grouped by inventory categories.
 class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
@@ -98,7 +95,6 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
   Widget build(BuildContext context) {
     // Filter mock generators based on search query
     final generators = ref.watch(generatorProvider);
-    final currentUser = ref.watch(authProvider);
     final filteredGenerators = generators.where((gen) {
       if (_searchQuery.isEmpty) return true;
       return gen.id.toLowerCase().contains(_searchQuery) ||
@@ -110,31 +106,9 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
     final permanentGensets = filteredGenerators.where((g) => g.category == 'permanent').toList();
     final emergencyGensets = filteredGenerators.where((g) => g.category == 'emergency').toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: SideNavigationDrawer(
-        currentRoute: '/generators',
-        onNavigate: (routePath) {
-          context.go(routePath);
-        },
-        userName: currentUser?.username ?? 'Guest',
-        userRole: currentUser?.role ?? '',
-      ),
-      floatingActionButton: ExpandableFABMenu(
-        items: [
-          ExpandableFABItem(
-            icon: Icons.add_box,
-            label: 'NEW RETAILER',
-            onPressed: () => _openAddModal('retailer'),
-          ),
-          ExpandableFABItem(
-            icon: Icons.emergency,
-            label: 'EMERGENCY',
-            onPressed: () => _openAddModal('emergency'),
-          ),
-        ],
-      ),
-      body: SafeArea(
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
         child: Stack(
           children: [
             SingleChildScrollView(
@@ -175,68 +149,60 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                       children: [
                         Text(
                           'BOOKED DATE',
-                          style: AppTypography.labelCaps.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
-                              child: Container(
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: _isDateFocused ? AppColors.primary : AppColors.border,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: TextFormField(
-                                    focusNode: _dateFocusNode,
-                                    controller: _dateController,
-                                    readOnly: true,
-                                    onTap: _selectDate,
-                                    style: AppTypography.bodySmall,
-                                    decoration: const InputDecoration(
-                                      hintText: 'dd-mm-yyyy',
-                                      suffixIcon: Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      border: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
+                              child: GestureDetector(
+                                onTap: _selectDate,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: _isDateFocused ? AppColors.primary : AppColors.border,
+                                      width: 1,
                                     ),
+                                    borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        _selectedDate != null
+                                            ? DateFormat('dd MMMM yyyy').format(_selectedDate!)
+                                            : 'All',
+                                        style: AppTypography.bodyMedium.copyWith(
+                                          color: _selectedDate != null ? AppColors.primary : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.calendar_today,
+                                        size: 16,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            SizedBox(
-                              height: 40,
-                              child: OutlinedButton(
+                            if (_selectedDate != null) ...[
+                              const SizedBox(width: 8),
+                              IconButton(
                                 onPressed: () {
                                   setState(() {
-                                    _dateController.clear();
                                     _selectedDate = null;
+                                    _dateController.clear();
                                   });
                                 },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: AppColors.border, width: 1),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: Text(
-                                  'All',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                icon: const Icon(Icons.clear, size: 16),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: AppColors.border.withValues(alpha: 0.3),
+                                  padding: const EdgeInsets.all(8),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ],
@@ -247,7 +213,7 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   // Retailer Genset Group
                   InventoryGroupSection(
                     title: 'Retailer Genset',
-                    description: 'Gensets used for normal bookings and day-to-day retailer assignments.',
+                    description: 'Gensets rented out to retail vendors for events like marriages.',
                     category: 'retailer',
                     generators: retailerGensets,
                     onGeneratorTap: (gen) {
@@ -304,6 +270,26 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                 controller: _searchController,
                 fabIcon: Icons.add,
                 onFABPressed: () => _openAddModal(null),
+              ),
+            ),
+
+            // Positioned ExpandableFABMenu
+            Positioned(
+              right: 16,
+              bottom: 80,
+              child: ExpandableFABMenu(
+                items: [
+                  ExpandableFABItem(
+                    icon: Icons.add_box,
+                    label: 'NEW RETAILER',
+                    onPressed: () => _openAddModal('retailer'),
+                  ),
+                  ExpandableFABItem(
+                    icon: Icons.emergency,
+                    label: 'EMERGENCY',
+                    onPressed: () => _openAddModal('emergency'),
+                  ),
+                ],
               ),
             ),
 

@@ -10,7 +10,7 @@ void main() {
   testWidgets('GeneratorsDirectoryScreen renders successfully with all elements', (tester) async {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
-        home: GeneratorsDirectoryScreen(),
+        home: Scaffold(body: GeneratorsDirectoryScreen()),
       ),
     ));
 
@@ -36,7 +36,7 @@ void main() {
   testWidgets('GeneratorsDirectoryScreen filters list using search field query', (tester) async {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
-        home: GeneratorsDirectoryScreen(),
+        home: Scaffold(body: GeneratorsDirectoryScreen()),
       ),
     ));
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/status_badge.dart';
 import 'metric_sparkline.dart';
 
 class HealthMetricCard extends StatelessWidget {
@@ -44,21 +45,9 @@ class HealthMetricCard extends StatelessWidget {
                 title,
                 style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(9999),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                child: Text(
-                  statusText,
-                  style: const TextStyle(
-                    color: AppColors.success,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
+              StatusBadge(
+                label: statusText,
+                type: StatusBadgeType.active,
               ),
             ],
           ),

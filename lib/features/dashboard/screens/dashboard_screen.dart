@@ -26,9 +26,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final summary = ref.watch(dashboardSummaryProvider);
     final bookings = ref.watch(bookingProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.mobileGutter),
           child: Column(

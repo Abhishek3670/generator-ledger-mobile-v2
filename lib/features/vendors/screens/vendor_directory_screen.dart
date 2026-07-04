@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
@@ -8,14 +7,12 @@ import '../../../data/mock/mock_vendors.dart';
 import '../../../shared/widgets/expandable_fab_menu.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
-import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../widgets/vendor_card.dart';
 import '../modals/add_vendor_modal.dart';
 import '../modals/edit_vendor_modal.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
 import '../widgets/vendor_action_menu.dart';
 import '../providers/vendors_provider.dart';
-import '../../auth/providers/auth_provider.dart';
 
 /// Directory screen listing Retailer and Rental vendors.
 class VendorDirectoryScreen extends ConsumerStatefulWidget {
@@ -67,7 +64,6 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
   Widget build(BuildContext context) {
     // Filter vendors based on search query
     final vendors = ref.watch(vendorProvider);
-    final currentUser = ref.watch(authProvider);
     final filteredVendors = vendors.where((vendor) {
       if (_searchQuery.isEmpty) return true;
       return vendor.name.toLowerCase().contains(_searchQuery) ||
@@ -78,31 +74,9 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
     final retailerVendors = filteredVendors.where((v) => v.category == 'retailer').toList();
     final rentalVendors = filteredVendors.where((v) => v.category == 'rental').toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: SideNavigationDrawer(
-        currentRoute: '/vendors',
-        onNavigate: (routePath) {
-          context.go(routePath);
-        },
-        userName: currentUser?.username ?? 'Guest',
-        userRole: currentUser?.role ?? '',
-      ),
-      floatingActionButton: ExpandableFABMenu(
-        items: [
-          ExpandableFABItem(
-            icon: Icons.add_box,
-            label: 'NEW RETAILER',
-            onPressed: () => _openAddVendorModal('retailer'),
-          ),
-          ExpandableFABItem(
-            icon: Icons.store,
-            label: 'NEW RENTAL VENDOR',
-            onPressed: () => _openAddVendorModal('rental'),
-          ),
-        ],
-      ),
-      body: SafeArea(
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
         child: Stack(
           children: [
             SingleChildScrollView(
@@ -255,6 +229,26 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                 controller: _searchController,
                 fabIcon: Icons.add,
                 onFABPressed: () => _openAddVendorModal(null),
+              ),
+            ),
+
+            // Positioned ExpandableFABMenu
+            Positioned(
+              right: 16,
+              bottom: 80,
+              child: ExpandableFABMenu(
+                items: [
+                  ExpandableFABItem(
+                    icon: Icons.add_box,
+                    label: 'NEW RETAILER',
+                    onPressed: () => _openAddVendorModal('retailer'),
+                  ),
+                  ExpandableFABItem(
+                    icon: Icons.store,
+                    label: 'NEW RENTAL VENDOR',
+                    onPressed: () => _openAddVendorModal('rental'),
+                  ),
+                ],
               ),
             ),
 

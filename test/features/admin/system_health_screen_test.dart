@@ -9,7 +9,7 @@ void main() {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
-          home: SystemHealthScreen(),
+          home: Scaffold(body: SystemHealthScreen()),
         ),
       ),
     );

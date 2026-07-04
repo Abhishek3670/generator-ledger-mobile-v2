@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
-import '../../../shared/widgets/side_navigation_drawer.dart';
 import '../widgets/vendor_booking_group.dart';
 import '../modals/add_booking_modal.dart';
 import '../widgets/edit_booking_modal.dart';
 import '../providers/bookings_provider.dart';
 import '../../vendors/providers/vendors_provider.dart';
-import '../../auth/providers/auth_provider.dart';
 
 /// Directory screen listing bookings grouped by vendor.
 class BookingsDirectoryScreen extends ConsumerStatefulWidget {
@@ -53,7 +50,6 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
     // Filter bookings based on search query
     final bookings = ref.watch(bookingProvider);
     final vendors = ref.watch(vendorProvider);
-    final currentUser = ref.watch(authProvider);
     final filteredBookings = bookings.where((booking) {
       if (_searchQuery.isEmpty) return true;
       return booking.vendorName.toLowerCase().contains(_searchQuery) ||
@@ -61,17 +57,9 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
           booking.generatorId.toLowerCase().contains(_searchQuery);
     }).toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: SideNavigationDrawer(
-        currentRoute: '/bookings',
-        onNavigate: (routePath) {
-          context.go(routePath);
-        },
-        userName: currentUser?.username ?? 'Guest',
-        userRole: currentUser?.role ?? '',
-      ),
-      body: SafeArea(
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
         child: Stack(
           children: [
             SingleChildScrollView(

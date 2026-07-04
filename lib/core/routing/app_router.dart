@@ -15,6 +15,8 @@ import '../../features/admin/screens/system_health_screen.dart';
 import '../../features/admin/screens/user_management_screen.dart';
 import '../../features/admin/screens/integrations_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import 'route_names.dart';
 
 /// Full router configuration for the application.
@@ -143,25 +145,50 @@ class _OperationalShell extends ConsumerWidget {
     final currentUser = ref.watch(authProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       drawer: SideNavigationDrawer(
-        variant: navigationShell.currentIndex == 0
-            ? SideNavigationDrawerVariant.light
-            : SideNavigationDrawerVariant.dark,
-        drawerContext: navigationShell.currentIndex == 0
-            ? SideNavigationDrawerContext.dashboard
-            : SideNavigationDrawerContext.operational,
+        variant: SideNavigationDrawerVariant.light,
+        drawerContext: SideNavigationDrawerContext.dashboard,
         currentRoute: _getRouteFromIndex(navigationShell.currentIndex),
         onNavigate: (routePath) {
-          final index = _getIndexFromRoute(routePath);
-          if (index != -1) {
-            navigationShell.goBranch(
-              index,
-              initialLocation: index == navigationShell.currentIndex,
-            );
+          if (routePath == '/billing') {
+            context.go(routePath);
+          } else {
+            final index = _getIndexFromRoute(routePath);
+            if (index != -1) {
+              navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              );
+            }
           }
         },
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
+      ),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text('Genset', style: AppTypography.headlineSmall.copyWith(color: AppColors.primary)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: Builder(
+          builder: (context) => Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: GestureDetector(
+              onTap: () => Scaffold.of(context).openDrawer(),
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.person, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: AppColors.border),
+        ),
       ),
       body: navigationShell,
       bottomNavigationBar: AppBottomNavBar(
@@ -207,14 +234,61 @@ class _OperationalShell extends ConsumerWidget {
   }
 }
 
-class _AdminShell extends StatelessWidget {
+class _AdminShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const _AdminShell({required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(authProvider);
+
     return Scaffold(
+      backgroundColor: AppColors.background,
+      drawer: SideNavigationDrawer(
+        variant: SideNavigationDrawerVariant.dark,
+        drawerContext: SideNavigationDrawerContext.admin,
+        currentRoute: _getRouteFromIndex(navigationShell.currentIndex),
+        onNavigate: (routePath) {
+          if (routePath == '/dashboard') {
+            context.go(routePath);
+          } else {
+            final index = _getIndexFromRoute(routePath);
+            if (index != -1) {
+              navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              );
+            }
+          }
+        },
+        userName: currentUser?.username ?? 'Guest',
+        userRole: currentUser?.role ?? '',
+      ),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text('Genset', style: AppTypography.headlineSmall.copyWith(color: AppColors.primary)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: Builder(
+          builder: (context) => Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: GestureDetector(
+              onTap: () => Scaffold.of(context).openDrawer(),
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.person, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: AppColors.border),
+        ),
+      ),
       body: navigationShell,
       bottomNavigationBar: AdminBottomNavBar(
         currentIndex: navigationShell.currentIndex,
@@ -226,6 +300,32 @@ class _AdminShell extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _getRouteFromIndex(int index) {
+    switch (index) {
+      case 0:
+        return '/admin/health';
+      case 1:
+        return '/admin/users';
+      case 2:
+        return '/admin/integrations';
+      default:
+        return '/admin/health';
+    }
+  }
+
+  int _getIndexFromRoute(String route) {
+    switch (route) {
+      case '/admin/health':
+        return 0;
+      case '/admin/users':
+        return 1;
+      case '/admin/integrations':
+        return 2;
+      default:
+        return -1;
+    }
   }
 }
 

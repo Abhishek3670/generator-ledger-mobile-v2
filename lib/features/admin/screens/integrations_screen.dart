@@ -1,29 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/side_navigation_drawer.dart';
-import '../../auth/providers/auth_provider.dart';
 
 class IntegrationsScreen extends ConsumerWidget {
   const IntegrationsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(authProvider);
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: SideNavigationDrawer(
-        currentRoute: '/admin/integrations',
-        onNavigate: (routePath) {
-          context.go(routePath);
-        },
-        userName: currentUser?.username ?? 'Guest',
-        userRole: currentUser?.role ?? '',
-      ),
-      body: SafeArea(
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Center(

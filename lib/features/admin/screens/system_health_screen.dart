@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/side_navigation_drawer.dart';
+import '../../../shared/widgets/status_badge.dart';
 import '../providers/system_health_provider.dart';
 import '../widgets/health_metric_card.dart';
-import '../../auth/providers/auth_provider.dart';
 
 class SystemHealthScreen extends ConsumerWidget {
   const SystemHealthScreen({super.key});
@@ -14,19 +12,10 @@ class SystemHealthScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final health = ref.watch(systemHealthProvider);
-    final currentUser = ref.watch(authProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: SideNavigationDrawer(
-        currentRoute: '/admin/health',
-        onNavigate: (routePath) {
-          context.go(routePath);
-        },
-        userName: currentUser?.username ?? 'Guest',
-        userRole: currentUser?.role ?? '',
-      ),
-      body: SafeArea(
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -51,9 +40,6 @@ class SystemHealthScreen extends ConsumerWidget {
                     icon: const Icon(Icons.refresh, color: AppColors.primary),
                     onPressed: () {
                       ref.read(systemHealthProvider.notifier).refresh();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Metrics refreshed')),
-                      );
                     },
                   ),
                 ],
@@ -87,24 +73,9 @@ class SystemHealthScreen extends ConsumerWidget {
                               style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
                             ),
                             const SizedBox(height: 6),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFECFDF5),
-                                border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
-                                borderRadius: BorderRadius.circular(9999),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.check_circle, color: AppColors.success, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    health.isHealthy ? 'Healthy' : 'Attention',
-                                    style: AppTypography.labelCaps.copyWith(color: AppColors.success, fontSize: 10),
-                                  ),
-                                ],
-                              ),
+                            const StatusBadge(
+                              label: 'Healthy',
+                              type: StatusBadgeType.active,
                             ),
                           ],
                         ),

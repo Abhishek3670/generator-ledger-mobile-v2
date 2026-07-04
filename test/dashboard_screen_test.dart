@@ -10,7 +10,7 @@ void main() {
   testWidgets('DashboardScreen renders successfully with all sub-widgets', (tester) async {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
-        home: DashboardScreen(),
+        home: Scaffold(body: DashboardScreen()),
       ),
     ));
     await tester.pumpAndSettle();
