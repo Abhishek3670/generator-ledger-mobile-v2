@@ -76,20 +76,25 @@ class Booking {
       ],
     }..removeWhere((value) => value.isEmpty);
 
+    // Handle both created_at and date fields for start date
     final startDate = _parseDate(
-      map['start_date'] ?? map['startDate'] ?? map['date'],
+      map['start_date'] ?? map['startDate'] ?? map['date'] ?? map['created_at'],
     );
     final endDate = _parseDate(
-      map['end_date'] ?? map['endDate'] ?? map['date'],
+      map['end_date'] ?? map['endDate'] ?? map['date'] ?? map['created_at'],
       fallback: startDate,
     );
+
+    // Handle vendor name - if missing, show vendor ID
+    final vendorId = (map['vendor_id'] ?? map['vendorId'] ?? '').toString();
+    final vendorName = (map['vendor_name'] ?? map['vendorName'] ?? vendorId).toString();
 
     return Booking.withGenerators(
       bookingId: (map['booking_id'] ?? map['bookingId'] ?? map['id'] ?? '')
           .toString(),
-      vendorId: (map['vendor_id'] ?? map['vendorId'] ?? '').toString(),
-      vendorName: (map['vendor_name'] ?? map['vendorName'] ?? '').toString(),
-      generators: generators,
+      vendorId: vendorId,
+      vendorName: vendorName.isEmpty ? 'Unknown Vendor' : vendorName,
+      generators: generators.isEmpty ? ['N/A'] : generators,
       startDate: startDate,
       endDate: endDate,
       status: (map['status'] ?? 'pending').toString(),
@@ -131,6 +136,10 @@ class Booking {
       final isWhole = value.truncateToDouble() == value;
       return '${value.toStringAsFixed(isWhole ? 0 : 1)} kVA';
     }
-    return (value ?? '').toString();
+    if (value is String && value.isNotEmpty) {
+      return value;
+    }
+    // Default capacity if missing
+    return 'N/A';
   }
 }
