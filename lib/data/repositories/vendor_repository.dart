@@ -6,14 +6,30 @@ class VendorRepository {
     : _apiClient = apiClient ?? ApiClient();
 
   static const String vendorsPath = '/api/vendors';
+  static const String rentalVendorsPath = '/api/rental-vendors';
 
   final ApiClient _apiClient;
 
   Future<List<Vendor>> getVendors() async {
-    return _apiClient.get<List<Vendor>>(
+    // Fetch from both endpoints and merge
+    final retailerVendorsFuture = _apiClient.get<List<Vendor>>(
       vendorsPath,
       fromJson: (json) => _parseVendorList(json),
     );
+    
+    final rentalVendorsFuture = _apiClient.get<List<Vendor>>(
+      rentalVendorsPath,
+      fromJson: (json) => _parseVendorList(json),
+    );
+
+    // Wait for both requests to complete
+    final results = await Future.wait([
+      retailerVendorsFuture,
+      rentalVendorsFuture,
+    ]);
+
+    // Merge the lists
+    return [...results[0], ...results[1]];
   }
 
   Future<Vendor> getVendorById(String id) async {

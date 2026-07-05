@@ -5,38 +5,51 @@ import 'package:ledger/shared/models/vendor.dart' as ledger_vendor;
 
 void main() {
   group('VendorRepository', () {
-    test('getVendors parses list responses', () async {
+    test('getVendors parses list responses from both endpoints', () async {
       final apiClient = _FakeApiClient(
-        response: {
-          'vendors': [
-            {
-              'vendor_id': 'VEN001',
-              'name': 'Mallu',
-              'type': 'retailer',
-              'location': 'Aligarh',
-              'phone': '9876543210',
-            },
-          ],
-        },
+        retailerResponse: [
+          {
+            'id': 'VEN001',
+            'name': 'Mallu',
+            'type': 'retailer',
+            'place': 'Aligarh',
+            'phone': '9876543210',
+          },
+        ],
+        rentalResponse: [
+          {
+            'rental_vendor_id': 'RNV001',
+            'name': 'Hotel One',
+            'type': 'rental',
+            'place': 'Downtown',
+            'phone': '222',
+          },
+        ],
       );
       final repository = VendorRepository(apiClient: apiClient);
 
       final vendors = await repository.getVendors();
 
-      expect(apiClient.lastGetPath, VendorRepository.vendorsPath);
-      expect(vendors.single.id, 'VEN001');
-      expect(vendors.single.category, 'retailer');
+      expect(apiClient.getCallPaths, contains(VendorRepository.vendorsPath));
+      expect(
+        apiClient.getCallPaths,
+        contains(VendorRepository.rentalVendorsPath),
+      );
+      expect(vendors.length, 2);
+      expect(vendors[0].id, 'VEN001');
+      expect(vendors[0].category, 'retailer');
+      expect(vendors[1].id, 'RNV001');
+      expect(vendors[1].category, 'rental');
     });
 
     test('getVendorById fetches all and filters client-side', () async {
       final repository = VendorRepository(
         apiClient: _FakeApiClient(
-          response: {
-            'vendors': [
-              {'vendor_id': 'VEN001', 'name': 'A'},
-              {'vendor_id': 'VEN002', 'name': 'B'},
-            ],
-          },
+          retailerResponse: [
+            {'id': 'VEN001', 'name': 'A', 'type': 'retailer'},
+            {'id': 'VEN002', 'name': 'B', 'type': 'retailer'},
+          ],
+          rentalResponse: [],
         ),
       );
 
@@ -119,9 +132,16 @@ class TestVendor extends ledger_vendor.Vendor {
 }
 
 class _FakeApiClient extends ApiClient {
-  _FakeApiClient({this.response});
+  _FakeApiClient({
+    this.response,
+    this.retailerResponse,
+    this.rentalResponse,
+  });
 
   final Object? response;
+  final Object? retailerResponse;
+  final Object? rentalResponse;
+  final List<String> getCallPaths = [];
   String? lastGetPath;
   String? lastPostPath;
   String? lastPatchPath;
@@ -134,7 +154,16 @@ class _FakeApiClient extends ApiClient {
     Map<String, dynamic>? queryParameters,
     required JsonParser<T> fromJson,
   }) async {
+    getCallPaths.add(path);
     lastGetPath = path;
+    
+    // Return appropriate response based on path
+    if (path == VendorRepository.rentalVendorsPath && rentalResponse != null) {
+      return fromJson(rentalResponse);
+    } else if (path == VendorRepository.vendorsPath && retailerResponse != null) {
+      return fromJson(retailerResponse);
+    }
+    
     return fromJson(response ?? {});
   }
 
