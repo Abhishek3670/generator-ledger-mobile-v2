@@ -38,7 +38,7 @@ class Vendor {
       id: _string(map, ['vendorId', 'vendor_id', 'id']),
       name: _string(map, ['name', 'vendor_name']),
       category: _string(map, ['type', 'category', 'vendor_type']),
-      location: _string(map, ['location', 'address']),
+      location: _string(map, ['location', 'place', 'address']),
       phone: _string(map, ['phone', 'phone_number', 'mobile']),
     );
   }

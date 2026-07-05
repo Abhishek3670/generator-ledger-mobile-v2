@@ -42,12 +42,13 @@ class Generator {
       id: _string(map, ['generatorId', 'generator_id', 'id']),
       capacity: _capacity(map),
       type: _string(map, ['type', 'model', 'engine_type']),
-      category: _string(map, ['inventoryGroup', 'inventory_group', 'category']),
+      category: _string(map, ['inventoryGroup', 'inventory_group', 'inventory_type', 'category']),
       status: _string(map, ['status', 'operational_status']),
       assignedVendor: _nullableString(map, [
         'assignedVendor',
         'assigned_vendor',
         'assigned_vendor_name',
+        'rental_vendor_name',
       ]),
     );
   }
