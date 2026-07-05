@@ -34,10 +34,11 @@ class Vendor {
   }
 
   factory Vendor.fromMap(Map<String, dynamic> map) {
+    final categoryValue = _string(map, ['type', 'category', 'vendor_type']);
     return Vendor(
       id: _string(map, ['vendorId', 'vendor_id', 'id']),
       name: _string(map, ['name', 'vendor_name']),
-      category: _string(map, ['type', 'category', 'vendor_type']),
+      category: categoryValue.isEmpty ? 'retailer' : categoryValue,
       location: _string(map, ['location', 'place', 'address']),
       phone: _string(map, ['phone', 'phone_number', 'mobile']),
     );
