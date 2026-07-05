@@ -2,7 +2,51 @@
 
 **Date**: 2026-07-06  
 **Requestor**: Mobile Team (Flutter App)  
-**Priority**: Medium (Post-v1.0 Enhancement)
+**Priority**: Medium (Post-v1.0 Enhancement)  
+**Status**: ✅ **COMPLETED** (2026-07-06)
+
+## Implementation Summary
+
+The backend `/api/bookings` endpoint has been successfully enhanced to include generator details in the list response. The mobile app now displays actual generator IDs and capacities instead of "N/A".
+
+### What Was Implemented
+
+Backend now returns:
+```json
+[
+  {
+    "id": "BKG-20260227-00001",
+    "vendor_id": "VEN005",
+    "vendor_name": "Mallu",
+    "created_at": "2026-02-27 23:56",
+    "status": "Confirmed",
+    "items": [
+      {
+        "generator_id": "GEN-30KVA-PL-RBHA-04",
+        "capacity_kva": 30
+      }
+    ]
+  }
+]
+```
+
+### Verification
+
+Mobile app successfully displays:
+- ✅ Real generator IDs (e.g., "GEN-30KVA-PL-RBHA-04")
+- ✅ Real capacities (e.g., "30 kVA", "190 kVA")
+- ✅ Summed capacities for multi-generator bookings (e.g., "315 kVA" for 3 generators)
+
+### Technical Notes
+
+- Backend reuses existing `get_items_with_capacity()` query
+- Vendor names resolved via in-memory lookup to avoid N+1 queries
+- Mobile app maintains backward compatibility with legacy format
+- All 84 tests passing
+
+---
+
+## Original Request (Archive)
 
 ## Summary
 
