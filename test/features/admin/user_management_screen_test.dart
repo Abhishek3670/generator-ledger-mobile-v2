@@ -18,6 +18,7 @@ void main() {
 
     // Verify Title
     expect(find.text('User Management'), findsOneWidget);
+    expect(find.text('CREATE USER'), findsNothing);
 
     // Verify presence of default mock users from userProvider
     expect(find.text('manohar'), findsNWidgets(2));

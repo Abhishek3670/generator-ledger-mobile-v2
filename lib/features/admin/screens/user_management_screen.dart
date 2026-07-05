@@ -73,23 +73,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           ],
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _showCreateModal = true;
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          foregroundColor: AppColors.primary,
-                          shape: const StadiumBorder(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        ),
-                        child: Text(
-                          'CREATE USER',
-                          style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
