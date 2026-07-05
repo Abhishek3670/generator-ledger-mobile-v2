@@ -269,6 +269,33 @@ void main() {
     expect(find.text(''), findsNothing);
   });
 
+  testWidgets('SideNavigationDrawer triggers onLogoutPressed when logout button is tapped', (tester) async {
+    bool logoutCalled = false;
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        key: scaffoldKey,
+        drawer: SideNavigationDrawer(
+          drawerContext: SideNavigationDrawerContext.dashboard,
+          currentRoute: '/dashboard',
+          onNavigate: (_) {},
+          onLogoutPressed: () => logoutCalled = true,
+          userName: 'Abhishek',
+          userRole: 'Fleet Manager',
+        ),
+      ),
+    ));
+    scaffoldKey.currentState?.openDrawer();
+    await tester.pumpAndSettle();
+
+    final logoutButton = find.byTooltip('Logout');
+    expect(logoutButton, findsOneWidget);
+    await tester.tap(logoutButton);
+    await tester.pumpAndSettle();
+
+    expect(logoutCalled, isTrue);
+  });
+
   testWidgets('SideNavigationDrawer renders different roles successfully', (tester) async {
     final roles = ['Admin', 'Manager', 'Operator', 'Viewer'];
     for (final role in roles) {

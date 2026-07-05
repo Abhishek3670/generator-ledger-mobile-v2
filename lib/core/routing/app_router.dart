@@ -166,6 +166,10 @@ class _OperationalShell extends ConsumerWidget {
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/admin/health'),
+        onLogoutPressed: () {
+          AppRouter.isLoggedIn = false;
+          context.go('/login');
+        },
       ),
       appBar: AppBar(
         centerTitle: true,
@@ -266,6 +270,10 @@ class _AdminShell extends ConsumerWidget {
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/dashboard'),
+        onLogoutPressed: () {
+          AppRouter.isLoggedIn = false;
+          context.go('/login');
+        },
       ),
       appBar: AppBar(
         centerTitle: true,
