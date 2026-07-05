@@ -11,9 +11,10 @@ class LoginResponse {
       throw const FormatException('Login response must be a JSON object');
     }
 
-    final token = json['token'];
+    // Backend returns "access_token", try both "token" and "access_token"
+    final token = json['token'] ?? json['access_token'];
     if (token is! String || token.isEmpty) {
-      throw const FormatException('Login response is missing token');
+      throw const FormatException('Login response is missing token (tried both "token" and "access_token")');
     }
 
     final rawUser = json['user'];
