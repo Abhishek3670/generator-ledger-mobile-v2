@@ -20,10 +20,12 @@ class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
   const GeneratorsDirectoryScreen({super.key});
 
   @override
-  ConsumerState<GeneratorsDirectoryScreen> createState() => _GeneratorsDirectoryScreenState();
+  ConsumerState<GeneratorsDirectoryScreen> createState() =>
+      _GeneratorsDirectoryScreenState();
 }
 
-class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryScreen> {
+class _GeneratorsDirectoryScreenState
+    extends ConsumerState<GeneratorsDirectoryScreen> {
   final _searchController = TextEditingController();
   final _dateController = TextEditingController();
   String _searchQuery = '';
@@ -93,8 +95,27 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
 
   @override
   Widget build(BuildContext context) {
-    // Filter mock generators based on search query
-    final generators = ref.watch(generatorProvider);
+    final generatorsAsync = ref.watch(generatorProvider);
+    final generators = generatorsAsync.valueOrNull ?? [];
+    if (generatorsAsync.isLoading && generators.isEmpty) {
+      return const ColoredBox(
+        color: AppColors.background,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (generatorsAsync.hasError && generators.isEmpty) {
+      return ColoredBox(
+        color: AppColors.background,
+        child: Center(
+          child: Text(
+            'Error loading generators: ${generatorsAsync.error}',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     final filteredGenerators = generators.where((gen) {
       if (_searchQuery.isEmpty) return true;
       return gen.id.toLowerCase().contains(_searchQuery) ||
@@ -102,9 +123,15 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
           gen.type.toLowerCase().contains(_searchQuery);
     }).toList();
 
-    final retailerGensets = filteredGenerators.where((g) => g.category == 'retailer').toList();
-    final permanentGensets = filteredGenerators.where((g) => g.category == 'permanent').toList();
-    final emergencyGensets = filteredGenerators.where((g) => g.category == 'emergency').toList();
+    final retailerGensets = filteredGenerators
+        .where((g) => g.category == 'retailer')
+        .toList();
+    final permanentGensets = filteredGenerators
+        .where((g) => g.category == 'permanent')
+        .toList();
+    final emergencyGensets = filteredGenerators
+        .where((g) => g.category == 'emergency')
+        .toList();
 
     return Container(
       color: AppColors.background,
@@ -125,7 +152,8 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   const SectionHeader(
                     category: 'DIRECTORY',
                     title: 'Generators',
-                    description: 'Track retailer, permanent, and emergency genset inventory, assignments, and availability.',
+                    description:
+                        'Track retailer, permanent, and emergency genset inventory, assignments, and availability.',
                   ),
                   const SizedBox(height: 20),
 
@@ -134,7 +162,9 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.functionalRadius,
+                      ),
                       border: Border.all(color: AppColors.border, width: 1),
                       boxShadow: const [
                         BoxShadow(
@@ -149,7 +179,9 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                       children: [
                         Text(
                           'BOOKED DATE',
-                          style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                          style: AppTypography.labelCaps.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -158,24 +190,37 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                               child: GestureDetector(
                                 onTap: _selectDate,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: _isDateFocused ? AppColors.primary : AppColors.border,
+                                      color: _isDateFocused
+                                          ? AppColors.primary
+                                          : AppColors.border,
                                       width: 1,
                                     ),
-                                    borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.functionalRadius,
+                                    ),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         _selectedDate != null
-                                            ? DateFormat('dd MMMM yyyy').format(_selectedDate!)
+                                            ? DateFormat(
+                                                'dd MMMM yyyy',
+                                              ).format(_selectedDate!)
                                             : 'All',
-                                        style: AppTypography.bodyMedium.copyWith(
-                                          color: _selectedDate != null ? AppColors.primary : AppColors.textSecondary,
-                                        ),
+                                        style: AppTypography.bodyMedium
+                                            .copyWith(
+                                              color: _selectedDate != null
+                                                  ? AppColors.primary
+                                                  : AppColors.textSecondary,
+                                            ),
                                       ),
                                       const Icon(
                                         Icons.calendar_today,
@@ -198,7 +243,9 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                                 },
                                 icon: const Icon(Icons.clear, size: 16),
                                 style: IconButton.styleFrom(
-                                  backgroundColor: AppColors.border.withValues(alpha: 0.3),
+                                  backgroundColor: AppColors.border.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   padding: const EdgeInsets.all(8),
                                 ),
                               ),
@@ -213,7 +260,8 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   // Retailer Genset Group
                   InventoryGroupSection(
                     title: 'Retailer Genset',
-                    description: 'Gensets rented out to retail vendors for events like marriages.',
+                    description:
+                        'Gensets rented out to retail vendors for events like marriages.',
                     category: 'retailer',
                     generators: retailerGensets,
                     onGeneratorTap: (gen) {
@@ -233,7 +281,8 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   // Permanent Genset Group
                   InventoryGroupSection(
                     title: 'Permanent Genset',
-                    description: 'Gensets permanently parked at Rental Vendor properties such as marriage halls.',
+                    description:
+                        'Gensets permanently parked at Rental Vendor properties such as marriage halls.',
                     category: 'permanent',
                     generators: permanentGensets,
                     onGeneratorTap: (gen) {
@@ -247,7 +296,8 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   // Emergency Genset Group
                   InventoryGroupSection(
                     title: 'Emergency Genset',
-                    description: 'Backup gensets kept ready when any genset fails or emergency coverage is requested.',
+                    description:
+                        'Backup gensets kept ready when any genset fails or emergency coverage is requested.',
                     category: 'emergency',
                     generators: emergencyGensets,
                     onGeneratorTap: (gen) {
@@ -299,7 +349,9 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   ref.read(generatorProvider.notifier).addGenerator(newGen);
                   setState(() => _showAddModal = false);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Generator added successfully')),
+                    const SnackBar(
+                      content: Text('Generator added successfully'),
+                    ),
                   );
                 },
               ),
@@ -313,13 +365,19 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   _selectedGeneratorForEdit = null;
                 }),
                 onSave: (updatedGen) {
-                  ref.read(generatorProvider.notifier).updateGenerator(updatedGen);
+                  ref
+                      .read(generatorProvider.notifier)
+                      .updateGenerator(updatedGen);
                   setState(() {
                     _showEditModal = false;
                     _selectedGeneratorForEdit = null;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Generator "${updatedGen.id}" updated successfully')),
+                    SnackBar(
+                      content: Text(
+                        'Generator "${updatedGen.id}" updated successfully',
+                      ),
+                    ),
                   );
                 },
               ),
@@ -358,7 +416,9 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                   final gen = _selectedGeneratorForAction!;
                   ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Generator deleted successfully')),
+                    const SnackBar(
+                      content: Text('Generator deleted successfully'),
+                    ),
                   );
                 },
               ),

@@ -11,8 +11,8 @@ class Vendor {
     required String category,
     required this.location,
     required this.phone,
-  })  : vendorId = id,
-        type = category;
+  }) : vendorId = id,
+       type = category;
 
   String get id => vendorId;
   String get category => type;
@@ -31,5 +31,38 @@ class Vendor {
       location: location ?? this.location,
       phone: phone ?? this.phone,
     );
+  }
+
+  factory Vendor.fromMap(Map<String, dynamic> map) {
+    return Vendor(
+      id: _string(map, ['vendorId', 'vendor_id', 'id']),
+      name: _string(map, ['name', 'vendor_name']),
+      category: _string(map, ['type', 'category', 'vendor_type']),
+      location: _string(map, ['location', 'address']),
+      phone: _string(map, ['phone', 'phone_number', 'mobile']),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'vendor_id': vendorId,
+      'name': name,
+      'type': type,
+      'location': location,
+      'phone': phone,
+    };
+  }
+
+  static String _string(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value is String) {
+        return value;
+      }
+      if (value != null) {
+        return value.toString();
+      }
+    }
+    return '';
   }
 }

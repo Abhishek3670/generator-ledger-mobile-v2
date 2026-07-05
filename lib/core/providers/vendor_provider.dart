@@ -1,28 +1,60 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/mock/mock_vendors.dart';
-import '../services/mock_data_service.dart';
+import '../../data/repositories/vendor_repository.dart';
 
-final vendorProvider =
-    StateNotifierProvider<VendorNotifier, List<MockVendor>>((ref) {
-  return VendorNotifier(MockDataService().getVendors());
+final vendorRepositoryProvider = Provider<VendorRepository>((ref) {
+  return VendorRepository();
 });
 
-class VendorNotifier extends StateNotifier<List<MockVendor>> {
-  VendorNotifier(super.initialVendors);
+final vendorProvider =
+    StateNotifierProvider<VendorNotifier, AsyncValue<List<MockVendor>>>((ref) {
+      return VendorNotifier(ref.watch(vendorRepositoryProvider));
+    });
 
-  void addVendor(MockVendor vendor) {
-    state = [vendor, ...state];
+class VendorNotifier extends StateNotifier<AsyncValue<List<MockVendor>>> {
+  VendorNotifier(this._repository) : super(const AsyncValue.loading()) {
+    loadVendors();
   }
 
-  void updateVendor(MockVendor vendor) {
-    state = [
-      for (final existing in state)
+  final VendorRepository _repository;
+
+  List<MockVendor> _cachedVendors = [];
+
+  Future<void> loadVendors() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final vendors = await _repository.getVendors();
+      _cachedVendors = vendors;
+      return vendors;
+    });
+  }
+
+  Future<void> addVendor(MockVendor vendor) async {
+    await _repository.createVendor(vendor);
+    await loadVendors();
+  }
+
+  Future<void> updateVendor(MockVendor vendor) async {
+    final previous = List<MockVendor>.of(_cachedVendors);
+    _cachedVendors = [
+      for (final existing in _cachedVendors)
         if (existing.id == vendor.id) vendor else existing,
     ];
+    state = AsyncValue.data(_cachedVendors);
+
+    try {
+      await _repository.updateVendor(vendor.id, vendor);
+      await loadVendors();
+    } catch (error, stackTrace) {
+      _cachedVendors = previous;
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
-  void deleteVendor(String vendorId) {
-    state = state.where((vendor) => vendor.id != vendorId).toList();
+  Future<void> deleteVendor(String vendorId) async {
+    await _repository.deleteVendor(vendorId);
+    await loadVendors();
   }
 }

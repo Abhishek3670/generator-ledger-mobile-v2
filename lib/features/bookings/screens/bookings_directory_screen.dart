@@ -17,10 +17,12 @@ class BookingsDirectoryScreen extends ConsumerStatefulWidget {
   const BookingsDirectoryScreen({super.key});
 
   @override
-  ConsumerState<BookingsDirectoryScreen> createState() => _BookingsDirectoryScreenState();
+  ConsumerState<BookingsDirectoryScreen> createState() =>
+      _BookingsDirectoryScreenState();
 }
 
-class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScreen> {
+class _BookingsDirectoryScreenState
+    extends ConsumerState<BookingsDirectoryScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showAddModal = false;
@@ -49,7 +51,7 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
   Widget build(BuildContext context) {
     // Filter bookings based on search query
     final bookings = ref.watch(bookingProvider);
-    final vendors = ref.watch(vendorProvider);
+    final vendors = ref.watch(vendorProvider).valueOrNull ?? [];
     final filteredBookings = bookings.where((booking) {
       if (_searchQuery.isEmpty) return true;
       return booking.vendorName.toLowerCase().contains(_searchQuery) ||
@@ -76,7 +78,8 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
                   const SectionHeader(
                     category: 'DIRECTORY',
                     title: 'Bookings by Vendor',
-                    description: 'Review active reservations and manage vendor schedules.',
+                    description:
+                        'Review active reservations and manage vendor schedules.',
                   ),
                   const SizedBox(height: 24),
 
@@ -90,7 +93,9 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
                       final vendorBookings = filteredBookings
                           .where((b) => b.vendorId == vendor.id)
                           .toList();
-                      return vendorBookings.isEmpty ? const SizedBox.shrink() : const SizedBox(height: 20);
+                      return vendorBookings.isEmpty
+                          ? const SizedBox.shrink()
+                          : const SizedBox(height: 20);
                     },
                     itemBuilder: (context, index) {
                       final vendor = vendors[index];
@@ -117,16 +122,23 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
                   // Empty State
                   if (filteredBookings.isEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 32,
+                        horizontal: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.functionalRadius,
+                        ),
                         border: Border.all(color: AppColors.border, width: 1),
                       ),
                       child: Center(
                         child: Text(
                           'No matching bookings found.',
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -170,10 +182,14 @@ class _BookingsDirectoryScreenState extends ConsumerState<BookingsDirectoryScree
                 booking: _editingBooking!,
                 onClose: () => setState(() => _editingBooking = null),
                 onSave: (updatedBooking) {
-                  ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
+                  ref
+                      .read(bookingProvider.notifier)
+                      .updateBooking(updatedBooking);
                   setState(() => _editingBooking = null);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Booking updated successfully')),
+                    const SnackBar(
+                      content: Text('Booking updated successfully'),
+                    ),
                   );
                 },
               ),

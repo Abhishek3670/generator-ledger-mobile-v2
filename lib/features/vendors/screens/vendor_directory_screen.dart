@@ -19,7 +19,8 @@ class VendorDirectoryScreen extends ConsumerStatefulWidget {
   const VendorDirectoryScreen({super.key});
 
   @override
-  ConsumerState<VendorDirectoryScreen> createState() => _VendorDirectoryScreenState();
+  ConsumerState<VendorDirectoryScreen> createState() =>
+      _VendorDirectoryScreenState();
 }
 
 class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
@@ -62,8 +63,27 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Filter vendors based on search query
-    final vendors = ref.watch(vendorProvider);
+    final vendorsAsync = ref.watch(vendorProvider);
+    final vendors = vendorsAsync.valueOrNull ?? [];
+    if (vendorsAsync.isLoading && vendors.isEmpty) {
+      return const ColoredBox(
+        color: AppColors.background,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (vendorsAsync.hasError && vendors.isEmpty) {
+      return ColoredBox(
+        color: AppColors.background,
+        child: Center(
+          child: Text(
+            'Error loading vendors: ${vendorsAsync.error}',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     final filteredVendors = vendors.where((vendor) {
       if (_searchQuery.isEmpty) return true;
       return vendor.name.toLowerCase().contains(_searchQuery) ||
@@ -71,8 +91,12 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
           vendor.location.toLowerCase().contains(_searchQuery);
     }).toList();
 
-    final retailerVendors = filteredVendors.where((v) => v.category == 'retailer').toList();
-    final rentalVendors = filteredVendors.where((v) => v.category == 'rental').toList();
+    final retailerVendors = filteredVendors
+        .where((v) => v.category == 'retailer')
+        .toList();
+    final rentalVendors = filteredVendors
+        .where((v) => v.category == 'rental')
+        .toList();
 
     return Container(
       color: AppColors.background,
@@ -93,7 +117,8 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                   const SectionHeader(
                     category: 'DIRECTORY',
                     title: 'Vendors',
-                    description: 'Manage retail vendor records used in bookings and rental vendor records for halls and hotels.',
+                    description:
+                        'Manage retail vendor records used in bookings and rental vendor records for halls and hotels.',
                   ),
                   const SizedBox(height: 24),
 
@@ -101,7 +126,9 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.functionalRadius,
+                      ),
                       border: Border.all(color: AppColors.border, width: 1),
                       boxShadow: const [
                         BoxShadow(
@@ -129,7 +156,9 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                             child: Center(
                               child: Text(
                                 'No matching retailer vendors.',
-                                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
                           )
@@ -138,7 +167,8 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: retailerVendors.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final vendor = retailerVendors[index];
                               return VendorCard(
@@ -161,7 +191,9 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.functionalRadius,
+                      ),
                       border: Border.all(color: AppColors.border, width: 1),
                       boxShadow: const [
                         BoxShadow(
@@ -189,7 +221,9 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                             child: Center(
                               child: Text(
                                 'No matching rental vendors.',
-                                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
                           )
@@ -198,7 +232,8 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: rentalVendors.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final vendor = rentalVendors[index];
                               return VendorCard(
@@ -273,7 +308,11 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                     _selectedVendorForEdit = null;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Vendor "${updatedVendor.name}" updated successfully')),
+                    SnackBar(
+                      content: Text(
+                        'Vendor "${updatedVendor.name}" updated successfully',
+                      ),
+                    ),
                   );
                 },
               ),
@@ -282,7 +321,8 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
             if (_showDeleteModal && _selectedVendorForDelete != null)
               ConfirmationDialog(
                 title: 'DELETE VENDOR',
-                message: 'Are you sure you want to delete vendor "${_selectedVendorForDelete!.name}"? This action cannot be undone.',
+                message:
+                    'Are you sure you want to delete vendor "${_selectedVendorForDelete!.name}"? This action cannot be undone.',
                 confirmText: 'DELETE',
                 isDestructive: true,
                 onCancel: () => setState(() {
@@ -298,7 +338,9 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                     _selectedVendorForDelete = null;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vendor deleted successfully')),
+                    const SnackBar(
+                      content: Text('Vendor deleted successfully'),
+                    ),
                   );
                 },
               ),

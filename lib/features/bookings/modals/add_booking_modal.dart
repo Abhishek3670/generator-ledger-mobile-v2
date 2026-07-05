@@ -91,8 +91,11 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
   void _submitForm() {
     setState(() {
-      _vendorError = _selectedVendorId == null ? 'Please search and select a vendor' : null;
-      _generatorError = (_assignmentMode == 'id' && _selectedGeneratorId == null)
+      _vendorError = _selectedVendorId == null
+          ? 'Please search and select a vendor'
+          : null;
+      _generatorError =
+          (_assignmentMode == 'id' && _selectedGeneratorId == null)
           ? 'Please select a generator ID'
           : null;
       _dateError = _startDate == null ? 'Please select booking dates' : null;
@@ -102,13 +105,26 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       return;
     }
 
-    final vendors = ref.read(vendorProvider);
+    final vendors = ref.read(vendorProvider).valueOrNull ?? [];
+    if (vendors.isEmpty) {
+      setState(() {
+        _vendorError = 'Vendors are still loading. Try again in a moment.';
+      });
+      return;
+    }
     final selectedVendor = vendors.firstWhere((v) => v.id == _selectedVendorId);
-    
+
     String genId = _selectedGeneratorId ?? 'AUTO-ASSIGN';
     String capacityText = '';
-    
-    final generators = ref.read(generatorProvider);
+
+    final generators = ref.read(generatorProvider).valueOrNull ?? [];
+    if (generators.isEmpty) {
+      setState(() {
+        _generatorError =
+            'Generators are still loading. Try again in a moment.';
+      });
+      return;
+    }
     if (_assignmentMode == 'capacity') {
       capacityText = _selectedCapacities.map((c) => '$c kVA').join(', ');
       // Try to find a mock generator that matches the first selected capacity
@@ -154,16 +170,13 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   Widget build(BuildContext context) {
     if (!widget.isVisible) return const SizedBox.shrink();
 
-    final availableGenerators = ref.watch(generatorProvider);
+    final availableGenerators = ref.watch(generatorProvider).valueOrNull ?? [];
     final bookings = ref.watch(bookingProvider);
 
     return Stack(
       children: [
         // Backdrop Overlay
-        BackdropBlurOverlay(
-          isVisible: widget.isVisible,
-          onTap: widget.onClose,
-        ),
+        BackdropBlurOverlay(isVisible: widget.isVisible, onTap: widget.onClose),
 
         // Centered Card Container
         Center(
@@ -172,11 +185,19 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 500, maxHeight: 750),
+                constraints: const BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: 750,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.background, // bg-background (#fafafa)
-                  borderRadius: BorderRadius.circular(AppDimensions.modalRadius),
-                  border: Border.all(color: AppColors.outlineVariant, width: 1), // border-outline-variant (#c6c6cd)
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.modalRadius,
+                  ),
+                  border: Border.all(
+                    color: AppColors.outlineVariant,
+                    width: 1,
+                  ), // border-outline-variant (#c6c6cd)
                   boxShadow: [
                     BoxShadow(
                       offset: const Offset(0, 10),
@@ -221,13 +242,20 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                           ),
                           IconButton(
                             onPressed: widget.onClose,
-                            icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.textSecondary,
+                            ),
                             splashRadius: 20,
                           ),
                         ],
                       ),
                     ),
-                    const Divider(color: AppColors.outlineVariant, height: 1, thickness: 1),
+                    const Divider(
+                      color: AppColors.outlineVariant,
+                      height: 1,
+                      thickness: 1,
+                    ),
 
                     // Scrollable content
                     Flexible(
@@ -248,11 +276,15 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                 });
                               },
                             ),
-                            if (_vendorError != null) _buildValidationError(_vendorError!),
+                            if (_vendorError != null)
+                              _buildValidationError(_vendorError!),
                             const SizedBox(height: 20),
 
                             // 2. Existing Bookings
-                            _buildExistingBookingsSection(bookings, _selectedVendorId),
+                            _buildExistingBookingsSection(
+                              bookings,
+                              _selectedVendorId,
+                            ),
                             const SizedBox(height: 20),
 
                             // 3. Generator Assignment Mode
@@ -280,7 +312,12 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                   focusNode: _dropdownFocusNode,
                                   isExpanded: true,
                                   initialValue: _selectedGeneratorId,
-                                  hint: Text('Select Generator', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+                                  hint: Text(
+                                    'Select Generator',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
                                   decoration: _inputDecoration(),
                                   dropdownColor: AppColors.background,
                                   items: availableGenerators.map((gen) {
@@ -301,7 +338,8 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                   },
                                 ),
                               ),
-                              if (_generatorError != null) _buildValidationError(_generatorError!),
+                              if (_generatorError != null)
+                                _buildValidationError(_generatorError!),
                             ] else ...[
                               _buildFieldLabel('Capacity (kVA)'),
                               const SizedBox(height: 8),
@@ -332,20 +370,30 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                 });
                               },
                             ),
-                            if (_dateError != null) _buildValidationError(_dateError!),
-                            
+                            if (_dateError != null)
+                              _buildValidationError(_dateError!),
+
                             // Date selection feedback display
                             if (_startDate != null) ...[
                               const SizedBox(height: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.05),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.05,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
+                                    const Icon(
+                                      Icons.calendar_today,
+                                      size: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
@@ -375,14 +423,20 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                 controller: _notesController,
                                 maxLines: 3,
                                 style: AppTypography.bodyMedium,
-                                decoration: _inputDecoration(hintText: 'Add any notes...'),
+                                decoration: _inputDecoration(
+                                  hintText: 'Add any notes...',
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const Divider(color: AppColors.outlineVariant, height: 1, thickness: 1),
+                    const Divider(
+                      color: AppColors.outlineVariant,
+                      height: 1,
+                      thickness: 1,
+                    ),
 
                     // Footer actions
                     Container(
@@ -394,9 +448,15 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                           OutlinedButton(
                             onPressed: widget.onClose,
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.outlineVariant, width: 1),
+                              side: const BorderSide(
+                                color: AppColors.outlineVariant,
+                                width: 1,
+                              ),
                               shape: const StadiumBorder(),
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
                             ),
                             child: Text(
                               'Cancel',
@@ -414,7 +474,10 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                               foregroundColor: AppColors.primary,
                               elevation: 0,
                               shape: const StadiumBorder(),
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
                             ),
                             child: Text(
                               'Create Booking',
@@ -489,7 +552,10 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         color: AppColors.surface, // Background surface (#f9f9f9)
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: hasFocus ? AppColors.primary : AppColors.outlineVariant, // primary on focus, outlineVariant (#c6c6cd) otherwise
+          color: hasFocus
+              ? AppColors.primary
+              : AppColors
+                    .outlineVariant, // primary on focus, outlineVariant (#c6c6cd) otherwise
           width: 1,
         ),
         boxShadow: [
@@ -502,17 +568,16 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: child,
-      ),
+      child: ClipRRect(borderRadius: BorderRadius.circular(8), child: child),
     );
   }
 
   InputDecoration _inputDecoration({String? hintText}) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+      hintStyle: AppTypography.bodySmall.copyWith(
+        color: AppColors.textSecondary,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       border: InputBorder.none,
       focusedBorder: InputBorder.none,
@@ -520,18 +585,25 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     );
   }
 
-  Widget _buildExistingBookingsSection(List<MockBooking> bookings, String? vendorId) {
+  Widget _buildExistingBookingsSection(
+    List<MockBooking> bookings,
+    String? vendorId,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildSectionHeader('EXISTING BOOKINGS'),
         const SizedBox(height: 8),
         if (vendorId == null)
-          _buildInfoCard('No vendor selected. Select a vendor to view existing bookings.')
+          _buildInfoCard(
+            'No vendor selected. Select a vendor to view existing bookings.',
+          )
         else ...[
           Builder(
             builder: (context) {
-              final vendorBookings = bookings.where((b) => b.vendorId == vendorId).toList();
+              final vendorBookings = bookings
+                  .where((b) => b.vendorId == vendorId)
+                  .toList();
               if (vendorBookings.isEmpty) {
                 return _buildInfoCard('No existing bookings for this vendor.');
               }
@@ -540,11 +612,17 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.outlineVariant, width: 1),
+                        border: Border.all(
+                          color: AppColors.outlineVariant,
+                          width: 1,
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -557,19 +635,27 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                   children: [
                                     Text(
                                       b.generatorId,
-                                      style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       '(${b.capacity})',
-                                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   '${DateFormat('MMM dd').format(b.startDate)} - ${DateFormat('MMM dd, yyyy').format(b.endDate)}',
-                                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 12),
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -602,12 +688,18 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, color: AppColors.textSecondary, size: 20),
+          const Icon(
+            Icons.info_outline,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ],

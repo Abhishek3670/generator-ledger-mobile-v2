@@ -1,7 +1,8 @@
-/// API Configuration for Backend Integration
-///
-/// Environment-specific configuration for connecting to the FastAPI backend.
-/// The backend runs on PROD (192.168.29.71:8000) and DEV (192.168.29.60:8001) servers.
+// API Configuration for Backend Integration.
+//
+// Environment-specific configuration for connecting to the FastAPI backend.
+// The backend runs on PROD (192.168.29.71:8000) and DEV
+// (192.168.29.60:8001) servers.
 
 class ApiConfig {
   /// Current environment (dev, prod, or local)
@@ -15,9 +16,9 @@ class ApiConfig {
   static String get baseUrl {
     switch (environment) {
       case 'prod':
-        return 'http://192.168.29.71:8000';  // PROD server
+        return 'http://192.168.29.71:8000'; // PROD server
       case 'dev':
-        return 'http://192.168.29.60:8001';  // DEV server (port 8001)
+        return 'http://192.168.29.60:8001'; // DEV server (port 8001)
       case 'local':
         return 'http://localhost:8000';
       default:

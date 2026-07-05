@@ -54,8 +54,9 @@ void main() {
       expect(adapter.lastBody, {'name': 'Vendor'});
     });
 
-    test('put and delete methods parse successful responses', () async {
+    test('put, patch, and delete methods parse successful responses', () async {
       final putAdapter = _FakeHttpClientAdapter(response: {'updated': true});
+      final patchAdapter = _FakeHttpClientAdapter(response: {'patched': true});
       final deleteAdapter = _FakeHttpClientAdapter(response: {'deleted': true});
 
       final putResponse = await _client(putAdapter).put<Map<String, dynamic>>(
@@ -63,6 +64,12 @@ void main() {
         data: {'name': 'Updated'},
         fromJson: (json) => json as Map<String, dynamic>,
       );
+      final patchResponse = await _client(patchAdapter)
+          .patch<Map<String, dynamic>>(
+            '/vendors/1',
+            data: {'name': 'Patched'},
+            fromJson: (json) => json as Map<String, dynamic>,
+          );
       final deleteResponse = await _client(deleteAdapter)
           .delete<Map<String, dynamic>>(
             '/vendors/1',
@@ -71,6 +78,8 @@ void main() {
 
       expect(putResponse['updated'], isTrue);
       expect(putAdapter.lastOptions?.method, 'PUT');
+      expect(patchResponse['patched'], isTrue);
+      expect(patchAdapter.lastOptions?.method, 'PATCH');
       expect(deleteResponse['deleted'], isTrue);
       expect(deleteAdapter.lastOptions?.method, 'DELETE');
     });

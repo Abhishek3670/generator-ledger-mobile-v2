@@ -110,6 +110,24 @@ class ApiClient {
     }
   }
 
+  Future<T> patch<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    required JsonParser<T> fromJson,
+  }) async {
+    try {
+      final response = await _dio.patch<dynamic>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
+      return fromJson(response.data);
+    } on DioException catch (error) {
+      throw _handleError(error);
+    }
+  }
+
   Future<T> delete<T>(
     String path, {
     Object? data,
