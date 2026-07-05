@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_vendors.dart';
+import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 
 class AddVendorModal extends StatefulWidget {
   final VoidCallback onClose;
-  final Function(MockVendor) onSave;
+  final Function(Vendor) onSave;
   final bool isVisible;
   final String? initialCategory; // Optional: 'retailer' or 'rental'
 
@@ -140,7 +140,7 @@ class _AddVendorModalState extends State<AddVendorModal> {
           ElevatedButton(
             onPressed: () {
               if (_formKey.currentState?.validate() ?? false) {
-                final newVendor = MockVendor(
+                final newVendor = Vendor(
                   id: 'VEN-${DateTime.now().millisecondsSinceEpoch}',
                   name: _nameController.text.trim(),
                   location: _locationController.text.trim(),

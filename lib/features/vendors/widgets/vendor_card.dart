@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_vendors.dart';
+import '../../../shared/models/vendor.dart';
 
 /// Card displaying details of a single vendor (name, ID, location, phone, accent border).
 class VendorCard extends StatelessWidget {
   /// The vendor information to display.
-  final MockVendor vendor;
+  final Vendor vendor;
 
   /// Optional callback when vertical actions dropdown is clicked.
   final VoidCallback? onMorePressed;

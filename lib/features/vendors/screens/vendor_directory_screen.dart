@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_vendors.dart';
+import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/expandable_fab_menu.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
@@ -31,9 +31,9 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
   bool _showDeleteModal = false;
   bool _showActionMenu = false;
   String? _modalInitialCategory;
-  MockVendor? _selectedVendorForAction;
-  MockVendor? _selectedVendorForEdit;
-  MockVendor? _selectedVendorForDelete;
+  Vendor? _selectedVendorForAction;
+  Vendor? _selectedVendorForEdit;
+  Vendor? _selectedVendorForDelete;
 
   @override
   void initState() {

@@ -1,25 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/mock/mock_vendors.dart';
 import '../../data/repositories/vendor_repository.dart';
+import '../../shared/models/vendor.dart';
 
 final vendorRepositoryProvider = Provider<VendorRepository>((ref) {
   return VendorRepository();
 });
 
 final vendorProvider =
-    StateNotifierProvider<VendorNotifier, AsyncValue<List<MockVendor>>>((ref) {
+    StateNotifierProvider<VendorNotifier, AsyncValue<List<Vendor>>>((ref) {
       return VendorNotifier(ref.watch(vendorRepositoryProvider));
     });
 
-class VendorNotifier extends StateNotifier<AsyncValue<List<MockVendor>>> {
+class VendorNotifier extends StateNotifier<AsyncValue<List<Vendor>>> {
   VendorNotifier(this._repository) : super(const AsyncValue.loading()) {
     loadVendors();
   }
 
   final VendorRepository _repository;
 
-  List<MockVendor> _cachedVendors = [];
+  List<Vendor> _cachedVendors = [];
 
   Future<void> loadVendors() async {
     state = const AsyncValue.loading();
@@ -30,13 +30,13 @@ class VendorNotifier extends StateNotifier<AsyncValue<List<MockVendor>>> {
     });
   }
 
-  Future<void> addVendor(MockVendor vendor) async {
+  Future<void> addVendor(Vendor vendor) async {
     await _repository.createVendor(vendor);
     await loadVendors();
   }
 
-  Future<void> updateVendor(MockVendor vendor) async {
-    final previous = List<MockVendor>.of(_cachedVendors);
+  Future<void> updateVendor(Vendor vendor) async {
+    final previous = List<Vendor>.of(_cachedVendors);
     _cachedVendors = [
       for (final existing in _cachedVendors)
         if (existing.id == vendor.id) vendor else existing,
