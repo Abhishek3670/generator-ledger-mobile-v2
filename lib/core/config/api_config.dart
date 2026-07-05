@@ -1,7 +1,7 @@
-/// API Configuration for Backend Integration
-///
-/// Environment-specific configuration for connecting to the FastAPI backend.
-/// The backend runs on PROD (192.162.29.71) and DEV (192.162.29.60) servers.
+// API Configuration for Backend Integration
+//
+// Environment-specific configuration for connecting to the FastAPI backend.
+// The backend runs on PROD (192.162.29.71) and DEV (192.162.29.60) servers.
 
 class ApiConfig {
   /// Current environment (dev, prod, or local)
@@ -41,5 +41,6 @@ class ApiConfig {
 
   /// PostgreSQL connection (for reference only - not used by mobile app)
   /// Database is accessed via API, not direct connection
-  static const String databaseInfo = 'PostgreSQL on 192.162.29.71:7865 (Docker)';
+  static const String databaseInfo =
+      'PostgreSQL on 192.162.29.71:7865 (Docker)';
 }
