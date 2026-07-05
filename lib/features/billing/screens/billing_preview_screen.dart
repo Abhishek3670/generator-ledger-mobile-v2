@@ -123,51 +123,75 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
       });
 
     double grandTotal = 0.0;
+    if (_includeGrandTotal && sortedVendorIds.isNotEmpty) {
+      for (var vendorId in sortedVendorIds) {
+        final vendorBookings = groupedBookings[vendorId]!;
+        double vendorSubtotal = 0.0;
+        for (var booking in vendorBookings) {
+          final rate = _getRateForCapacity(booking.capacity);
+          vendorSubtotal += rate;
+        }
+        final paidAmount = _paidAmounts[vendorId] ?? 0.0;
+        grandTotal += (vendorSubtotal - paidAmount);
+      }
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Back Navigation Label Link
-              GestureDetector(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Fixed Top Header
+            Container(
+              color: AppColors.background,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
                 onTap: () => context.go('/dashboard'),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.textSecondary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'BACK TO DASHBOARD',
-                        style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back, size: 16, color: AppColors.textSecondary),
+                    SizedBox(width: 8),
+                    Text(
+                      'BACK TO DASHBOARD',
+                      style: TextStyle(
+                        fontFamily: 'Space Grotesk',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                        letterSpacing: 2.2,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
 
-              // Title Header
-              Text(
-                'BILLING',
-                style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Billing Preview',
-                style: AppTypography.displayLarge.copyWith(color: AppColors.primary),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Calculate vendor totals from confirmed bookings using session-only pricing.',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 24),
+            // Scrollable Body
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 8),
+                    Text(
+                      'BILLING',
+                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Billing Preview',
+                      style: AppTypography.displayLarge.copyWith(color: AppColors.primary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Calculate vendor totals from confirmed bookings using session-only pricing.',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 24),
 
               // Date Range Filter Card
               Container(
@@ -482,7 +506,6 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
 
                           final paidAmount = _paidAmounts[vendorId] ?? 0.0;
                           final vendorFinalTotal = vendorSubtotal - paidAmount;
-                          grandTotal += vendorFinalTotal;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -628,34 +651,39 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                     ),
                   ),
 
-                // Grand Total Widget
-                if (_includeGrandTotal && sortedVendorIds.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'GRAND TOTAL',
-                          style: AppTypography.headlineSmall.copyWith(color: Colors.white, letterSpacing: 1),
-                        ),
-                        Text(
-                          currencyFormatter.format(grandTotal),
-                          style: AppTypography.headlineMedium.copyWith(color: AppColors.accent, fontSize: 26),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ],
-              ],
-            ],
+              ),
+            ),
           ),
-        ),
+
+            // Fixed Bottom Footer
+            if (_includeGrandTotal && sortedVendorIds.isNotEmpty)
+              Container(
+                color: AppColors.background,
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'GRAND TOTAL',
+                        style: AppTypography.headlineSmall.copyWith(color: Colors.white, letterSpacing: 1),
+                      ),
+                      Text(
+                        currencyFormatter.format(grandTotal),
+                        style: AppTypography.headlineMedium.copyWith(color: AppColors.accent, fontSize: 26),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
