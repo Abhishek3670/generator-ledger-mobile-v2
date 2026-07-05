@@ -247,11 +247,11 @@ class _AdminShell extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       drawer: SideNavigationDrawer(
-        variant: SideNavigationDrawerVariant.dark,
-        drawerContext: SideNavigationDrawerContext.admin,
+        variant: SideNavigationDrawerVariant.light,
+        drawerContext: SideNavigationDrawerContext.dashboard,
         currentRoute: _getRouteFromIndex(navigationShell.currentIndex),
         onNavigate: (routePath) {
-          if (routePath == '/dashboard') {
+          if (routePath == '/billing' || routePath == '/dashboard') {
             context.go(routePath);
           } else {
             final index = _getIndexFromRoute(routePath);
@@ -265,6 +265,7 @@ class _AdminShell extends ConsumerWidget {
         },
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
+        onSettingsPressed: () => context.go('/dashboard'),
       ),
       appBar: AppBar(
         centerTitle: true,

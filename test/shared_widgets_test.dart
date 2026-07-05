@@ -217,15 +217,17 @@ void main() {
     expect(find.text('Genset Ledger'), findsNothing);
   });
 
-  testWidgets('SideNavigationDrawer renders successfully in admin context', (tester) async {
+  testWidgets('SideNavigationDrawer renders light drawer on admin routes with Exit Admin',
+      (tester) async {
     final scaffoldKey = GlobalKey<ScaffoldState>();
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         key: scaffoldKey,
         drawer: SideNavigationDrawer(
-          drawerContext: SideNavigationDrawerContext.admin,
+          drawerContext: SideNavigationDrawerContext.dashboard,
           currentRoute: '/admin/users',
           onNavigate: (_) {},
+          onSettingsPressed: () {},
           userName: 'Abhishek',
           userRole: 'Fleet Manager',
         ),
@@ -235,12 +237,13 @@ void main() {
     await tester.pump();
     expect(find.byType(SideNavigationDrawer), findsOneWidget);
     expect(find.text('Abhishek'), findsOneWidget);
-    expect(find.text('Fleet Manager'), findsOneWidget);
-    expect(find.text('SYSTEM HEALTH'), findsOneWidget);
-    expect(find.text('USERS'), findsOneWidget);
-    expect(find.text('INTEGRATIONS'), findsOneWidget);
-    expect(find.text('EXIT ADMIN'), findsOneWidget);
-    expect(find.text('DASHBOARD'), findsNothing);
+    expect(find.text('Genset Ledger'), findsOneWidget);
+    expect(find.text('Billing Preview'), findsOneWidget);
+    expect(find.text('Exit Admin'), findsOneWidget);
+    // Old links should NOT exist
+    expect(find.text('SYSTEM HEALTH'), findsNothing);
+    expect(find.text('USERS'), findsNothing);
+    expect(find.text('INTEGRATIONS'), findsNothing);
   });
 
   testWidgets('SideNavigationDrawer does not render role text when empty', (tester) async {

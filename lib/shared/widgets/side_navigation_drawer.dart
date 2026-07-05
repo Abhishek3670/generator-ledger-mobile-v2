@@ -3,7 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
 enum SideNavigationDrawerVariant { light, dark }
-enum SideNavigationDrawerContext { dashboard, operational, admin }
+enum SideNavigationDrawerContext { dashboard, operational }
 
 /// A side navigation drawer with support for dark/light themes.
 ///
@@ -52,9 +52,6 @@ class SideNavigationDrawer extends StatelessWidget {
   });
 
   SideNavigationDrawerContext _deriveContext(String route, SideNavigationDrawerVariant varOption) {
-    if (route.startsWith('/admin')) {
-      return SideNavigationDrawerContext.admin;
-    }
     if (route == '/dashboard') {
       return SideNavigationDrawerContext.dashboard;
     }
@@ -68,6 +65,7 @@ class SideNavigationDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final activeContext = drawerContext ?? _deriveContext(currentRoute, variant);
     final isLight = activeContext == SideNavigationDrawerContext.dashboard;
+    final isAdminRoute = currentRoute.startsWith('/admin');
 
     return Drawer(
       width: 280,
@@ -178,13 +176,13 @@ class SideNavigationDrawer extends StatelessWidget {
                         child: Row(
                           children: [
                             Icon(
-                              Icons.settings_outlined,
+                              isAdminRoute ? Icons.dashboard_outlined : Icons.settings_outlined,
                               color: isLight ? AppColors.textSecondary : Colors.white70,
                               size: 20,
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Settings',
+                              isAdminRoute ? 'Exit Admin' : 'Settings',
                               style: AppTypography.bodySmall.copyWith(
                                 color: isLight ? AppColors.textSecondary : Colors.white70,
                                 fontWeight: FontWeight.w500,
@@ -230,33 +228,6 @@ class SideNavigationDrawer extends StatelessWidget {
           icon: Icons.receipt_long_outlined,
           label: 'Billing Preview',
           routePath: '/billing',
-        ),
-      ];
-    } else if (activeContext == SideNavigationDrawerContext.admin) {
-      return [
-        _buildNavLink(
-          context: context,
-          icon: Icons.health_and_safety_outlined,
-          label: 'SYSTEM HEALTH',
-          routePath: '/admin/health',
-        ),
-        _buildNavLink(
-          context: context,
-          icon: Icons.people_outline,
-          label: 'USERS',
-          routePath: '/admin/users',
-        ),
-        _buildNavLink(
-          context: context,
-          icon: Icons.extension_outlined,
-          label: 'INTEGRATIONS',
-          routePath: '/admin/integrations',
-        ),
-        _buildNavLink(
-          context: context,
-          icon: Icons.dashboard_outlined,
-          label: 'EXIT ADMIN',
-          routePath: '/dashboard',
         ),
       ];
     } else {
