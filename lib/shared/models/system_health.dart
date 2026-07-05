@@ -21,6 +21,20 @@ class SystemHealth {
     required this.temperatureTrend,
   });
 
+  factory SystemHealth.fromMap(Map<String, dynamic> map) {
+    return SystemHealth(
+      cpu: (map['cpu_usage'] as num?)?.toDouble() ?? 0.0,
+      memory: (map['memory_usage'] as num?)?.toDouble() ?? 0.0,
+      temperature: (map['disk_usage'] as num?)?.toDouble() ?? 0.0,
+      dbConnection: map['database_status'] as String? ?? 'unknown',
+      appVersion: map['app_version'] as String? ?? '0.0.0',
+      lastChecked: DateTime.now(),
+      cpuTrend: const [],
+      memoryTrend: const [],
+      temperatureTrend: const [],
+    );
+  }
+
   bool get isHealthy =>
       cpu < 80 && memory < 80 && temperature < 75 && dbConnection.isNotEmpty;
 
