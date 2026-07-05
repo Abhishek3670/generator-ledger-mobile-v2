@@ -271,9 +271,14 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
                 actionWidget: ExpandableFABMenu(
                   items: [
                     ExpandableFABItem(
-                      icon: Icons.add_box,
+                      icon: Icons.storefront,
                       label: 'NEW RETAILER',
                       onPressed: () => _openAddModal('retailer'),
+                    ),
+                    ExpandableFABItem(
+                      icon: Icons.domain,
+                      label: 'NEW PERMANENT',
+                      onPressed: () => _openAddModal('permanent'),
                     ),
                     ExpandableFABItem(
                       icon: Icons.emergency,

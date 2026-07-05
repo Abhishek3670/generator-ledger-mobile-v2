@@ -58,4 +58,23 @@ void main() {
     expect(find.text('GEN-45KVA-HA-11'), findsOneWidget);
     expect(find.text('GEN-100KVA-02'), findsNothing);
   });
+
+  testWidgets('GeneratorsDirectoryScreen FAB menu expands and shows all three options', (tester) async {
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(body: GeneratorsDirectoryScreen()),
+      ),
+    ));
+
+    // Tap the FAB to expand the menu
+    final fabFinder = find.byType(ExpandableFABMenu);
+    expect(fabFinder, findsOneWidget);
+    await tester.tap(fabFinder);
+    await tester.pumpAndSettle();
+
+    // Verify all three action items are displayed in the overlay
+    expect(find.text('NEW RETAILER'), findsOneWidget);
+    expect(find.text('NEW PERMANENT'), findsOneWidget);
+    expect(find.text('EMERGENCY'), findsOneWidget);
+  });
 }

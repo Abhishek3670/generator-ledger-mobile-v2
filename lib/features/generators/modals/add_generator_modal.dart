@@ -132,11 +132,13 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
                   ),
                 ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value;
-                });
-              },
+              onChanged: widget.initialCategory != null
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    },
               validator: (value) => value == null ? 'Please select category' : null,
             ),
             const SizedBox(height: 16),
