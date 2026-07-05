@@ -1,7 +1,7 @@
 # ARCHITECTURE.md — Genset Industrial Ledger (Mobile v2)
 
 > **Architect:** Claude
-> **Last Updated:** 2026-06-28
+> **Last Updated:** 2026-07-05
 
 ---
 
@@ -246,23 +246,28 @@ GoRouter(
   initialLocation: '/login',
   routes: [
     GoRoute(path: '/login', builder: → LoginScreen),
-    ShellRoute(
-      builder: → AppShell (with BottomNav),
-      routes: [
-        GoRoute(path: '/dashboard', builder: → DashboardScreen),
-        GoRoute(path: '/bookings', builder: → BookingsDirectoryScreen),
-        GoRoute(path: '/generators', builder: → GeneratorsDirectoryScreen),
-        GoRoute(path: '/generators/:id', builder: → GeneratorDetailScreen),
-        GoRoute(path: '/vendors', builder: → VendorDirectoryScreen),
+    GoRoute(path: '/billing', builder: → BillingPreviewScreen),
+    StatefulShellRoute.indexedStack(
+      builder: → _OperationalShell (with AppBottomNavBar & SideNavigationDrawer),
+      branches: [
+        StatefulShellBranch(routes: [GoRoute(path: '/dashboard', builder: → DashboardScreen)]),
+        StatefulShellBranch(routes: [GoRoute(path: '/bookings', builder: → BookingsDirectoryScreen)]),
+        StatefulShellBranch(routes: [
+          GoRoute(
+            path: '/generators',
+            builder: → GeneratorsDirectoryScreen,
+            routes: [GoRoute(path: ':id', builder: → GeneratorDetailScreen)],
+          )
+        ]),
+        StatefulShellBranch(routes: [GoRoute(path: '/vendors', builder: → VendorDirectoryScreen)]),
       ],
     ),
-    GoRoute(path: '/billing', builder: → BillingPreviewScreen),
-    ShellRoute(
-      builder: → AdminShell (with AdminBottomNav),
-      routes: [
-        GoRoute(path: '/admin/health', builder: → SystemHealthScreen),
-        GoRoute(path: '/admin/users', builder: → UserManagementScreen),
-        GoRoute(path: '/admin/integrations', builder: → IntegrationsScreen),
+    StatefulShellRoute.indexedStack(
+      builder: → _AdminShell (with AdminBottomNavBar & SideNavigationDrawer),
+      branches: [
+        StatefulShellBranch(routes: [GoRoute(path: '/admin/health', builder: → SystemHealthScreen)]),
+        StatefulShellBranch(routes: [GoRoute(path: '/admin/users', builder: → UserManagementScreen)]),
+        StatefulShellBranch(routes: [GoRoute(path: '/admin/integrations', builder: → IntegrationsScreen)]),
       ],
     ),
   ],
