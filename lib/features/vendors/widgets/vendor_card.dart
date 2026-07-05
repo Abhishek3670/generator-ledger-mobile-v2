@@ -55,23 +55,30 @@ class VendorCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                vendor.name,
-                                style: AppTypography.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  vendor.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                vendor.id,
-                                style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-                              ),
-                            ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  vendor.id,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           IconButton(
                             onPressed: onMorePressed,
                             icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
@@ -84,16 +91,23 @@ class VendorCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
-                              const SizedBox(width: 4),
-                              Text(
-                                vendor.location,
-                                style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                              ),
-                            ],
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    vendor.location,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Row(
                             children: [
                               const Icon(Icons.phone, size: 14, color: AppColors.textSecondary),

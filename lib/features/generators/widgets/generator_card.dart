@@ -49,13 +49,18 @@ class GeneratorCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                generator.id,
-                style: AppTypography.headlineSmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  generator.id,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: AppTypography.headlineSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               const StatusBadge(
                 label: 'Active',
                 type: StatusBadgeType.active,
@@ -65,6 +70,8 @@ class GeneratorCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Cap: ${generator.capacity} | Type: ${generator.type}',
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
             style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
           ),
           if (generator.category == 'permanent' && generator.assignedVendor != null) ...[
@@ -79,18 +86,22 @@ class GeneratorCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    generator.assignedVendor!,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.warning,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      generator.assignedVendor!,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.warning,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ),
