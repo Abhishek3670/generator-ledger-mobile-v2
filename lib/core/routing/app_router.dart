@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/token_storage.dart';
 import '../../shared/widgets/side_navigation_drawer.dart';
 import '../../shared/widgets/admin_bottom_nav_bar.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
@@ -21,16 +22,23 @@ import 'route_names.dart';
 
 /// Full router configuration for the application.
 abstract final class AppRouter {
-  /// Simple mock authentication state toggle.
-  static bool isLoggedIn = true;
+  static final _authRefresh = _AuthRefreshNotifier();
+  static TokenStorage tokenStorage = TokenStorage();
+
+  static void refreshAuthState() {
+    _authRefresh.refresh();
+  }
 
   /// Global router declaration using [GoRouter] and stateful nested navigation.
   static final router = GoRouter(
     initialLocation: '/dashboard',
-    redirect: (context, state) {
+    refreshListenable: _authRefresh,
+    redirect: (context, state) async {
+      final token = await tokenStorage.getToken();
+      final isAuthenticated = token != null && token.isNotEmpty;
       final isLoggingIn = state.matchedLocation == '/login';
-      if (!isLoggedIn && !isLoggingIn) return '/login';
-      if (isLoggedIn && isLoggingIn) return '/dashboard';
+      if (!isAuthenticated && !isLoggingIn) return '/login';
+      if (isAuthenticated && isLoggingIn) return '/dashboard';
       return null;
     },
     routes: [
@@ -135,6 +143,12 @@ abstract final class AppRouter {
   );
 }
 
+class _AuthRefreshNotifier extends ChangeNotifier {
+  void refresh() {
+    notifyListeners();
+  }
+}
+
 class _OperationalShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -142,7 +156,7 @@ class _OperationalShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(authProvider);
+    final currentUser = ref.watch(authProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -166,14 +180,21 @@ class _OperationalShell extends ConsumerWidget {
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/admin/health'),
-        onLogoutPressed: () {
-          AppRouter.isLoggedIn = false;
+        onLogoutPressed: () async {
+          await ref.read(authProvider.notifier).logout();
+          AppRouter.refreshAuthState();
+          if (!context.mounted) {
+            return;
+          }
           context.go('/login');
         },
       ),
       appBar: AppBar(
         centerTitle: true,
-        title: Text('Genset', style: AppTypography.headlineSmall.copyWith(color: AppColors.primary)),
+        title: Text(
+          'Genset',
+          style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -246,7 +267,7 @@ class _AdminShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(authProvider);
+    final currentUser = ref.watch(authProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -270,14 +291,21 @@ class _AdminShell extends ConsumerWidget {
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/dashboard'),
-        onLogoutPressed: () {
-          AppRouter.isLoggedIn = false;
+        onLogoutPressed: () async {
+          await ref.read(authProvider.notifier).logout();
+          AppRouter.refreshAuthState();
+          if (!context.mounted) {
+            return;
+          }
           context.go('/login');
         },
       ),
       appBar: AppBar(
         centerTitle: true,
-        title: Text('Genset', style: AppTypography.headlineSmall.copyWith(color: AppColors.primary)),
+        title: Text(
+          'Genset',
+          style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -338,5 +366,3 @@ class _AdminShell extends ConsumerWidget {
     }
   }
 }
-
-

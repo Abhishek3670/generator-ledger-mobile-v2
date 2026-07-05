@@ -1,14 +1,39 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../../shared/models/user.dart';
 
-/// Provider to track the currently authenticated user.
-final authProvider = StateProvider<User?>((ref) {
-  // Return the default user "abhishek" (admin) for initial mock state.
-  return User(
-    username: 'abhishek',
-    role: 'admin',
-    status: 'ACTIVE',
-    lastLogin: DateTime.utc(2025, 4, 20),
-    createdAt: DateTime.utc(2025, 2, 9),
-  );
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepository();
+});
+
+class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
+  AuthNotifier(this._authRepository) : super(const AsyncValue.data(null));
+
+  final AuthRepository _authRepository;
+
+  Future<void> login(String username, String password) async {
+    state = const AsyncValue.loading();
+    try {
+      final response = await _authRepository.login(username, password);
+      state = AsyncValue.data(response.user);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<void> logout() async {
+    await _authRepository.logout();
+    state = const AsyncValue.data(null);
+  }
+
+  Future<bool> isAuthenticated() {
+    return _authRepository.isAuthenticated();
+  }
+}
+
+final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((
+  ref,
+) {
+  return AuthNotifier(ref.watch(authRepositoryProvider));
 });

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ledger/data/models/login_response.dart';
+import 'package:ledger/data/repositories/auth_repository.dart';
 import 'package:ledger/features/auth/providers/auth_provider.dart';
 import 'package:ledger/shared/models/user.dart';
 import 'package:ledger/shared/widgets/admin_bottom_nav_bar.dart';
@@ -18,121 +20,135 @@ import 'package:ledger/shared/widgets/swipe_action_card.dart';
 
 void main() {
   testWidgets('AppBottomNavBar renders successfully', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        bottomNavigationBar: AppBottomNavBar(
-          currentIndex: 0,
-          onTap: (_) {},
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: AppBottomNavBar(currentIndex: 0, onTap: (_) {}),
         ),
       ),
-    ));
+    );
     expect(find.byType(AppBottomNavBar), findsOneWidget);
     expect(find.text('DASHBOARD'), findsOneWidget);
   });
 
   testWidgets('AdminBottomNavBar renders successfully', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        bottomNavigationBar: AdminBottomNavBar(
-          currentIndex: 0,
-          onTap: (_) {},
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: AdminBottomNavBar(
+            currentIndex: 0,
+            onTap: (_) {},
+          ),
         ),
       ),
-    ));
+    );
     expect(find.byType(AdminBottomNavBar), findsOneWidget);
     expect(find.text('HEALTH'), findsOneWidget);
   });
 
-  testWidgets('BackdropBlurOverlay renders successfully when visible', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: Stack(
-          children: [
-            BackdropBlurOverlay(isVisible: true),
-          ],
+  testWidgets('BackdropBlurOverlay renders successfully when visible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Stack(children: [BackdropBlurOverlay(isVisible: true)]),
         ),
       ),
-    ));
+    );
     expect(find.byType(BackdropBlurOverlay), findsOneWidget);
   });
 
   testWidgets('FloatingSearchFAB renders successfully', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: FloatingSearchFAB(
-          searchHint: 'Search test',
-          fabIcon: Icons.add,
-          onFABPressed: () {},
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FloatingSearchFAB(
+            searchHint: 'Search test',
+            fabIcon: Icons.add,
+            onFABPressed: () {},
+          ),
         ),
       ),
-    ));
+    );
     expect(find.byType(FloatingSearchFAB), findsOneWidget);
     expect(find.text('Search test'), findsOneWidget);
   });
 
   testWidgets('ExpandableFABMenu renders successfully', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        floatingActionButton: ExpandableFABMenu(
-          items: [
-            ExpandableFABItem(icon: Icons.add, label: 'Add Item', onPressed: _dummy),
-          ],
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          floatingActionButton: ExpandableFABMenu(
+            items: [
+              ExpandableFABItem(
+                icon: Icons.add,
+                label: 'Add Item',
+                onPressed: _dummy,
+              ),
+            ],
+          ),
         ),
       ),
-    ));
+    );
     expect(find.byType(ExpandableFABMenu), findsOneWidget);
   });
 
   testWidgets('StatusBadge renders successfully', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: StatusBadge(
-          label: 'CONFIRMED',
-          type: StatusBadgeType.confirmed,
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: StatusBadge(
+            label: 'CONFIRMED',
+            type: StatusBadgeType.confirmed,
+          ),
         ),
       ),
-    ));
+    );
     expect(find.byType(StatusBadge), findsOneWidget);
     expect(find.text('CONFIRMED'), findsOneWidget);
   });
 
   testWidgets('DirectoryCard renders successfully', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: DirectoryCard(
-          headerTitle: 'Card Title',
-          child: Text('Card Content'),
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: DirectoryCard(
+            headerTitle: 'Card Title',
+            child: Text('Card Content'),
+          ),
         ),
       ),
-    ));
+    );
     expect(find.byType(DirectoryCard), findsOneWidget);
     expect(find.text('Card Title'), findsOneWidget);
     expect(find.text('Card Content'), findsOneWidget);
   });
 
   testWidgets('DarkHeaderCard renders successfully', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: DarkHeaderCard(
-          title: 'Dark Title',
-          child: Text('Content'),
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: DarkHeaderCard(title: 'Dark Title', child: Text('Content')),
         ),
       ),
-    ));
+    );
     expect(find.byType(DarkHeaderCard), findsOneWidget);
     expect(find.text('Dark Title'), findsOneWidget);
   });
 
   testWidgets('SectionHeader renders successfully', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: SectionHeader(
-          category: 'Category',
-          title: 'Section Title',
-          description: 'Section Description',
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SectionHeader(
+            category: 'Category',
+            title: 'Section Title',
+            description: 'Section Description',
+          ),
         ),
       ),
-    ));
+    );
     expect(find.byType(SectionHeader), findsOneWidget);
     expect(find.text('CATEGORY'), findsOneWidget);
     expect(find.text('Section Title'), findsOneWidget);
@@ -140,126 +156,144 @@ void main() {
   });
 
   testWidgets('ModalScaffold renders successfully', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: ModalScaffold(
-          title: 'Modal Title',
-          body: const Text('Modal Body'),
-          onClose: () {},
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ModalScaffold(
+            title: 'Modal Title',
+            body: const Text('Modal Body'),
+            onClose: () {},
+          ),
         ),
       ),
-    ));
+    );
     expect(find.byType(ModalScaffold), findsOneWidget);
     expect(find.text('Modal Title'), findsOneWidget);
     expect(find.text('Modal Body'), findsOneWidget);
   });
 
   testWidgets('SwipeActionCard renders successfully', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: SwipeActionCard(
-          child: Text('Swipe Content'),
-        ),
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SwipeActionCard(child: Text('Swipe Content'))),
       ),
-    ));
+    );
     expect(find.byType(SwipeActionCard), findsOneWidget);
     expect(find.text('Swipe Content'), findsOneWidget);
   });
 
-  testWidgets('SideNavigationDrawer renders successfully in dashboard context', (tester) async {
-    final scaffoldKey = GlobalKey<ScaffoldState>();
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        key: scaffoldKey,
-        drawer: SideNavigationDrawer(
-          drawerContext: SideNavigationDrawerContext.dashboard,
-          currentRoute: '/dashboard',
-          onNavigate: (_) {},
-          userName: 'Abhishek',
-          userRole: 'Fleet Manager',
+  testWidgets(
+    'SideNavigationDrawer renders successfully in dashboard context',
+    (tester) async {
+      final scaffoldKey = GlobalKey<ScaffoldState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            key: scaffoldKey,
+            drawer: SideNavigationDrawer(
+              drawerContext: SideNavigationDrawerContext.dashboard,
+              currentRoute: '/dashboard',
+              onNavigate: (_) {},
+              userName: 'Abhishek',
+              userRole: 'Fleet Manager',
+            ),
+          ),
         ),
-      ),
-    ));
-    scaffoldKey.currentState?.openDrawer();
-    await tester.pump();
-    expect(find.byType(SideNavigationDrawer), findsOneWidget);
-    expect(find.text('Abhishek'), findsOneWidget);
-    expect(find.text('FLEET MANAGER'), findsOneWidget);
-    expect(find.text('Genset Ledger'), findsOneWidget);
-    expect(find.text('Billing Preview'), findsOneWidget);
-    expect(find.text('DASHBOARD'), findsNothing);
-  });
+      );
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pump();
+      expect(find.byType(SideNavigationDrawer), findsOneWidget);
+      expect(find.text('Abhishek'), findsOneWidget);
+      expect(find.text('FLEET MANAGER'), findsOneWidget);
+      expect(find.text('Genset Ledger'), findsOneWidget);
+      expect(find.text('Billing Preview'), findsOneWidget);
+      expect(find.text('DASHBOARD'), findsNothing);
+    },
+  );
 
-  testWidgets('SideNavigationDrawer renders successfully in operational context', (tester) async {
-    final scaffoldKey = GlobalKey<ScaffoldState>();
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        key: scaffoldKey,
-        drawer: SideNavigationDrawer(
-          drawerContext: SideNavigationDrawerContext.operational,
-          currentRoute: '/bookings',
-          onNavigate: (_) {},
-          userName: 'Abhishek',
-          userRole: 'Fleet Manager',
+  testWidgets(
+    'SideNavigationDrawer renders successfully in operational context',
+    (tester) async {
+      final scaffoldKey = GlobalKey<ScaffoldState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            key: scaffoldKey,
+            drawer: SideNavigationDrawer(
+              drawerContext: SideNavigationDrawerContext.operational,
+              currentRoute: '/bookings',
+              onNavigate: (_) {},
+              userName: 'Abhishek',
+              userRole: 'Fleet Manager',
+            ),
+          ),
         ),
-      ),
-    ));
-    scaffoldKey.currentState?.openDrawer();
-    await tester.pump();
-    expect(find.byType(SideNavigationDrawer), findsOneWidget);
-    expect(find.text('Abhishek'), findsOneWidget);
-    expect(find.text('Fleet Manager'), findsOneWidget);
-    expect(find.text('DASHBOARD'), findsOneWidget);
-    expect(find.text('BOOKINGS'), findsOneWidget);
-    expect(find.text('GENSETS'), findsOneWidget);
-    expect(find.text('VENDORS'), findsOneWidget);
-    expect(find.text('BILLING PREVIEW'), findsOneWidget);
-    expect(find.text('Genset Ledger'), findsNothing);
-  });
+      );
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pump();
+      expect(find.byType(SideNavigationDrawer), findsOneWidget);
+      expect(find.text('Abhishek'), findsOneWidget);
+      expect(find.text('Fleet Manager'), findsOneWidget);
+      expect(find.text('DASHBOARD'), findsOneWidget);
+      expect(find.text('BOOKINGS'), findsOneWidget);
+      expect(find.text('GENSETS'), findsOneWidget);
+      expect(find.text('VENDORS'), findsOneWidget);
+      expect(find.text('BILLING PREVIEW'), findsOneWidget);
+      expect(find.text('Genset Ledger'), findsNothing);
+    },
+  );
 
-  testWidgets('SideNavigationDrawer renders light drawer on admin routes with Exit Admin',
-      (tester) async {
-    final scaffoldKey = GlobalKey<ScaffoldState>();
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        key: scaffoldKey,
-        drawer: SideNavigationDrawer(
-          drawerContext: SideNavigationDrawerContext.dashboard,
-          currentRoute: '/admin/users',
-          onNavigate: (_) {},
-          onSettingsPressed: () {},
-          userName: 'Abhishek',
-          userRole: 'Fleet Manager',
+  testWidgets(
+    'SideNavigationDrawer renders light drawer on admin routes with Exit Admin',
+    (tester) async {
+      final scaffoldKey = GlobalKey<ScaffoldState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            key: scaffoldKey,
+            drawer: SideNavigationDrawer(
+              drawerContext: SideNavigationDrawerContext.dashboard,
+              currentRoute: '/admin/users',
+              onNavigate: (_) {},
+              onSettingsPressed: () {},
+              userName: 'Abhishek',
+              userRole: 'Fleet Manager',
+            ),
+          ),
         ),
-      ),
-    ));
-    scaffoldKey.currentState?.openDrawer();
-    await tester.pump();
-    expect(find.byType(SideNavigationDrawer), findsOneWidget);
-    expect(find.text('Abhishek'), findsOneWidget);
-    expect(find.text('Genset Ledger'), findsOneWidget);
-    expect(find.text('Billing Preview'), findsOneWidget);
-    expect(find.text('Exit Admin'), findsOneWidget);
-    // Old links should NOT exist
-    expect(find.text('SYSTEM HEALTH'), findsNothing);
-    expect(find.text('USERS'), findsNothing);
-    expect(find.text('INTEGRATIONS'), findsNothing);
-  });
+      );
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pump();
+      expect(find.byType(SideNavigationDrawer), findsOneWidget);
+      expect(find.text('Abhishek'), findsOneWidget);
+      expect(find.text('Genset Ledger'), findsOneWidget);
+      expect(find.text('Billing Preview'), findsOneWidget);
+      expect(find.text('Exit Admin'), findsOneWidget);
+      // Old links should NOT exist
+      expect(find.text('SYSTEM HEALTH'), findsNothing);
+      expect(find.text('USERS'), findsNothing);
+      expect(find.text('INTEGRATIONS'), findsNothing);
+    },
+  );
 
-  testWidgets('SideNavigationDrawer does not render role text when empty', (tester) async {
+  testWidgets('SideNavigationDrawer does not render role text when empty', (
+    tester,
+  ) async {
     final scaffoldKey = GlobalKey<ScaffoldState>();
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        key: scaffoldKey,
-        drawer: SideNavigationDrawer(
-          drawerContext: SideNavigationDrawerContext.dashboard,
-          currentRoute: '/dashboard',
-          onNavigate: (_) {},
-          userName: 'John Doe',
-          userRole: '',
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          key: scaffoldKey,
+          drawer: SideNavigationDrawer(
+            drawerContext: SideNavigationDrawerContext.dashboard,
+            currentRoute: '/dashboard',
+            onNavigate: (_) {},
+            userName: 'John Doe',
+            userRole: '',
+          ),
         ),
       ),
-    ));
+    );
     scaffoldKey.currentState?.openDrawer();
     await tester.pump();
     expect(find.byType(SideNavigationDrawer), findsOneWidget);
@@ -269,65 +303,80 @@ void main() {
     expect(find.text(''), findsNothing);
   });
 
-  testWidgets('SideNavigationDrawer triggers onLogoutPressed when logout button is tapped', (tester) async {
-    bool logoutCalled = false;
-    final scaffoldKey = GlobalKey<ScaffoldState>();
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        key: scaffoldKey,
-        drawer: SideNavigationDrawer(
-          drawerContext: SideNavigationDrawerContext.dashboard,
-          currentRoute: '/dashboard',
-          onNavigate: (_) {},
-          onLogoutPressed: () => logoutCalled = true,
-          userName: 'Abhishek',
-          userRole: 'Fleet Manager',
+  testWidgets(
+    'SideNavigationDrawer triggers onLogoutPressed when logout button is tapped',
+    (tester) async {
+      bool logoutCalled = false;
+      final scaffoldKey = GlobalKey<ScaffoldState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            key: scaffoldKey,
+            drawer: SideNavigationDrawer(
+              drawerContext: SideNavigationDrawerContext.dashboard,
+              currentRoute: '/dashboard',
+              onNavigate: (_) {},
+              onLogoutPressed: () => logoutCalled = true,
+              userName: 'Abhishek',
+              userRole: 'Fleet Manager',
+            ),
+          ),
         ),
-      ),
-    ));
-    scaffoldKey.currentState?.openDrawer();
-    await tester.pumpAndSettle();
+      );
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pumpAndSettle();
 
-    final logoutButton = find.byTooltip('Logout');
-    expect(logoutButton, findsOneWidget);
-    await tester.tap(logoutButton);
-    await tester.pumpAndSettle();
+      final logoutButton = find.byTooltip('Logout');
+      expect(logoutButton, findsOneWidget);
+      await tester.tap(logoutButton);
+      await tester.pumpAndSettle();
 
-    expect(logoutCalled, isTrue);
-  });
+      expect(logoutCalled, isTrue);
+    },
+  );
 
-  testWidgets('SideNavigationDrawer renders different roles successfully', (tester) async {
+  testWidgets('SideNavigationDrawer renders different roles successfully', (
+    tester,
+  ) async {
     final roles = ['Admin', 'Manager', 'Operator', 'Viewer'];
     for (final role in roles) {
       final scaffoldKey = GlobalKey<ScaffoldState>();
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          key: scaffoldKey,
-          drawer: SideNavigationDrawer(
-            drawerContext: SideNavigationDrawerContext.operational,
-            currentRoute: '/bookings',
-            onNavigate: (_) {},
-            userName: 'User A',
-            userRole: role,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            key: scaffoldKey,
+            drawer: SideNavigationDrawer(
+              drawerContext: SideNavigationDrawerContext.operational,
+              currentRoute: '/bookings',
+              onNavigate: (_) {},
+              userName: 'User A',
+              userRole: role,
+            ),
           ),
         ),
-      ));
+      );
       scaffoldKey.currentState?.openDrawer();
       await tester.pump();
       expect(find.text(role), findsOneWidget);
     }
   });
 
-  testWidgets('SideNavigationDrawer integrates dynamically with authProvider', (tester) async {
+  testWidgets('SideNavigationDrawer integrates dynamically with authProvider', (
+    tester,
+  ) async {
     final container = ProviderContainer(
       overrides: [
-        authProvider.overrideWith((ref) => User(
+        authProvider.overrideWith(
+          (ref) => _TestAuthNotifier(
+            User(
               username: 'Manohar L.',
               role: 'Operator',
               status: 'ACTIVE',
               lastLogin: DateTime.now(),
               createdAt: DateTime.now(),
-            )),
+            ),
+          ),
+        ),
       ],
     );
 
@@ -339,7 +388,7 @@ void main() {
           home: Scaffold(
             body: Consumer(
               builder: (context, ref, child) {
-                final user = ref.watch(authProvider);
+                final user = ref.watch(authProvider).valueOrNull;
                 return SideNavigationDrawer(
                   currentRoute: '/bookings',
                   userName: user?.username ?? '',
@@ -359,3 +408,25 @@ void main() {
 }
 
 void _dummy() {}
+
+class _TestAuthNotifier extends AuthNotifier {
+  _TestAuthNotifier(User user) : super(_NoopAuthRepository()) {
+    state = AsyncValue.data(user);
+  }
+}
+
+class _NoopAuthRepository implements AuthRepository {
+  @override
+  Future<LoginResponse> login(String username, String password) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  Future<bool> isAuthenticated() async => true;
+
+  @override
+  Future<bool> verifyToken() async => true;
+}
