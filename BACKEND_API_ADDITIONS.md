@@ -1,21 +1,313 @@
-# Backend API Additions for Mobile Integration
+# Backend API Strategy for Mobile Integration
 
-**Target File**: `W:\Aatish\Stuff\generator-ledger\web\app.py`  
-**Backend Version**: 4.0.4  
-**Estimated Effort**: 4-6 hours
-
----
-
-## 🎯 Missing Endpoints to Add
-
-These endpoints are needed for full mobile app functionality. They follow the same patterns as existing endpoints in `web/app.py`.
+**Status**: 🔄 **MOCK-FIRST APPROACH**  
+**Updated**: 2026-07-05  
+**Decision**: Use mocks now, add real APIs later
 
 ---
 
-## 1. Generators - Update & Delete
+## 📋 Strategy Overview
 
-### PUT /api/generators/{generator_id}
-**Purpose**: Update generator details (capacity, status, inventory group, assigned vendor)
+After analyzing the live backend app, the decision is to **NOT add new endpoints immediately**. Instead:
+
+### Phase 1: Mock Implementation (Current Sprint - M11)
+- Mobile app repositories will include **mock implementations** for missing endpoints
+- Mock data uses same models/structure as real API responses
+- No backend changes required
+- Mobile development unblocked immediately
+
+### Phase 2: Backend API Addition (Future Sprint)
+- Add real endpoints to `web/app.py` when backend development is scheduled
+- Use specifications in this document as reference
+- Deploy to DEV → test → deploy to PROD
+
+### Phase 3: Switch to Real APIs (Simple Update)
+- Update mobile repository implementations to call real endpoints
+- Remove mock logic
+- No UI changes needed (repository pattern abstracts API)
+
+**Benefits**:
+- ✅ Mobile development starts immediately
+- ✅ No backend work blocking mobile team
+- ✅ Clean separation via repository pattern
+- ✅ Easy migration path to real APIs
+
+---
+
+## 🎯 Missing Endpoints (To Mock in Mobile)
+
+### 1. Generators
+- ❌ `PUT /api/generators/{id}` — Update generator
+- ❌ `DELETE /api/generators/{id}` — Delete generator
+- ❌ `GET /api/generators?inventoryGroup=...` — Filter by group
+
+**Mobile Mock Strategy**:
+- Store generators in local state (Riverpod)
+- Update/delete locally
+- Filter in-memory
+- Persist to API when endpoint is added
+
+---
+
+### 2. Vendors
+- ❌ `PUT /api/vendors/{id}` — Update vendor
+- ❌ `GET /api/vendors/{id}` — Get single vendor
+
+**Mobile Mock Strategy**:
+- Fetch all vendors from `GET /api/vendors` (exists)
+- Find single vendor by ID in-memory
+- Update locally, call real API when available
+
+---
+
+### 3. Bookings
+- ❌ `PUT /api/bookings/{id}` — Update booking
+
+**Mobile Mock Strategy**:
+- Use existing `POST /api/bookings/{id}/items/bulk-update` as workaround
+- Store full booking state locally
+- Update locally until real PUT endpoint is added
+
+---
+
+### 4. Billing
+- ❌ `GET /api/billing/preview?startDate=...&endDate=...&vendorId=...` — Filtered preview
+- ❌ `POST /api/billing/payments` — Record payment
+
+**Mobile Mock Strategy**:
+- Fetch all billing lines from `GET /api/billing/lines` (exists)
+- Filter client-side by date range and vendor
+- Calculate totals in-memory
+- Mock payment tracking locally
+
+---
+
+### 5. Admin Users
+- ❌ `GET /api/users` — List all users
+- ❌ `GET /api/permissions` — Permission matrix
+
+**Mobile Mock Strategy**:
+- Use mock user list from `mock_users.dart` (already exists)
+- Use mock permissions from app constants
+- Switch to real API when backend is ready
+
+---
+
+## 🔧 Implementation Pattern: Repository with Mocks
+
+### Example: VendorRepository with Mock PUT
+
+```dart
+// lib/data/repositories/vendor_repository.dart
+
+class VendorRepository {
+  final ApiClient _apiClient;
+  final bool _useMocks;  // Toggle for mock vs real API
+  
+  VendorRepository({
+    ApiClient? apiClient,
+    bool useMocks = true,  // Default to mocks for now
+  }) : _apiClient = apiClient ?? ApiClient(),
+       _useMocks = useMocks;
+  
+  Future<List<Vendor>> getVendors() async {
+    // This endpoint EXISTS in backend
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/vendors',
+      fromJson: (json) => json,
+    );
+    
+    final vendorList = response['vendors'] as List;
+    return vendorList.map((v) => Vendor.fromMap(v)).toList();
+  }
+  
+  Future<Vendor> getVendorById(String id) async {
+    if (_useMocks) {
+      // MOCK: Fetch all and filter locally
+      final vendors = await getVendors();
+      final vendor = vendors.firstWhere(
+        (v) => v.vendorId == id,
+        orElse: () => throw Exception('Vendor not found'),
+      );
+      return vendor;
+    } else {
+      // REAL API (when endpoint is added)
+      return await _apiClient.get<Vendor>(
+        '/vendors/$id',
+        fromJson: (json) => Vendor.fromMap(json['vendor']),
+      );
+    }
+  }
+  
+  Future<Vendor> updateVendor(String id, Vendor vendor) async {
+    if (_useMocks) {
+      // MOCK: Simulate update with delay
+      await Future.delayed(Duration(milliseconds: 300));
+      
+      // In real scenario, provider will handle local state update
+      // This just returns the updated vendor
+      return vendor;
+    } else {
+      // REAL API (when endpoint is added)
+      return await _apiClient.put<Vendor>(
+        '/vendors/$id',
+        data: vendor.toMap(),
+        fromJson: (json) => Vendor.fromMap(json['vendor']),
+      );
+    }
+  }
+}
+```
+
+### Provider Usage (Notifier handles local state)
+
+```dart
+// lib/features/vendors/providers/vendors_provider.dart
+
+class VendorNotifier extends StateNotifier<AsyncValue<List<Vendor>>> {
+  final VendorRepository _repository;
+  List<Vendor> _cachedVendors = [];
+  
+  VendorNotifier(this._repository) : super(const AsyncValue.loading()) {
+    loadVendors();
+  }
+  
+  Future<void> loadVendors() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final vendors = await _repository.getVendors();
+      _cachedVendors = vendors;
+      return vendors;
+    });
+  }
+  
+  Future<void> updateVendor(Vendor vendor) async {
+    // Optimistic update: update local state immediately
+    final index = _cachedVendors.indexWhere((v) => v.vendorId == vendor.vendorId);
+    if (index != -1) {
+      _cachedVendors[index] = vendor;
+      state = AsyncValue.data([..._cachedVendors]);
+    }
+    
+    try {
+      // Call repository (mock or real)
+      await _repository.updateVendor(vendor.vendorId, vendor);
+      
+      // Reload from server when real API is available
+      // For mocks, skip reload since we updated locally
+      if (!_repository._useMocks) {
+        await loadVendors();
+      }
+    } catch (e) {
+      // Revert optimistic update on error
+      await loadVendors();
+      rethrow;
+    }
+  }
+}
+```
+
+---
+
+## 🚀 Migration Path (Mock → Real API)
+
+When backend endpoints are added:
+
+### Step 1: Add Endpoint to Backend
+Use specifications from the "Original Endpoint Specs" section below.
+
+### Step 2: Test Endpoint
+```bash
+curl -X PUT http://192.162.29.60:8000/api/vendors/V001 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Vendor","location":"New Location"}'
+```
+
+### Step 3: Update Mobile Repository
+Change the toggle:
+```dart
+VendorRepository({
+  ApiClient? apiClient,
+  bool useMocks = false,  // ← Change to false
+})
+```
+
+### Step 4: Remove Mock Logic (Optional Cleanup)
+Once all endpoints are real, remove the `if (_useMocks)` branches entirely.
+
+---
+
+## 📝 Work Order Updates
+
+### WO-056, WO-057, WO-058, WO-059, WO-060
+**Updated Implementation Approach**:
+1. Implement repositories with mock logic for missing endpoints
+2. Use existing backend endpoints where available
+3. Add `useMocks` toggle to each repository
+4. Document which methods are mocked vs real
+5. Add TODO comments for future API migration
+
+**Acceptance Criteria Update**:
+- ✅ Repository implements all CRUD methods
+- ✅ Methods use existing API endpoints where available
+- ✅ Methods use local mocks for missing endpoints
+- ✅ Mock implementations provide realistic delays
+- ✅ Code includes migration path documentation
+- ✅ Tests cover both mock and real API scenarios
+
+---
+
+## ✅ Available Backend Endpoints (Use These)
+
+These endpoints EXIST in backend and should be used:
+
+### Authentication
+✅ `POST /api/login` → `{token, user}`  
+✅ `POST /api/auth/refresh`  
+✅ `POST /api/logout`
+
+### Generators
+✅ `GET /api/generators` → List all  
+✅ `POST /api/generators` → Create  
+✅ `GET /api/generators/{id}/bookings`
+
+### Vendors
+✅ `GET /api/vendors` → List all  
+✅ `POST /api/vendors` → Create  
+✅ `DELETE /api/vendors/{id}`  
+✅ `GET /api/vendors/{id}/bookings`
+
+### Bookings
+✅ `GET /api/bookings` → List all  
+✅ `GET /api/bookings/{id}` → Get single  
+✅ `POST /api/bookings` → Create  
+✅ `POST /api/bookings/{id}/cancel`  
+✅ `DELETE /api/bookings/{id}`  
+✅ `POST /api/bookings/{id}/items` → Add item  
+✅ `POST /api/bookings/{id}/items/bulk-update`
+
+### Billing
+✅ `GET /api/billing/lines` → All billing lines
+
+### System Health
+✅ `GET /api/monitor/live` → Live metrics
+
+### Admin Users
+✅ `POST /admin/users/create`  
+✅ `POST /admin/users/{id}/update`  
+✅ `POST /admin/users/{id}/delete`  
+✅ `POST /admin/users/{id}/password`  
+✅ `POST /admin/users/{id}/permissions`
+
+---
+
+## 🔮 Future: Real Endpoint Specifications
+
+When ready to add backend endpoints, use these specifications:
+
+<details>
+<summary>Click to expand: PUT /api/generators/{id}</summary>
 
 ```python
 @app.put("/api/generators/{generator_id}")
@@ -26,568 +318,67 @@ async def update_generator(
     user: User = Depends(get_session_user_dependency),
 ):
     """Update an existing generator."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    # Admin-only for now (can add operator permissions later)
-    if user.role != "admin":
+    if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    try:
-        body = await request.json()
-        generator = GeneratorRepository(conn).get_generator(generator_id)
-        
-        if not generator:
-            raise HTTPException(status_code=404, detail="Generator not found")
-        
-        # Update fields
-        updated_generator = Generator(
-            generator_id=generator_id,
-            capacity=body.get("capacity", generator.capacity),
-            type_name=body.get("type_name", generator.type_name),
-            operational_status=body.get("operational_status", generator.operational_status),
-            inventory_type=body.get("inventory_type", generator.inventory_type),
-            rental_vendor_id=body.get("rental_vendor_id", generator.rental_vendor_id),
-            notes=body.get("notes", generator.notes),
-        )
-        
-        GeneratorRepository(conn).update_generator(updated_generator)
-        conn.commit()
-        
-        return JSONResponse({
-            "status": "success",
-            "generator": {
-                "generator_id": updated_generator.generator_id,
-                "capacity": updated_generator.capacity,
-                "type_name": updated_generator.type_name,
-                "operational_status": updated_generator.operational_status,
-                "inventory_type": updated_generator.inventory_type,
-                "rental_vendor_id": updated_generator.rental_vendor_id,
-                "notes": updated_generator.notes,
-            }
-        })
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Error updating generator: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-```
-
-**Required Repository Method** (add to `core/repositories.py` if missing):
-```python
-def update_generator(self, generator: Generator) -> None:
-    """Update an existing generator."""
-    self.conn.execute(
-        """
-        UPDATE generators
-        SET capacity = ?,
-            type_name = ?,
-            operational_status = ?,
-            inventory_type = ?,
-            rental_vendor_id = ?,
-            notes = ?
-        WHERE generator_id = ?
-        """,
-        (
-            generator.capacity,
-            generator.type_name,
-            generator.operational_status,
-            generator.inventory_type,
-            generator.rental_vendor_id,
-            generator.notes,
-            generator.generator_id,
-        ),
+    body = await request.json()
+    generator = GeneratorRepository(conn).get_generator(generator_id)
+    if not generator:
+        raise HTTPException(status_code=404, detail="Generator not found")
+    
+    updated_generator = Generator(
+        generator_id=generator_id,
+        capacity=body.get("capacity", generator.capacity),
+        type_name=body.get("type_name", generator.type_name),
+        operational_status=body.get("operational_status", generator.operational_status),
+        inventory_type=body.get("inventory_type", generator.inventory_type),
+        rental_vendor_id=body.get("rental_vendor_id", generator.rental_vendor_id),
+        notes=body.get("notes", generator.notes),
     )
+    
+    GeneratorRepository(conn).update_generator(updated_generator)
+    conn.commit()
+    
+    return JSONResponse({"status": "success", "generator": updated_generator.to_dict()})
 ```
+</details>
+
+<details>
+<summary>Click to expand: Other endpoint specs</summary>
+
+See original `BACKEND_API_ADDITIONS.md` backup for:
+- DELETE /api/generators/{id}
+- GET /api/vendors/{id}
+- PUT /api/vendors/{id}
+- PUT /api/bookings/{id}
+- GET /api/billing/preview
+- GET /api/users
+- GET /api/permissions
+
+All specifications preserved for future reference.
+</details>
 
 ---
 
-### DELETE /api/generators/{generator_id}
-**Purpose**: Delete a generator (admin only)
+## 📊 Summary
 
-```python
-@app.delete("/api/generators/{generator_id}")
-async def delete_generator(
-    generator_id: str,
-    conn: Connection = Depends(get_connection_dependency),
-    user: User = Depends(get_session_user_dependency),
-):
-    """Delete a generator."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        generator = GeneratorRepository(conn).get_generator(generator_id)
-        if not generator:
-            raise HTTPException(status_code=404, detail="Generator not found")
-        
-        # Check if generator has active bookings
-        bookings = GeneratorRepository(conn).get_generator_bookings(generator_id)
-        active_bookings = [b for b in bookings if b.status != "Cancelled"]
-        
-        if active_bookings:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Cannot delete generator with {len(active_bookings)} active booking(s)"
-            )
-        
-        GeneratorRepository(conn).delete_generator(generator_id)
-        conn.commit()
-        
-        return JSONResponse({
-            "status": "success",
-            "message": f"Generator {generator_id} deleted"
-        })
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Error deleting generator: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-```
+| Endpoint | Status | Mobile Implementation |
+|----------|--------|----------------------|
+| PUT /api/generators/{id} | ❌ Missing | Mock in repository |
+| DELETE /api/generators/{id} | ❌ Missing | Mock in repository |
+| GET /api/vendors/{id} | ❌ Missing | Filter in-memory |
+| PUT /api/vendors/{id} | ❌ Missing | Mock in repository |
+| PUT /api/bookings/{id} | ❌ Missing | Mock in repository |
+| GET /api/billing/preview | ❌ Missing | Calculate client-side |
+| GET /api/users | ❌ Missing | Use mock_users.dart |
+| GET /api/permissions | ❌ Missing | Use app constants |
 
-**Required Repository Method**:
-```python
-def delete_generator(self, generator_id: str) -> None:
-    """Delete a generator."""
-    self.conn.execute(
-        "DELETE FROM generators WHERE generator_id = ?",
-        (generator_id,)
-    )
-```
+**Mobile development**: ✅ Unblocked  
+**Backend work**: ⏸️ Deferred to future sprint  
+**Migration effort**: 🟢 Low (repository pattern enables easy switch)
 
 ---
 
-## 2. Vendors - Get Single & Update
-
-### GET /api/vendors/{vendor_id}
-**Purpose**: Get details of a single vendor
-
-```python
-@app.get("/api/vendors/{vendor_id}")
-async def get_vendor(
-    vendor_id: str,
-    conn: Connection = Depends(get_connection_dependency),
-    user: User = Depends(get_session_user_dependency),
-):
-    """Get a single vendor by ID."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    vendor = VendorRepository(conn).get_vendor(vendor_id)
-    if not vendor:
-        raise HTTPException(status_code=404, detail="Vendor not found")
-    
-    return JSONResponse({
-        "vendor": {
-            "vendor_id": vendor.vendor_id,
-            "name": vendor.name,
-            "location": vendor.location,
-            "phone": vendor.phone,
-            "notes": vendor.notes,
-        }
-    })
-```
-
-**Required Repository Method** (add if missing):
-```python
-def get_vendor(self, vendor_id: str) -> Optional[Vendor]:
-    """Get a vendor by ID."""
-    row = self.conn.execute(
-        "SELECT * FROM vendors WHERE vendor_id = ?",
-        (vendor_id,)
-    ).fetchone()
-    return Vendor(*row) if row else None
-```
-
----
-
-### PUT /api/vendors/{vendor_id}
-**Purpose**: Update vendor details
-
-```python
-@app.put("/api/vendors/{vendor_id}")
-async def update_vendor(
-    vendor_id: str,
-    request: Request,
-    conn: Connection = Depends(get_connection_dependency),
-    user: User = Depends(get_session_user_dependency),
-):
-    """Update an existing vendor."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        body = await request.json()
-        vendor = VendorRepository(conn).get_vendor(vendor_id)
-        
-        if not vendor:
-            raise HTTPException(status_code=404, detail="Vendor not found")
-        
-        updated_vendor = Vendor(
-            vendor_id=vendor_id,
-            name=body.get("name", vendor.name),
-            location=body.get("location", vendor.location),
-            phone=body.get("phone", vendor.phone),
-            notes=body.get("notes", vendor.notes),
-        )
-        
-        VendorRepository(conn).update_vendor(updated_vendor)
-        conn.commit()
-        
-        return JSONResponse({
-            "status": "success",
-            "vendor": {
-                "vendor_id": updated_vendor.vendor_id,
-                "name": updated_vendor.name,
-                "location": updated_vendor.location,
-                "phone": updated_vendor.phone,
-                "notes": updated_vendor.notes,
-            }
-        })
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Error updating vendor: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-```
-
-**Required Repository Method**:
-```python
-def update_vendor(self, vendor: Vendor) -> None:
-    """Update an existing vendor."""
-    self.conn.execute(
-        """
-        UPDATE vendors
-        SET name = ?, location = ?, phone = ?, notes = ?
-        WHERE vendor_id = ?
-        """,
-        (vendor.name, vendor.location, vendor.phone, vendor.notes, vendor.vendor_id),
-    )
-```
-
----
-
-## 3. Bookings - Update
-
-### PUT /api/bookings/{booking_id}
-**Purpose**: Update booking details (vendor, date range, status)
-
-```python
-@app.put("/api/bookings/{booking_id}")
-async def update_booking(
-    booking_id: int,
-    request: Request,
-    conn: Connection = Depends(get_connection_dependency),
-    user: User = Depends(get_session_user_dependency),
-):
-    """Update an existing booking."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    try:
-        body = await request.json()
-        booking = BookingRepository(conn).get_booking(booking_id)
-        
-        if not booking:
-            raise HTTPException(status_code=404, detail="Booking not found")
-        
-        # Update booking fields
-        updated_booking = Booking(
-            booking_id=booking_id,
-            vendor_name=body.get("vendor_name", booking.vendor_name),
-            start_datetime=body.get("start_datetime", booking.start_datetime),
-            end_datetime=body.get("end_datetime", booking.end_datetime),
-            status=body.get("status", booking.status),
-            notes=body.get("notes", booking.notes),
-            created_at=booking.created_at,
-            created_by=booking.created_by,
-        )
-        
-        BookingRepository(conn).update_booking(updated_booking)
-        conn.commit()
-        
-        return JSONResponse({
-            "status": "success",
-            "booking": {
-                "booking_id": updated_booking.booking_id,
-                "vendor_name": updated_booking.vendor_name,
-                "start_datetime": updated_booking.start_datetime,
-                "end_datetime": updated_booking.end_datetime,
-                "status": updated_booking.status,
-                "notes": updated_booking.notes,
-            }
-        })
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Error updating booking: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-```
-
-**Required Repository Method**:
-```python
-def update_booking(self, booking: Booking) -> None:
-    """Update an existing booking."""
-    self.conn.execute(
-        """
-        UPDATE bookings
-        SET vendor_name = ?,
-            start_datetime = ?,
-            end_datetime = ?,
-            status = ?,
-            notes = ?
-        WHERE booking_id = ?
-        """,
-        (
-            booking.vendor_name,
-            booking.start_datetime,
-            booking.end_datetime,
-            booking.status,
-            booking.notes,
-            booking.booking_id,
-        ),
-    )
-```
-
----
-
-## 4. Billing - Preview with Filters
-
-### GET /api/billing/preview
-**Purpose**: Get billing preview with date range and vendor filters
-
-```python
-@app.get("/api/billing/preview")
-async def get_billing_preview(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    vendor_id: Optional[str] = None,
-    conn: Connection = Depends(get_connection_dependency),
-    user: User = Depends(get_session_user_dependency),
-):
-    """Get billing preview with optional filters."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    try:
-        # Get all billing lines
-        billing_lines = BillingRepository(conn).get_billing_lines()
-        
-        # Filter by date range if provided
-        if start_date:
-            billing_lines = [
-                line for line in billing_lines
-                if line.start_datetime >= start_date
-            ]
-        
-        if end_date:
-            billing_lines = [
-                line for line in billing_lines
-                if line.end_datetime <= end_date
-            ]
-        
-        # Filter by vendor if provided
-        if vendor_id:
-            billing_lines = [
-                line for line in billing_lines
-                if line.vendor_name == vendor_id  # Adjust based on your schema
-            ]
-        
-        # Group by vendor and calculate totals
-        vendor_totals = {}
-        for line in billing_lines:
-            vendor = line.vendor_name
-            if vendor not in vendor_totals:
-                vendor_totals[vendor] = {
-                    "vendor_name": vendor,
-                    "total_amount": 0,
-                    "paid_amount": 0,
-                    "line_count": 0,
-                }
-            vendor_totals[vendor]["total_amount"] += line.amount or 0
-            vendor_totals[vendor]["paid_amount"] += line.paid_amount or 0
-            vendor_totals[vendor]["line_count"] += 1
-        
-        grand_total = sum(v["total_amount"] for v in vendor_totals.values())
-        grand_paid = sum(v["paid_amount"] for v in vendor_totals.values())
-        
-        return JSONResponse({
-            "billing": {
-                "vendor_summaries": list(vendor_totals.values()),
-                "grand_total": grand_total,
-                "grand_paid": grand_paid,
-                "grand_balance": grand_total - grand_paid,
-                "line_count": len(billing_lines),
-            }
-        })
-    except Exception as e:
-        logger.error(f"Error generating billing preview: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-```
-
----
-
-## 5. Admin - Users List & Permissions
-
-### GET /api/users
-**Purpose**: List all users (admin only)
-
-```python
-@app.get("/api/users")
-async def get_users(
-    conn: Connection = Depends(get_connection_dependency),
-    user: User = Depends(get_session_user_dependency),
-):
-    """Get all users (admin only)."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    users = UserRepository(conn).get_all_users()
-    
-    return JSONResponse({
-        "users": [
-            {
-                "user_id": u.user_id,
-                "username": u.username,
-                "role": u.role,
-                "status": u.status,
-                "created_at": u.created_at,
-                "last_login": u.last_login,
-            }
-            for u in users
-        ]
-    })
-```
-
-**Required Repository Method**:
-```python
-def get_all_users(self) -> List[User]:
-    """Get all users."""
-    rows = self.conn.execute("SELECT * FROM users ORDER BY username").fetchall()
-    return [User(*row) for row in rows]
-```
-
----
-
-### GET /api/permissions
-**Purpose**: Get permission matrix for roles
-
-```python
-@app.get("/api/permissions")
-async def get_permissions(
-    conn: Connection = Depends(get_connection_dependency),
-    user: User = Depends(get_session_user_dependency),
-):
-    """Get permission matrix (admin only)."""
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    # Return the permission matrix from core/permissions.py
-    from core.permissions import CAPABILITY_MATRIX
-    
-    return JSONResponse({
-        "permissions": [
-            {
-                "capability": cap,
-                "admin": perms.get("admin", False),
-                "operator": perms.get("operator", False),
-            }
-            for cap, perms in CAPABILITY_MATRIX.items()
-        ]
-    })
-```
-
----
-
-## 6. CORS Configuration Update
-
-**Add to backend `.env` file**:
-
-```env
-# CORS Configuration - Add mobile app origins
-CORS_ALLOWED_ORIGINS=http://localhost:8082,http://127.0.0.1:8082,http://192.162.29.71:8000,http://192.162.29.60:8000
-
-# For development with Flutter on same network:
-# May need to add: http://<your-dev-machine-ip>:*
-```
-
-**Or in `web/app.py`**, update the CORS middleware:
-
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8082",
-        "http://127.0.0.1:8082",
-        "http://192.162.29.71:8000",
-        "http://192.162.29.60:8000",
-        # Add wildcard for local network during development (remove in production)
-        "http://192.162.29.*",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
----
-
-## ✅ Testing Checklist
-
-After adding endpoints, test with curl or Postman:
-
-```bash
-# 1. Login to get JWT token
-curl -X POST http://192.162.29.60:8000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"<password>"}'
-
-# 2. Test GET /api/users (use token from step 1)
-curl -X GET http://192.162.29.60:8000/api/users \
-  -H "Authorization: Bearer <token>"
-
-# 3. Test PUT /api/vendors/{id}
-curl -X PUT http://192.162.29.60:8000/api/vendors/V001 \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Updated Vendor","location":"New Location"}'
-
-# 4. Test DELETE /api/generators/{id}
-curl -X DELETE http://192.162.29.60:8000/api/generators/G001 \
-  -H "Authorization: Bearer <token>"
-```
-
----
-
-## 📝 Implementation Steps
-
-1. **Backup** `web/app.py` before making changes
-2. **Add endpoint functions** to `web/app.py` (copy from above)
-3. **Add repository methods** to `core/repositories.py` if missing
-4. **Update CORS** configuration in `.env` or `web/app.py`
-5. **Restart backend** server: `python main.py`
-6. **Test endpoints** with curl/Postman
-7. **Deploy to DEV** server first
-8. **Test from mobile app** once WO-054 is complete
-9. **Deploy to PROD** after mobile integration verified
-
----
-
-**Estimated Implementation Time**: 4-6 hours  
-**Priority**: Complete before assigning WO-054 to Codex
+**Last Updated**: 2026-07-05T20:05:00+05:30  
+**Decision By**: CEO  
+**Status**: Ready for mobile implementation with mocks

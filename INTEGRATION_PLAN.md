@@ -267,53 +267,42 @@ Proceed as planned.
 
 ## 🚀 Recommended Execution Plan
 
-### Option 1: Backend First (Safest)
+### ✅ SELECTED: Mock-First Approach (Fastest, Pragmatic)
+**Timeline**: 5-7 days (mobile only, no backend work)
+
+**Decision (2026-07-05)**: After reviewing live backend, CEO decided to use mock implementations for missing endpoints. Real APIs will be added in future sprint.
+
+1. **Day 1-2**: WO-054 (API Client) + WO-055 (Auth with real login endpoint)
+2. **Day 3-4**: WO-056 (Vendors) + WO-057 (Generators) with mock updates/deletes
+3. **Day 5**: WO-058 (Bookings) + WO-059 (Billing) with client-side logic
+4. **Day 6**: WO-060 (Users) + WO-061 (System Health)
+5. **Day 7**: WO-062 (Error handling + UX polish)
+
+**Pros**: 
+- ✅ No backend work required now
+- ✅ Mobile development unblocked immediately
+- ✅ Easy migration to real APIs later (repository pattern)
+- ✅ Can launch v1.0 with mock implementations
+
+**Implementation**:
+- Repositories use `useMocks` toggle (default: true)
+- Existing endpoints used where available
+- Missing endpoints mocked locally with realistic delays
+- Future: Switch toggle to false when backend adds endpoints
+
+---
+
+### ~~Option 1: Backend First (Safest)~~ [REJECTED]
 **Timeline**: 1-2 days backend + 5-7 days mobile
 
-1. **Day 1**: Add missing backend endpoints (4-6 hours)
-2. **Day 1-2**: Test backend endpoints with Postman/curl
-3. **Day 2-3**: WO-054 + WO-055 (API Client + Auth)
-4. **Day 3-5**: WO-056 through WO-061 (All repositories)
-5. **Day 6-7**: WO-062 (Error handling + UX polish)
-
-**Pros**: Clean integration, no workarounds  
-**Cons**: Delays mobile work by 1-2 days
+Rejected because backend team doesn't want to add new APIs immediately.
 
 ---
 
-### Option 2: Parallel Development (Faster)
+### ~~Option 2: Parallel Development (Faster)~~ [REJECTED]
 **Timeline**: 5-7 days (backend and mobile in parallel)
 
-1. **Day 1**: 
-   - Backend: Start adding missing endpoints
-   - Mobile: WO-054 (API Client foundation)
-2. **Day 2**: 
-   - Backend: Complete missing endpoints + test
-   - Mobile: WO-055 (Auth integration)
-3. **Day 3-4**: 
-   - Backend: Deploy to DEV
-   - Mobile: WO-056, WO-057 (Vendors, Generators)
-4. **Day 5**: 
-   - Mobile: WO-058, WO-059 (Bookings, Billing)
-5. **Day 6**: 
-   - Mobile: WO-060, WO-061 (Users, System Health)
-6. **Day 7**: 
-   - Mobile: WO-062 (Error handling + UX polish)
-
-**Pros**: Faster to v1.0.0  
-**Cons**: Requires coordination, potential rework
-
----
-
-### Option 3: Mobile-First with Mocks (Riskiest)
-**Timeline**: 4-6 days mobile + 2-3 days integration fixes
-
-1. **Days 1-4**: Complete all mobile WOs with client-side workarounds
-2. **Days 5-6**: Add backend endpoints
-3. **Days 7-8**: Integration testing + fixes
-
-**Pros**: Mobile team not blocked  
-**Cons**: High rework risk, workarounds may need removal
+Rejected because no backend resources available now.
 
 ---
 
