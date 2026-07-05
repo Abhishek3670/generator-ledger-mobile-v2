@@ -110,6 +110,42 @@ void main() {
         '${BookingRepository.bookingsPath}/BK-003',
       );
     });
+
+    test('getBookings parses enhanced items array format', () async {
+      final apiClient = _FakeApiClient(
+        response: {
+          'bookings': [
+            {
+              'id': 'BKG-20260227-00001',
+              'vendor_id': 'VEN005',
+              'vendor_name': 'Mallu',
+              'created_at': '2026-02-27 23:56',
+              'status': 'Confirmed',
+              'items': [
+                {
+                  'generator_id': 'GEN001',
+                  'capacity_kva': 125,
+                },
+                {
+                  'generator_id': 'GEN002',
+                  'capacity_kva': 75,
+                },
+              ],
+            },
+          ],
+        },
+      );
+      final repository = BookingRepository(apiClient: apiClient);
+
+      final bookings = await repository.getBookings();
+
+      expect(bookings.single.id, 'BKG-20260227-00001');
+      expect(bookings.single.vendorId, 'VEN005');
+      expect(bookings.single.vendorName, 'Mallu');
+      expect(bookings.single.generators, ['GEN001', 'GEN002']);
+      expect(bookings.single.capacity, '200 kVA'); // 125 + 75
+      expect(bookings.single.status, 'Confirmed');
+    });
   });
 }
 
