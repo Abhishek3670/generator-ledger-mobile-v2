@@ -66,15 +66,38 @@ class Booking {
   }
 
   factory Booking.fromMap(Map<String, dynamic> map) {
-    final rawGenerators = map['generator_ids'] ?? map['generators'];
-    final generators = switch (rawGenerators) {
-      List<dynamic> values => values.map((value) => value.toString()).toList(),
-      String value when value.isNotEmpty => [value],
-      _ => [
-        (map['generator_id'] ?? map['generatorId'] ?? map['generator'] ?? '')
-            .toString(),
-      ],
-    }..removeWhere((value) => value.isEmpty);
+    // First, try to parse from new 'items' array format
+    List<String> generators = [];
+    double totalCapacity = 0.0;
+    
+    final items = map['items'];
+    if (items is List && items.isNotEmpty) {
+      for (final item in items) {
+        if (item is Map<String, dynamic>) {
+          final genId = item['generator_id']?.toString();
+          if (genId != null && genId.isNotEmpty) {
+            generators.add(genId);
+          }
+          final capacity = item['capacity_kva'];
+          if (capacity is num) {
+            totalCapacity += capacity.toDouble();
+          }
+        }
+      }
+    }
+    
+    // Fallback to legacy generator_ids field if items not present
+    if (generators.isEmpty) {
+      final rawGenerators = map['generator_ids'] ?? map['generators'];
+      generators = switch (rawGenerators) {
+        List<dynamic> values => values.map((value) => value.toString()).toList(),
+        String value when value.isNotEmpty => [value],
+        _ => [
+          (map['generator_id'] ?? map['generatorId'] ?? map['generator'] ?? '')
+              .toString(),
+        ],
+      }..removeWhere((value) => value.isEmpty);
+    }
 
     // Handle both created_at and date fields for start date
     final startDate = _parseDate(
@@ -89,6 +112,15 @@ class Booking {
     final vendorId = (map['vendor_id'] ?? map['vendorId'] ?? '').toString();
     final vendorName = (map['vendor_name'] ?? map['vendorName'] ?? vendorId).toString();
 
+    // Capacity: prefer items total, then map fields, then N/A
+    String capacityStr;
+    if (totalCapacity > 0) {
+      final isWhole = totalCapacity.truncateToDouble() == totalCapacity;
+      capacityStr = '${totalCapacity.toStringAsFixed(isWhole ? 0 : 1)} kVA';
+    } else {
+      capacityStr = _capacityFromMap(map);
+    }
+
     return Booking.withGenerators(
       bookingId: (map['booking_id'] ?? map['bookingId'] ?? map['id'] ?? '')
           .toString(),
@@ -99,7 +131,7 @@ class Booking {
       endDate: endDate,
       status: (map['status'] ?? 'pending').toString(),
       notes: (map['notes'] ?? '').toString(),
-      capacity: _capacityFromMap(map),
+      capacity: capacityStr,
     );
   }
 
