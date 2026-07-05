@@ -6,9 +6,10 @@ import 'package:ledger/data/repositories/system_health_repository.dart';
 import 'package:ledger/shared/models/system_health.dart';
 
 class _FakeApiClient extends ApiClient {
-  _FakeApiClient({this.mockResponse, this.shouldThrow = false});
+  _FakeApiClient({this.mockHealthResponse, this.mockMonitorResponse, this.shouldThrow = false});
 
-  final dynamic mockResponse;
+  final dynamic mockHealthResponse;
+  final dynamic mockMonitorResponse;
   final bool shouldThrow;
 
   @override
@@ -26,7 +27,13 @@ class _FakeApiClient extends ApiClient {
         ),
       );
     }
-    return fromJson(mockResponse);
+    
+    // Return appropriate mock based on endpoint
+    if (path == '/api/monitor/live') {
+      return fromJson(mockMonitorResponse ?? {});
+    } else {
+      return fromJson(mockHealthResponse ?? {});
+    }
   }
 }
 
@@ -34,15 +41,24 @@ void main() {
   group('SystemHealthRepository', () {
     test('getHealth returns SystemHealth from API response', () async {
       // Arrange
-      final mockResponse = {
-        'cpu_usage': 45.2,
-        'memory_usage': 67.8,
-        'disk_usage': 32.1,
-        'database_status': 'healthy',
-        'app_version': '1.0.0',
+      final mockHealthResponse = {
+        'version': '4.0.4',
+        'database': {
+          'status': 'connected',
+          'latency_ms': 9.27,
+        }
+      };
+      
+      final mockMonitorResponse = {
+        'cpu': {'percent': 45.2},
+        'memory': {'percent': 67.8},
+        'temperature': {'celsius': 32.1},
       };
 
-      final apiClient = _FakeApiClient(mockResponse: mockResponse);
+      final apiClient = _FakeApiClient(
+        mockHealthResponse: mockHealthResponse,
+        mockMonitorResponse: mockMonitorResponse,
+      );
       final repository = SystemHealthRepository(apiClient: apiClient);
 
       // Act
@@ -54,11 +70,11 @@ void main() {
       expect(health.memory, equals(67.8));
       expect(health.temperature, equals(32.1));
       expect(health.dbConnection, equals('healthy'));
-      expect(health.appVersion, equals('1.0.0'));
+      expect(health.appVersion, equals('4.0.4'));
     });
 
     test('getHealth handles wrapped response with "data" key', () async {
-      // Arrange
+      // Arrange - Mock format for backward compatibility
       final mockResponse = {
         'data': {
           'cpu_usage': 25.5,
@@ -69,7 +85,10 @@ void main() {
         }
       };
 
-      final apiClient = _FakeApiClient(mockResponse: mockResponse);
+      final apiClient = _FakeApiClient(
+        mockHealthResponse: mockResponse,
+        mockMonitorResponse: {},
+      );
       final repository = SystemHealthRepository(apiClient: apiClient);
 
       // Act
@@ -78,13 +97,13 @@ void main() {
       // Assert
       expect(health.cpu, equals(25.5));
       expect(health.memory, equals(50.0));
-      expect(health.temperature, equals(20.0));
+      expect(health.temperature, equals(0.0)); // disk_usage not mapped to temperature anymore
       expect(health.dbConnection, equals('connected'));
       expect(health.appVersion, equals('1.2.3'));
     });
 
     test('getHealth handles wrapped response with "health" key', () async {
-      // Arrange
+      // Arrange - Mock format for backward compatibility
       final mockResponse = {
         'health': {
           'cpu_usage': 15.0,
@@ -95,7 +114,10 @@ void main() {
         }
       };
 
-      final apiClient = _FakeApiClient(mockResponse: mockResponse);
+      final apiClient = _FakeApiClient(
+        mockHealthResponse: mockResponse,
+        mockMonitorResponse: {},
+      );
       final repository = SystemHealthRepository(apiClient: apiClient);
 
       // Act
@@ -104,7 +126,7 @@ void main() {
       // Assert
       expect(health.cpu, equals(15.0));
       expect(health.memory, equals(40.0));
-      expect(health.temperature, equals(10.0));
+      expect(health.temperature, equals(0.0)); // disk_usage not mapped to temperature anymore
       expect(health.dbConnection, equals('online'));
       expect(health.appVersion, equals('2.0.0'));
     });
@@ -123,9 +145,12 @@ void main() {
 
     test('getHealth throws FormatException on invalid response format', () async {
       // Arrange
-      const mockResponse = 'invalid response';
+      const mockHealthResponse = 'invalid response';
 
-      final apiClient = _FakeApiClient(mockResponse: mockResponse);
+      final apiClient = _FakeApiClient(
+        mockHealthResponse: mockHealthResponse,
+        mockMonitorResponse: {},
+      );
       final repository = SystemHealthRepository(apiClient: apiClient);
 
       // Act & Assert
