@@ -260,7 +260,7 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
               ),
             ),
 
-            // Pinned search bar at bottom
+            // Pinned search bar at bottom containing ExpandableFABMenu
             Positioned(
               bottom: 0,
               left: 0,
@@ -268,28 +268,20 @@ class _GeneratorsDirectoryScreenState extends ConsumerState<GeneratorsDirectoryS
               child: FloatingSearchFAB(
                 searchHint: 'Search generators...',
                 controller: _searchController,
-                fabIcon: Icons.add,
-                onFABPressed: () => _openAddModal(null),
-              ),
-            ),
-
-            // Positioned ExpandableFABMenu
-            Positioned(
-              right: 16,
-              bottom: 80,
-              child: ExpandableFABMenu(
-                items: [
-                  ExpandableFABItem(
-                    icon: Icons.add_box,
-                    label: 'NEW RETAILER',
-                    onPressed: () => _openAddModal('retailer'),
-                  ),
-                  ExpandableFABItem(
-                    icon: Icons.emergency,
-                    label: 'EMERGENCY',
-                    onPressed: () => _openAddModal('emergency'),
-                  ),
-                ],
+                actionWidget: ExpandableFABMenu(
+                  items: [
+                    ExpandableFABItem(
+                      icon: Icons.add_box,
+                      label: 'NEW RETAILER',
+                      onPressed: () => _openAddModal('retailer'),
+                    ),
+                    ExpandableFABItem(
+                      icon: Icons.emergency,
+                      label: 'EMERGENCY',
+                      onPressed: () => _openAddModal('emergency'),
+                    ),
+                  ],
+                ),
               ),
             ),
 

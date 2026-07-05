@@ -219,7 +219,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
               ),
             ),
 
-            // Pinned Search FAB at bottom
+            // Pinned Search FAB at bottom containing ExpandableFABMenu
             Positioned(
               bottom: 0,
               left: 0,
@@ -227,28 +227,20 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
               child: FloatingSearchFAB(
                 searchHint: 'Search vendors...',
                 controller: _searchController,
-                fabIcon: Icons.add,
-                onFABPressed: () => _openAddVendorModal(null),
-              ),
-            ),
-
-            // Positioned ExpandableFABMenu
-            Positioned(
-              right: 16,
-              bottom: 80,
-              child: ExpandableFABMenu(
-                items: [
-                  ExpandableFABItem(
-                    icon: Icons.add_box,
-                    label: 'NEW RETAILER',
-                    onPressed: () => _openAddVendorModal('retailer'),
-                  ),
-                  ExpandableFABItem(
-                    icon: Icons.store,
-                    label: 'NEW RENTAL VENDOR',
-                    onPressed: () => _openAddVendorModal('rental'),
-                  ),
-                ],
+                actionWidget: ExpandableFABMenu(
+                  items: [
+                    ExpandableFABItem(
+                      icon: Icons.add_box,
+                      label: 'NEW RETAILER',
+                      onPressed: () => _openAddVendorModal('retailer'),
+                    ),
+                    ExpandableFABItem(
+                      icon: Icons.store,
+                      label: 'NEW RENTAL VENDOR',
+                      onPressed: () => _openAddVendorModal('rental'),
+                    ),
+                  ],
+                ),
               ),
             ),
 

@@ -126,19 +126,8 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.go('/dashboard'),
-        ),
-        title: Text(
-          'Billing Preview',
-          style: AppTypography.headlineSmall.copyWith(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -666,6 +655,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
               ],
             ],
           ),
+        ),
         ),
       ),
     );

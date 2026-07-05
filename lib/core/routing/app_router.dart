@@ -165,6 +165,7 @@ class _OperationalShell extends ConsumerWidget {
         },
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
+        onSettingsPressed: () => context.go('/admin/health'),
       ),
       appBar: AppBar(
         centerTitle: true,

@@ -14,10 +14,13 @@ class FloatingSearchFAB extends StatefulWidget {
   final ValueChanged<String>? onSearchChanged;
 
   /// Icon to display in the FAB.
-  final IconData fabIcon;
+  final IconData? fabIcon;
 
   /// Callback triggered when the FAB is pressed.
   final VoidCallback? onFABPressed;
+
+  /// A custom widget (e.g. ExpandableFABMenu) to display next to the search input.
+  final Widget? actionWidget;
 
   /// Optional text controller to manage search field state.
   final TextEditingController? controller;
@@ -27,8 +30,9 @@ class FloatingSearchFAB extends StatefulWidget {
     super.key,
     required this.searchHint,
     this.onSearchChanged,
-    required this.fabIcon,
+    this.fabIcon,
     this.onFABPressed,
+    this.actionWidget,
     this.controller,
   });
 
@@ -112,11 +116,12 @@ class _FloatingSearchFABState extends State<FloatingSearchFAB> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: FloatingActionButton(
+          if (widget.actionWidget != null) ...[
+            const SizedBox(width: 16),
+            widget.actionWidget!,
+          ] else if (widget.fabIcon != null) ...[
+            const SizedBox(width: 16),
+            FloatingActionButton(
               onPressed: widget.onFABPressed,
               backgroundColor: AppColors.accent,
               foregroundColor: AppColors.primary,
@@ -124,7 +129,7 @@ class _FloatingSearchFABState extends State<FloatingSearchFAB> {
               shape: const StadiumBorder(),
               child: Icon(widget.fabIcon),
             ),
-          ),
+          ],
         ],
       ),
     );
