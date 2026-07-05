@@ -50,7 +50,8 @@ class _BookingsDirectoryScreenState
   @override
   Widget build(BuildContext context) {
     // Filter bookings based on search query
-    final bookings = ref.watch(bookingProvider);
+    final bookingState = ref.watch(bookingProvider);
+    final bookings = bookingState.valueOrNull ?? [];
     final vendors = ref.watch(vendorProvider).valueOrNull ?? [];
     final filteredBookings = bookings.where((booking) {
       if (_searchQuery.isEmpty) return true;
@@ -83,65 +84,89 @@ class _BookingsDirectoryScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // Vendor Groups List
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: vendors.length,
-                    separatorBuilder: (context, index) {
-                      final vendor = vendors[index];
-                      final vendorBookings = filteredBookings
-                          .where((b) => b.vendorId == vendor.id)
-                          .toList();
-                      return vendorBookings.isEmpty
-                          ? const SizedBox.shrink()
-                          : const SizedBox(height: 20);
-                    },
-                    itemBuilder: (context, index) {
-                      final vendor = vendors[index];
-                      final vendorBookings = filteredBookings
-                          .where((b) => b.vendorId == vendor.id)
-                          .toList();
-
-                      if (vendorBookings.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-
-                      return VendorBookingGroup(
-                        vendor: vendor,
-                        bookings: vendorBookings,
-                        onBookingTap: (booking) {
-                          setState(() {
-                            _editingBooking = booking;
-                          });
-                        },
-                      );
-                    },
-                  ),
-
-                  // Empty State
-                  if (filteredBookings.isEmpty)
+                  if (bookingState.isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (bookingState.hasError)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 32,
-                        horizontal: 16,
-                      ),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(
                           AppDimensions.functionalRadius,
                         ),
-                        border: Border.all(color: AppColors.border, width: 1),
+                        border: Border.all(color: AppColors.danger, width: 1),
                       ),
-                      child: Center(
-                        child: Text(
-                          'No matching bookings found.',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                      child: Text(
+                        'Unable to load bookings. Pull latest data and try again.',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.danger,
+                        ),
+                      ),
+                    )
+                  else ...[
+                    // Vendor Groups List
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: vendors.length,
+                      separatorBuilder: (context, index) {
+                        final vendor = vendors[index];
+                        final vendorBookings = filteredBookings
+                            .where((b) => b.vendorId == vendor.id)
+                            .toList();
+                        return vendorBookings.isEmpty
+                            ? const SizedBox.shrink()
+                            : const SizedBox(height: 20);
+                      },
+                      itemBuilder: (context, index) {
+                        final vendor = vendors[index];
+                        final vendorBookings = filteredBookings
+                            .where((b) => b.vendorId == vendor.id)
+                            .toList();
+
+                        if (vendorBookings.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return VendorBookingGroup(
+                          vendor: vendor,
+                          bookings: vendorBookings,
+                          onBookingTap: (booking) {
+                            setState(() {
+                              _editingBooking = booking;
+                            });
+                          },
+                        );
+                      },
+                    ),
+
+                    // Empty State
+                    if (filteredBookings.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 32,
+                          horizontal: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.functionalRadius,
+                          ),
+                          border: Border.all(color: AppColors.border, width: 1),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'No matching bookings found.',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                  ],
                 ],
               ),
             ),
@@ -167,8 +192,11 @@ class _BookingsDirectoryScreenState
             if (_showAddModal)
               AddBookingModal(
                 onClose: () => setState(() => _showAddModal = false),
-                onSave: (newBooking) {
-                  ref.read(bookingProvider.notifier).addBooking(newBooking);
+                onSave: (newBooking) async {
+                  await ref
+                      .read(bookingProvider.notifier)
+                      .addBooking(newBooking);
+                  if (!context.mounted) return;
                   setState(() => _showAddModal = false);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Booking added successfully')),
@@ -181,10 +209,11 @@ class _BookingsDirectoryScreenState
               EditBookingModal(
                 booking: _editingBooking!,
                 onClose: () => setState(() => _editingBooking = null),
-                onSave: (updatedBooking) {
-                  ref
+                onSave: (updatedBooking) async {
+                  await ref
                       .read(bookingProvider.notifier)
                       .updateBooking(updatedBooking);
+                  if (!context.mounted) return;
                   setState(() => _editingBooking = null);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

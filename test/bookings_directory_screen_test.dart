@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ledger/core/providers/booking_provider.dart';
 import 'package:ledger/core/providers/vendor_provider.dart';
+import 'package:ledger/data/mock/mock_bookings.dart';
 import 'package:ledger/data/mock/mock_vendors.dart';
+import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/screens/bookings_directory_screen.dart';
 import 'package:ledger/features/bookings/widgets/vendor_booking_group.dart';
@@ -15,6 +18,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            bookingRepositoryProvider.overrideWithValue(
+              _FakeBookingRepository(),
+            ),
             vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
           ],
           child: const MaterialApp(
@@ -48,6 +54,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
           vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
         ],
         child: const MaterialApp(
@@ -85,4 +92,16 @@ void main() {
 class _FakeVendorRepository extends VendorRepository {
   @override
   Future<List<MockVendor>> getVendors() async => List.of(mockVendors);
+}
+
+class _FakeBookingRepository extends BookingRepository {
+  @override
+  Future<List<MockBooking>> getBookings({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? vendorId,
+    String? status,
+  }) async {
+    return List.of(mockBookings);
+  }
 }

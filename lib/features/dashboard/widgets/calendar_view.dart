@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/booking.dart';
 
 /// Monthly calendar view displaying confirmed bookings and counts per day.
 class CalendarView extends StatefulWidget {
@@ -16,8 +16,8 @@ class CalendarView extends StatefulWidget {
   /// Callback triggered when a new day is selected.
   final ValueChanged<DateTime> onDaySelected;
 
-  /// The list of mock bookings to display on the calendar.
-  final List<MockBooking> bookings;
+  /// The list of bookings to display on the calendar.
+  final List<Booking> bookings;
 
   /// Creates a [CalendarView].
   const CalendarView({
@@ -41,7 +41,7 @@ class _CalendarViewState extends State<CalendarView> {
     _focusedDay = widget.focusedDay;
   }
 
-  List<MockBooking> _getBookingsForDay(DateTime day) {
+  List<Booking> _getBookingsForDay(DateTime day) {
     return widget.bookings.where((b) {
       return b.date.year == day.year &&
           b.date.month == day.month &&

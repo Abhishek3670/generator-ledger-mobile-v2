@@ -3,15 +3,15 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/booking.dart';
 import '../../../data/mock/mock_vendors.dart';
 import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 
 class EditBookingModal extends StatefulWidget {
-  final MockBooking booking;
+  final Booking booking;
   final VoidCallback onClose;
-  final Function(MockBooking) onSave;
+  final Function(Booking) onSave;
   final bool isVisible;
 
   const EditBookingModal({
@@ -295,7 +295,7 @@ class _EditBookingModalState extends State<EditBookingModal> {
                   genId = match.id;
                 }
 
-                final updatedBooking = MockBooking(
+                final updatedBooking = Booking(
                   id: widget.booking.id,
                   vendorId: _selectedVendorId!,
                   vendorName: selectedVendor.name,

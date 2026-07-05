@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/booking.dart';
 import '../../../shared/widgets/status_badge.dart';
 
 /// A list item showing booking schedule details (date, status, generator ID, capacity).
 class BookingListItem extends StatelessWidget {
-  /// The mock booking data for this item.
-  final MockBooking booking;
+  /// The booking data for this item.
+  final Booking booking;
 
   /// Optional callback when item is tapped.
   final VoidCallback? onTap;

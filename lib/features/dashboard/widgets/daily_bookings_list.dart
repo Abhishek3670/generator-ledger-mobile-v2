@@ -3,15 +3,15 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/booking.dart';
 import 'compact_booking_row.dart';
-/// List displaying mock bookings for the selected date inside a single compact bordered container.
+/// List displaying bookings for the selected date inside a single compact bordered container.
 class DailyBookingsList extends StatelessWidget {
   /// The currently selected day.
   final DateTime selectedDay;
 
-  /// The list of mock bookings.
-  final List<MockBooking> bookings;
+  /// The list of bookings.
+  final List<Booking> bookings;
 
   /// Callback triggered when the "View All Bookings" button is pressed.
   final VoidCallback onViewAllPressed;

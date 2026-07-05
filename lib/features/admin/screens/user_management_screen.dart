@@ -20,8 +20,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   bool _showCreateModal = false;
   bool _showEditModal = false;
   bool _showDeleteModal = false;
-  Map<String, String>? _selectedUserForEdit;
-  Map<String, String>? _selectedUserForDelete;
+  Map<String, dynamic>? _selectedUserForEdit;
+  Map<String, dynamic>? _selectedUserForDelete;
 
   final List<Map<String, dynamic>> _capabilities = [
     // System & Admin group
@@ -41,12 +41,42 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final users = ref.watch(userProvider).map((user) => user.toMap()).toList();
+    final usersAsync = ref.watch(userProvider);
 
     return Container(
       color: AppColors.background,
       child: SafeArea(
-        child: Stack(
+        child: usersAsync.when(
+          data: (usersList) => _buildContent(context, usersList),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load users',
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, List<User> usersList) {
+    final users = usersList.map((user) => user.toMap()).toList();
+
+    return Stack(
           children: [
             SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -181,7 +211,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      user['lastLogin']!,
+                                      _formatDateString(user['last_login'] ?? user['lastLogin']),
                                       style: AppTypography.bodySmall,
                                     ),
                                   ],
@@ -195,7 +225,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      user['created']!,
+                                      _formatDateString(user['created_at'] ?? user['created']),
                                       style: AppTypography.bodySmall,
                                     ),
                                   ],
@@ -410,12 +440,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
+        );
   }
 
-  List<TableRow> _buildTableRows(List<Map<String, String>> users) {
+  List<TableRow> _buildTableRows(List<Map<String, dynamic>> users) {
     final List<TableRow> rows = [];
     String currentGroup = '';
 
@@ -497,5 +525,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     }
 
     return rows;
+  }
+
+  String _formatDateString(dynamic value) {
+    if (value == null) return 'Never';
+    final str = value.toString();
+    if (str.length >= 10) {
+      return str.substring(0, 10);
+    }
+    return str;
   }
 }

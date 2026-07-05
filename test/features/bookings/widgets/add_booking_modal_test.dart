@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ledger/core/providers/booking_provider.dart';
 import 'package:ledger/core/providers/generator_provider.dart';
 import 'package:ledger/core/providers/vendor_provider.dart';
+import 'package:ledger/data/mock/mock_bookings.dart';
 import 'package:ledger/data/mock/mock_generators.dart';
 import 'package:ledger/data/mock/mock_vendors.dart';
+import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/data/repositories/generator_repository.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
@@ -93,9 +96,22 @@ void _dummySave(_) {}
 
 List<Override> _providerOverrides() {
   return [
+    bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
     vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
     generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
   ];
+}
+
+class _FakeBookingRepository extends BookingRepository {
+  @override
+  Future<List<MockBooking>> getBookings({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? vendorId,
+    String? status,
+  }) async {
+    return List.of(mockBookings);
+  }
 }
 
 class _FakeVendorRepository extends VendorRepository {

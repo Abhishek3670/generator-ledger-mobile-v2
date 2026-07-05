@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/booking.dart';
 import '../../../data/mock/mock_vendors.dart';
 import '../../../shared/widgets/dark_header_card.dart';
 import 'booking_list_item.dart';
@@ -12,10 +12,10 @@ class VendorBookingGroup extends StatelessWidget {
   final MockVendor vendor;
 
   /// The list of bookings associated with this vendor.
-  final List<MockBooking> bookings;
+  final List<Booking> bookings;
 
   /// Optional callback when a booking inside this group is tapped.
-  final Function(MockBooking)? onBookingTap;
+  final Function(Booking)? onBookingTap;
 
   /// Creates a [VendorBookingGroup].
   const VendorBookingGroup({

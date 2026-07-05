@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/booking.dart';
 import '../../../shared/widgets/backdrop_blur_overlay.dart';
 import '../../../shared/widgets/assignment_mode_toggle.dart';
 import '../../../shared/widgets/capacity_chip_selector.dart';
@@ -25,7 +25,7 @@ class AddBookingModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
 
   /// Callback triggered when the booking is successfully created and saved.
-  final Function(MockBooking) onSave;
+  final Function(Booking) onSave;
 
   /// Controls the visibility of this overlay.
   final bool isVisible;
@@ -138,7 +138,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       capacityText = match.capacity;
     }
 
-    final newBooking = MockBooking(
+    final newBooking = Booking(
       id: 'BK-${DateTime.now().millisecondsSinceEpoch}',
       vendorId: _selectedVendorId!,
       vendorName: selectedVendor.name,
@@ -171,7 +171,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     if (!widget.isVisible) return const SizedBox.shrink();
 
     final availableGenerators = ref.watch(generatorProvider).valueOrNull ?? [];
-    final bookings = ref.watch(bookingProvider);
+    final bookings = ref.watch(bookingProvider).valueOrNull ?? [];
 
     return Stack(
       children: [
@@ -586,7 +586,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   }
 
   Widget _buildExistingBookingsSection(
-    List<MockBooking> bookings,
+    List<Booking> bookings,
     String? vendorId,
   ) {
     return Column(

@@ -24,7 +24,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final summary = ref.watch(dashboardSummaryProvider);
-    final bookings = ref.watch(bookingProvider);
+    final bookings = ref.watch(bookingProvider).valueOrNull ?? [];
 
     return Container(
       color: AppColors.background,

@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ledger/core/providers/user_provider.dart';
+import 'package:ledger/data/mock/mock_users.dart';
+import 'package:ledger/data/repositories/user_repository.dart';
+import 'package:ledger/shared/models/user.dart';
+import 'package:ledger/shared/models/permission.dart';
 import 'package:ledger/features/admin/screens/user_management_screen.dart';
 import 'package:ledger/features/admin/modals/add_user_modal.dart';
 
 void main() {
   testWidgets('UserManagementScreen renders users list and permission matrix', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(
+      ProviderScope(
+        overrides: [
+          userRepositoryProvider.overrideWithValue(_FakeUserRepository()),
+        ],
+        child: const MaterialApp(
           home: Scaffold(body: UserManagementScreen()),
         ),
       ),
@@ -44,3 +52,43 @@ void main() {
     expect(find.text('PASSWORD'), findsOneWidget);
   });
 }
+
+class _FakeUserRepository extends UserRepository {
+  @override
+  Future<List<User>> getUsers() async {
+    return List.of(mockUsers);
+  }
+
+  @override
+  Future<List<Permission>> getPermissions() async {
+    return [
+      const Permission(
+        capability: 'settings_user_admin',
+        label: 'Settings & User Admin',
+        description: 'Manage users and settings',
+        admin: true,
+        operator: false,
+      ),
+      const Permission(
+        capability: 'monitor',
+        label: 'Monitor',
+        description: 'View health metrics',
+        admin: true,
+        operator: true,
+      ),
+      const Permission(
+        capability: 'vendor_management',
+        label: 'Vendor Management',
+        description: 'Manage vendors',
+        admin: true,
+        operator: true,
+      ),
+    ];
+  }
+
+  @override
+  Future<User> createUser(User user) async {
+    return user;
+  }
+}
+

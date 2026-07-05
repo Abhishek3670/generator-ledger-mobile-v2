@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ledger/core/providers/booking_provider.dart';
+import 'package:ledger/data/mock/mock_bookings.dart';
+import 'package:ledger/data/repositories/booking_repository.dart';
+import 'package:ledger/shared/models/booking.dart';
 import 'package:ledger/features/billing/screens/billing_preview_screen.dart';
 
 void main() {
   testWidgets('BillingPreviewScreen renders sticky header and bottom grand total', (tester) async {
-    await tester.pumpWidget(const ProviderScope(
-      child: MaterialApp(
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+      ],
+      child: const MaterialApp(
         home: Scaffold(body: BillingPreviewScreen()),
       ),
     ));
@@ -26,3 +33,16 @@ void main() {
     expect(find.text('GRAND TOTAL'), findsOneWidget);
   });
 }
+
+class _FakeBookingRepository extends BookingRepository {
+  @override
+  Future<List<Booking>> getBookings({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? vendorId,
+    String? status,
+  }) async {
+    return List.of(mockBookings);
+  }
+}
+

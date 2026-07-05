@@ -18,7 +18,7 @@ class DashboardSummary {
 
 final dashboardSummaryProvider = Provider<DashboardSummary>((ref) {
   return DashboardSummary(
-    totalBookings: ref.watch(bookingProvider).length,
+    totalBookings: ref.watch(bookingProvider).valueOrNull?.length ?? 0,
     totalGenerators: ref.watch(generatorProvider).valueOrNull?.length ?? 0,
     totalVendors: ref.watch(vendorProvider).valueOrNull?.length ?? 0,
   );

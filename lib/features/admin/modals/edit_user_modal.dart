@@ -5,9 +5,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 
 class EditUserModal extends StatefulWidget {
-  final Map<String, String> user;
+  final Map<String, dynamic> user;
   final VoidCallback onClose;
-  final Function(Map<String, String>) onSave;
+  final Function(Map<String, dynamic>) onSave;
   final bool isVisible;
 
   const EditUserModal({
