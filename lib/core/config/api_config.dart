@@ -1,7 +1,7 @@
-// API Configuration for Backend Integration
-//
-// Environment-specific configuration for connecting to the FastAPI backend.
-// The backend runs on PROD (192.162.29.71) and DEV (192.162.29.60) servers.
+/// API Configuration for Backend Integration
+///
+/// Environment-specific configuration for connecting to the FastAPI backend.
+/// The backend runs on PROD (192.168.29.71:8000) and DEV (192.168.29.60:8001) servers.
 
 class ApiConfig {
   /// Current environment (dev, prod, or local)
@@ -11,16 +11,17 @@ class ApiConfig {
   );
 
   /// Base URL for API requests (without trailing slash)
+  /// Note: Endpoints like /login, /api/users, etc. are added by repositories
   static String get baseUrl {
     switch (environment) {
       case 'prod':
-        return 'http://192.162.29.71:8000/api';
+        return 'http://192.168.29.71:8000';  // PROD server
       case 'dev':
-        return 'http://192.162.29.60:8000/api';
+        return 'http://192.168.29.60:8001';  // DEV server (port 8001)
       case 'local':
-        return 'http://localhost:8000/api';
+        return 'http://localhost:8000';
       default:
-        return 'http://192.162.29.60:8000/api'; // Default to DEV
+        return 'http://192.168.29.60:8001'; // Default to DEV
     }
   }
 
@@ -42,5 +43,5 @@ class ApiConfig {
   /// PostgreSQL connection (for reference only - not used by mobile app)
   /// Database is accessed via API, not direct connection
   static const String databaseInfo =
-      'PostgreSQL on 192.162.29.71:7865 (Docker)';
+      'PostgreSQL on 192.168.29.71:7865 (Docker)';
 }
