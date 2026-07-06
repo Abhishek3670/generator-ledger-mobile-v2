@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:ledger/app.dart';
 import 'package:ledger/core/routing/app_router.dart';
 import 'package:ledger/core/services/token_storage.dart';
+import 'package:ledger/core/providers/booking_provider.dart';
+import 'package:ledger/core/providers/generator_provider.dart';
+import 'package:ledger/core/providers/vendor_provider.dart';
+import 'package:ledger/core/providers/billing_provider.dart';
+import 'package:ledger/core/utils/connectivity_service.dart';
+import 'package:ledger/data/mock/mock_bookings.dart';
+import 'package:ledger/data/mock/mock_generators.dart';
+import 'package:ledger/data/mock/mock_vendors.dart';
+import 'package:ledger/data/repositories/booking_repository.dart';
+import 'package:ledger/data/repositories/generator_repository.dart';
+import 'package:ledger/data/repositories/vendor_repository.dart';
+import 'package:ledger/data/repositories/billing_repository.dart';
+import 'package:ledger/shared/models/booking.dart';
+import 'package:ledger/shared/models/billing.dart';
 import 'package:ledger/shared/widgets/side_navigation_drawer.dart';
 
 void main() {
@@ -11,8 +26,21 @@ void main() {
     AppRouter.tokenStorage = TokenStorage(backend: _FakeTokenStorageBackend());
   });
 
+  List<Override> _getOverrides() {
+    return [
+      vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
+      generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
+      bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+      billingRepositoryProvider.overrideWithValue(_FakeBillingRepository()),
+      connectivityProvider.overrideWith((ref) => Stream.value(ConnectivityResult.wifi)),
+    ];
+  }
+
   testWidgets('unauthenticated launch renders login screen', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: LedgerApp()));
+    await tester.pumpWidget(ProviderScope(
+      overrides: _getOverrides(),
+      child: const LedgerApp(),
+    ));
     await tester.pumpAndSettle();
 
     expect(find.text('Sign in'), findsOneWidget);
@@ -24,7 +52,10 @@ void main() {
     (tester) async {
       await AppRouter.tokenStorage.saveToken('jwt-token');
 
-      await tester.pumpWidget(const ProviderScope(child: LedgerApp()));
+      await tester.pumpWidget(ProviderScope(
+        overrides: _getOverrides(),
+        child: const LedgerApp(),
+      ));
       await tester.pumpAndSettle();
 
       expect(find.text('Genset'), findsOneWidget);
@@ -61,5 +92,38 @@ class _FakeTokenStorageBackend implements TokenStorageBackend {
   @override
   Future<void> delete({required String key}) async {
     values.remove(key);
+  }
+}
+
+class _FakeVendorRepository extends VendorRepository {
+  @override
+  Future<List<MockVendor>> getVendors() async => List.of(mockVendors);
+}
+
+class _FakeGeneratorRepository extends GeneratorRepository {
+  @override
+  Future<List<MockGenerator>> getGenerators({String? inventoryGroup}) async => List.of(mockGenerators);
+}
+
+class _FakeBookingRepository extends BookingRepository {
+  @override
+  Future<List<Booking>> getBookings({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? vendorId,
+    String? status,
+  }) async {
+    return List.of(mockBookings);
+  }
+}
+
+class _FakeBillingRepository extends BillingRepository {
+  @override
+  Future<List<BillingSummary>> getBillingPreview({
+    required DateTime startDate,
+    required DateTime endDate,
+    String? vendorId,
+  }) async {
+    return [];
   }
 }

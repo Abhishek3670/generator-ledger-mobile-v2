@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/connectivity_service.dart';
 import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/expandable_fab_menu.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
+import '../../../shared/widgets/error_screen.dart';
 import '../widgets/vendor_card.dart';
 import '../modals/add_vendor_modal.dart';
 import '../modals/edit_vendor_modal.dart';
@@ -61,29 +64,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final vendorsAsync = ref.watch(vendorProvider);
-    final vendors = vendorsAsync.valueOrNull ?? [];
-    if (vendorsAsync.isLoading && vendors.isEmpty) {
-      return const ColoredBox(
-        color: AppColors.background,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (vendorsAsync.hasError && vendors.isEmpty) {
-      return ColoredBox(
-        color: AppColors.background,
-        child: Center(
-          child: Text(
-            'Error loading vendors: ${vendorsAsync.error}',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
-    }
-
+  Widget _buildVendorLists(List<Vendor> vendors) {
     final filteredVendors = vendors.where((vendor) {
       if (_searchQuery.isEmpty) return true;
       return vendor.name.toLowerCase().contains(_searchQuery) ||
@@ -98,159 +79,216 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
         .where((v) => v.category == 'rental')
         .toList();
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Retailer Vendors Group Section
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+              AppDimensions.functionalRadius,
+            ),
+            border: Border.all(color: AppColors.border, width: 1),
+            boxShadow: const [
+              BoxShadow(
+                offset: Offset(0, 1),
+                blurRadius: 2,
+                color: AppColors.shadowSoft,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Retailer Vendor',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (retailerVendors.isEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'No matching retailer vendors.',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: retailerVendors.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final vendor = retailerVendors[index];
+                    return VendorCard(
+                      vendor: vendor,
+                      onMorePressed: () {
+                        setState(() {
+                          _selectedVendorForAction = vendor;
+                          _showActionMenu = true;
+                        });
+                      },
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Rental Vendors Group Section
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+              AppDimensions.functionalRadius,
+            ),
+            border: Border.all(color: AppColors.border, width: 1),
+            boxShadow: const [
+              BoxShadow(
+                offset: Offset(0, 1),
+                blurRadius: 2,
+                color: AppColors.shadowSoft,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Rental Vendors',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (rentalVendors.isEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'No matching rental vendors.',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: rentalVendors.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final vendor = rentalVendors[index];
+                    return VendorCard(
+                      vendor: vendor,
+                      onMorePressed: () {
+                        setState(() {
+                          _selectedVendorForAction = vendor;
+                          _showActionMenu = true;
+                        });
+                      },
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final vendorsAsync = ref.watch(vendorProvider);
+    final connectivity = ref.watch(connectivityProvider);
+
     return Container(
       color: AppColors.background,
       child: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.mobileGutter,
-                AppDimensions.mobileGutter,
-                AppDimensions.mobileGutter,
-                100, // Margin to avoid overlap with FloatingSearchFAB
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Page Header
-                  const SectionHeader(
-                    category: 'DIRECTORY',
-                    title: 'Vendors',
-                    description:
-                        'Manage retail vendor records used in bookings and rental vendor records for halls and hotels.',
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Retailer Vendors Group Section
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.functionalRadius,
-                      ),
-                      border: Border.all(color: AppColors.border, width: 1),
-                      boxShadow: const [
-                        BoxShadow(
-                          offset: Offset(0, 1),
-                          blurRadius: 2,
-                          color: AppColors.shadowSoft,
+            RefreshIndicator(
+              onRefresh: () async {
+                await ref.read(vendorProvider.notifier).loadVendors();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  AppDimensions.mobileGutter,
+                  AppDimensions.mobileGutter,
+                  AppDimensions.mobileGutter,
+                  100, // Margin to avoid overlap with FloatingSearchFAB
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (connectivity.value == ConnectivityResult.none) ...[
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.warningBg,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                         ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Retailer Vendor',
-                          style: AppTypography.headlineSmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        if (retailerVendors.isEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Center(
-                              child: Text(
-                                'No matching retailer vendors.',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.wifi_off, color: AppColors.warningText, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Offline Mode - Viewing Cached Data',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.warningText,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          )
-                        else
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: retailerVendors.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final vendor = retailerVendors[index];
-                              return VendorCard(
-                                vendor: vendor,
-                                onMorePressed: () {
-                                  setState(() {
-                                    _selectedVendorForAction = vendor;
-                                    _showActionMenu = true;
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Rental Vendors Group Section
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.functionalRadius,
+                          ],
+                        ),
                       ),
-                      border: Border.all(color: AppColors.border, width: 1),
-                      boxShadow: const [
-                        BoxShadow(
-                          offset: Offset(0, 1),
-                          blurRadius: 2,
-                          color: AppColors.shadowSoft,
-                        ),
-                      ],
+                    ],
+                    // Page Header
+                    const SectionHeader(
+                      category: 'DIRECTORY',
+                      title: 'Vendors',
+                      description:
+                          'Manage retail vendor records used in bookings and rental vendor records for halls and hotels.',
                     ),
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Rental Vendors',
-                          style: AppTypography.headlineSmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    const SizedBox(height: 24),
+
+                    vendorsAsync.when(
+                      data: (vendors) => _buildVendorLists(vendors),
+                      loading: () => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 40),
+                          child: CircularProgressIndicator(),
                         ),
-                        const SizedBox(height: 16),
-                        if (rentalVendors.isEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Center(
-                              child: Text(
-                                'No matching rental vendors.',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: rentalVendors.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final vendor = rentalVendors[index];
-                              return VendorCard(
-                                vendor: vendor,
-                                onMorePressed: () {
-                                  setState(() {
-                                    _selectedVendorForAction = vendor;
-                                    _showActionMenu = true;
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                      ],
+                      ),
+                      error: (error, stack) => ErrorScreen(
+                        message: error.toString(),
+                        onRetry: () => ref.read(vendorProvider.notifier).loadVendors(),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 

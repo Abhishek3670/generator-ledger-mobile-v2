@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/user.dart';
+import '../../../shared/widgets/loading_overlay.dart';
 import '../providers/user_management_provider.dart';
 import '../modals/add_user_modal.dart';
 import '../modals/edit_user_modal.dart';
@@ -20,6 +21,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   bool _showCreateModal = false;
   bool _showEditModal = false;
   bool _showDeleteModal = false;
+  bool _isLoading = false;
   Map<String, dynamic>? _selectedUserForEdit;
   Map<String, dynamic>? _selectedUserForDelete;
 
@@ -43,29 +45,32 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(userProvider);
 
-    return Container(
-      color: AppColors.background,
-      child: SafeArea(
-        child: usersAsync.when(
-          data: (usersList) => _buildContent(context, usersList),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load users',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+    return LoadingOverlay(
+      isLoading: _isLoading,
+      child: Container(
+        color: AppColors.background,
+        child: SafeArea(
+          child: usersAsync.when(
+            data: (usersList) => _buildContent(context, usersList),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load users',
+                    style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -371,12 +376,23 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             if (_showCreateModal)
               AddUserModal(
                 onClose: () => setState(() => _showCreateModal = false),
-                onSave: (newUser) {
-                  ref.read(userProvider.notifier).addUser(User.fromMap(newUser));
-                  setState(() => _showCreateModal = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('User "${newUser['username']}" created successfully')),
-                  );
+                onSave: (newUser) async {
+                  setState(() => _isLoading = true);
+                  try {
+                    await ref.read(userProvider.notifier).addUser(User.fromMap(newUser));
+                    setState(() {
+                      _showCreateModal = false;
+                      _isLoading = false;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('User "${newUser['username']}" created successfully')),
+                    );
+                  } catch (e) {
+                    setState(() => _isLoading = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to create user: $e')),
+                    );
+                  }
                 },
               ),
 
@@ -387,18 +403,27 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   _showEditModal = false;
                   _selectedUserForEdit = null;
                 }),
-                onSave: (updatedUser) {
-                  ref.read(userProvider.notifier).updateUser(
-                        User.fromMap(updatedUser),
-                        _selectedUserForEdit!['username']!,
-                      );
-                  setState(() {
-                    _showEditModal = false;
-                    _selectedUserForEdit = null;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('User "${updatedUser['username']}" updated successfully')),
-                  );
+                onSave: (updatedUser) async {
+                  setState(() => _isLoading = true);
+                  try {
+                    await ref.read(userProvider.notifier).updateUser(
+                          User.fromMap(updatedUser),
+                          _selectedUserForEdit!['username']!,
+                        );
+                    setState(() {
+                      _showEditModal = false;
+                      _selectedUserForEdit = null;
+                      _isLoading = false;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('User "${updatedUser['username']}" updated successfully')),
+                    );
+                  } catch (e) {
+                    setState(() => _isLoading = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to update user: $e')),
+                    );
+                  }
                 },
               ),
 
@@ -412,17 +437,26 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   _showDeleteModal = false;
                   _selectedUserForDelete = null;
                 }),
-                onConfirm: () {
-                  ref
-                      .read(userProvider.notifier)
-                      .deleteUser(_selectedUserForDelete!['username']!);
-                  setState(() {
-                    _showDeleteModal = false;
-                    _selectedUserForDelete = null;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('User deleted successfully')),
-                  );
+                onConfirm: () async {
+                  setState(() => _isLoading = true);
+                  try {
+                    await ref
+                        .read(userProvider.notifier)
+                        .deleteUser(_selectedUserForDelete!['username']!);
+                    setState(() {
+                      _showDeleteModal = false;
+                      _selectedUserForDelete = null;
+                      _isLoading = false;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User deleted successfully')),
+                    );
+                  } catch (e) {
+                    setState(() => _isLoading = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete user: $e')),
+                    );
+                  }
                 },
               ),
             Positioned(

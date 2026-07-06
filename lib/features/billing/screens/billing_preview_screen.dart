@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/connectivity_service.dart';
 import '../../../data/mock/mock_bookings.dart';
 import '../providers/billing_provider.dart';
 import '../../bookings/providers/bookings_provider.dart';
@@ -113,7 +115,11 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
       symbol: '₹ ',
       decimalDigits: 2,
     );
-    ref.watch(billingProvider);
+    final billingState = ref.watch(billingProvider);
+    final bookingState = ref.watch(bookingProvider);
+    final connectivity = ref.watch(connectivityProvider);
+    final isLoading = billingState.isLoading || bookingState.isLoading;
+
     ref.listen<AsyncValue<List<MockBooking>>>(bookingProvider, (previous, next) {
       if (next.hasValue && !next.isLoading) {
         _loadBillingData();
@@ -201,6 +207,32 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (connectivity.value == ConnectivityResult.none) ...[
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 8, bottom: 8),
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.warningBg,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.wifi_off, color: AppColors.warningText, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Offline Mode - Viewing Cached Data',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.warningText,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Text(
                       'BILLING',
@@ -578,7 +610,14 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                       const SizedBox(height: 16),
 
                       // Grouped Billing List
-                      if (bookingsToDisplay.isEmpty)
+                      if (isLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32.0),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (bookingsToDisplay.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 32.0),
                           child: Center(
