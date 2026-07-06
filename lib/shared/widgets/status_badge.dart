@@ -43,23 +43,23 @@ class StatusBadge extends StatelessWidget {
 
     switch (type) {
       case StatusBadgeType.confirmed:
-        backgroundColor = AppColors.successBg;
-        textColor = AppColors.success;
+        backgroundColor = AppColors.successLight;
+        textColor = AppColors.successText;
         icon = Icons.check;
         break;
       case StatusBadgeType.active:
-        backgroundColor = AppColors.successBg;
-        textColor = AppColors.success;
-        icon = Icons.check;
+        backgroundColor = AppColors.infoLight;
+        textColor = AppColors.infoText;
+        icon = Icons.info_outline;
         break;
       case StatusBadgeType.pending:
-        backgroundColor = AppColors.warningBg;
+        backgroundColor = AppColors.warningLight;
         textColor = AppColors.warningText;
         icon = Icons.access_time;
         break;
       case StatusBadgeType.cancelled:
-        backgroundColor = AppColors.dangerBg;
-        textColor = AppColors.dangerText;
+        backgroundColor = AppColors.errorLight;
+        textColor = AppColors.errorText;
         icon = Icons.cancel_outlined;
         break;
     }
