@@ -1014,15 +1014,22 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
               ),
             ),
 
-            // Fixed Bottom Footer
+            // Fixed Bottom Footer - Floating Grand Total
             if (_includeGrandTotal && sortedSummaries.isNotEmpty)
-              Container(
-                color: AppColors.background,
+              Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 20,
+                        offset: const Offset(0, -4),
+                        spreadRadius: 0,
+                      ),
+                    ],
                   ),
                   padding: const EdgeInsets.all(20),
                   child: Row(
