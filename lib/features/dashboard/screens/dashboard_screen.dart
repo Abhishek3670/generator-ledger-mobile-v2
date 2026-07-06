@@ -11,6 +11,7 @@ import '../../../core/providers/booking_provider.dart';
 import '../../../core/providers/generator_provider.dart';
 import '../../../core/providers/vendor_provider.dart';
 import '../../../shared/widgets/error_screen.dart';
+import '../../../shared/widgets/skeleton_loading.dart';
 import '../widgets/calendar_view.dart';
 import '../widgets/daily_bookings_list.dart';
 import '../widgets/stats_grid.dart';
@@ -40,7 +41,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (bookingState.isLoading || generatorState.isLoading || vendorState.isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator()),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: SkeletonCard(height: 90, borderRadius: 12)),
+                    SizedBox(width: 12),
+                    Expanded(child: SkeletonCard(height: 90, borderRadius: 12)),
+                    SizedBox(width: 12),
+                    Expanded(child: SkeletonCard(height: 90, borderRadius: 12)),
+                  ],
+                ),
+                SizedBox(height: 24),
+                SkeletonCard(height: 160, borderRadius: 16),
+                SizedBox(height: 24),
+                SkeletonText(height: 20, width: 150),
+                SizedBox(height: 12),
+                SkeletonCard(height: 80, borderRadius: 12),
+                SizedBox(height: 12),
+                SkeletonCard(height: 80, borderRadius: 12),
+              ],
+            ),
+          ),
+        ),
       );
     }
 

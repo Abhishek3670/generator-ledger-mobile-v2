@@ -4,6 +4,8 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 class AddVendorModal extends StatefulWidget {
   final VoidCallback onClose;
@@ -58,35 +60,29 @@ class _AddVendorModalState extends State<AddVendorModal> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Vendor Name
-            _buildFieldLabel('NAME'),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppTextField(
+              labelText: 'NAME',
+              hintText: 'Enter Vendor Name',
               controller: _nameController,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Enter Vendor Name'),
               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a name' : null,
             ),
             const SizedBox(height: 16),
 
             // Location
-            _buildFieldLabel('LOCATION'),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppTextField(
+              labelText: 'LOCATION',
+              hintText: 'Enter Location',
               controller: _locationController,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Enter Location'),
               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a location' : null,
             ),
             const SizedBox(height: 16),
 
             // Phone
-            _buildFieldLabel('PHONE'),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppTextField(
+              labelText: 'PHONE',
+              hintText: 'Enter Phone Number',
               controller: _phoneController,
-              style: AppTypography.bodyMedium,
               keyboardType: TextInputType.phone,
-              decoration: _inputDecoration(hintText: 'Enter Phone Number'),
               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a phone number' : null,
             ),
             const SizedBox(height: 16),
@@ -118,13 +114,10 @@ class _AddVendorModalState extends State<AddVendorModal> {
             const SizedBox(height: 16),
 
             // Notes
-            _buildFieldLabel('NOTES (OPTIONAL)'),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppTextField(
+              labelText: 'NOTES (OPTIONAL)',
+              hintText: 'Add any relevant details...',
               controller: _notesController,
-              maxLines: 3,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Add any relevant details...'),
             ),
           ],
         ),
@@ -132,12 +125,14 @@ class _AddVendorModalState extends State<AddVendorModal> {
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
+          AppButton(
+            label: 'CANCEL',
             onPressed: widget.onClose,
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
+            variant: AppButtonVariant.ghost,
           ),
           const SizedBox(width: 12),
-          ElevatedButton(
+          AppButton(
+            label: 'CREATE',
             onPressed: () {
               if (_formKey.currentState?.validate() ?? false) {
                 final newVendor = Vendor(
@@ -150,13 +145,7 @@ class _AddVendorModalState extends State<AddVendorModal> {
                 widget.onSave(newVendor);
               }
             },
-             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('CREATE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            variant: AppButtonVariant.accent,
           ),
         ],
       ),

@@ -10,6 +10,7 @@ import '../../../shared/widgets/expandable_fab_menu.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/error_screen.dart';
+import '../../../shared/widgets/skeleton_loading.dart';
 import '../widgets/vendor_card.dart';
 import '../modals/add_vendor_modal.dart';
 import '../modals/edit_vendor_modal.dart';
@@ -276,11 +277,11 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
 
                     vendorsAsync.when(
                       data: (vendors) => _buildVendorLists(vendors),
-                      loading: () => const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40),
-                          child: CircularProgressIndicator(),
-                        ),
+                      loading: () => Column(
+                        children: List.generate(3, (index) => const Padding(
+                          padding: EdgeInsets.only(bottom: 16.0),
+                          child: SkeletonCard(height: 100),
+                        )),
                       ),
                       error: (error, stack) => ErrorScreen(
                         message: error.toString(),

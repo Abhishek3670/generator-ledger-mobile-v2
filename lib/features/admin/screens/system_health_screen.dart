@@ -7,6 +7,7 @@ import '../../../core/utils/connectivity_service.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../providers/system_health_provider.dart';
 import '../widgets/health_metric_card.dart';
+import '../../../core/services/haptic_service.dart';
 
 class SystemHealthScreen extends ConsumerStatefulWidget {
   const SystemHealthScreen({super.key});
@@ -238,6 +239,55 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                         points: health.temperatureTrend,
                         timeStart: '12:32:09',
                         timeEnd: '12:32:27',
+                      ),
+                       const SizedBox(height: 16),
+
+                      // Preferences Card
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: AppColors.border),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'PREFERENCES',
+                              style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Haptic Feedback',
+                                      style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Provide tactile feedback for taps and actions.',
+                                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                                Switch(
+                                  value: HapticService.isEnabled,
+                                  activeColor: AppColors.accent,
+                                  activeTrackColor: AppColors.primary,
+                                  onChanged: (value) async {
+                                    await HapticService.setEnabled(value);
+                                    setState(() {});
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
 

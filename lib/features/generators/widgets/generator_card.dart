@@ -5,6 +5,8 @@ import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/swipe_action_card.dart';
 
+import '../../../core/navigation/hero_tags.dart';
+
 /// Card component representing a single generator (genset) and its status.
 class GeneratorCard extends StatelessWidget {
   /// The generator mock data.
@@ -29,10 +31,13 @@ class GeneratorCard extends StatelessWidget {
     final cardContent = GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      child: Hero(
+        tag: HeroTags.generatorCard(generator.id),
+        child: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.border, width: 1),
         boxShadow: const [
@@ -110,6 +115,7 @@ class GeneratorCard extends StatelessWidget {
           ],
         ],
       ),
+    ),
     ),
     );
 

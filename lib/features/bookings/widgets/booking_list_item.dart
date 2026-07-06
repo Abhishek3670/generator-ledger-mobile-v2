@@ -5,6 +5,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
 import '../../../shared/widgets/status_badge.dart';
 
+import '../../../core/navigation/hero_tags.dart';
+
 /// A list item showing booking schedule details (date, status, generator ID, capacity).
 class BookingListItem extends StatelessWidget {
   /// The booking data for this item.
@@ -29,9 +31,13 @@ class BookingListItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
-        child: Column(
+      child: Hero(
+        tag: HeroTags.bookingCard(booking.id),
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -70,6 +76,8 @@ class BookingListItem extends StatelessWidget {
           ],
         ),
       ),
+    ),
+    ),
     );
   }
 

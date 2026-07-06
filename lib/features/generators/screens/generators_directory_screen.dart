@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -11,6 +12,7 @@ import '../../../shared/widgets/expandable_fab_menu.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/error_screen.dart';
+import '../../../shared/widgets/skeleton_loading.dart';
 import '../widgets/inventory_group_section.dart';
 import '../modals/add_generator_modal.dart';
 import '../modals/edit_generator_modal.dart';
@@ -112,9 +114,7 @@ class _GeneratorsDirectoryScreenState
           category: 'retailer',
           generators: retailerGensets,
           onGeneratorTap: (gen) {
-            setState(() {
-              _selectedGeneratorDetail = gen;
-            });
+            context.push('/generators/${gen.id}');
           },
           onModify: (gen) {
             setState(() {
@@ -133,9 +133,7 @@ class _GeneratorsDirectoryScreenState
           category: 'permanent',
           generators: permanentGensets,
           onGeneratorTap: (gen) {
-            setState(() {
-              _selectedGeneratorDetail = gen;
-            });
+            context.push('/generators/${gen.id}');
           },
         ),
         const SizedBox(height: 20),
@@ -148,9 +146,7 @@ class _GeneratorsDirectoryScreenState
           category: 'emergency',
           generators: emergencyGensets,
           onGeneratorTap: (gen) {
-            setState(() {
-              _selectedGeneratorDetail = gen;
-            });
+            context.push('/generators/${gen.id}');
           },
         ),
       ],
@@ -341,11 +337,11 @@ class _GeneratorsDirectoryScreenState
                         permanentGensets,
                         emergencyGensets,
                       ),
-                      loading: () => const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40),
-                          child: CircularProgressIndicator(),
-                        ),
+                      loading: () => Column(
+                        children: List.generate(3, (index) => const Padding(
+                          padding: EdgeInsets.only(bottom: 16.0),
+                          child: SkeletonCard(height: 120),
+                        )),
                       ),
                       error: (error, stack) => ErrorScreen(
                         message: error.toString(),

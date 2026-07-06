@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/haptic_service.dart';
 
 /// A wrapper widget that equips cards with slide-to-reveal actions.
 ///
@@ -34,7 +35,10 @@ class SwipeActionCard extends StatelessWidget {
               extentRatio: 0.25,
               children: [
                 SlidableAction(
-                  onPressed: (_) => onDelete?.call(),
+                  onPressed: (_) {
+                    HapticService.medium();
+                    onDelete?.call();
+                  },
                   backgroundColor: AppColors.danger,
                   foregroundColor: Colors.white,
                   icon: Icons.delete_outline,
@@ -49,7 +53,10 @@ class SwipeActionCard extends StatelessWidget {
               extentRatio: 0.25,
               children: [
                 SlidableAction(
-                  onPressed: (_) => onModify?.call(),
+                  onPressed: (_) {
+                    HapticService.light();
+                    onModify?.call();
+                  },
                   backgroundColor: AppColors.warning,
                   foregroundColor: Colors.white,
                   icon: Icons.edit_outlined,

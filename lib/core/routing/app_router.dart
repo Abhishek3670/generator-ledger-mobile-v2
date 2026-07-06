@@ -18,7 +18,9 @@ import '../../features/admin/screens/integrations_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../navigation/page_transitions.dart';
 import 'route_names.dart';
+
 
 /// Full router configuration for the application.
 abstract final class AppRouter {
@@ -45,12 +47,18 @@ abstract final class AppRouter {
       GoRoute(
         path: '/login',
         name: RouteNames.login,
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => SlideRightTransitionPage<void>(
+          key: state.pageKey,
+          child: const LoginScreen(),
+        ),
       ),
       GoRoute(
         path: '/billing',
         name: RouteNames.billing,
-        builder: (context, state) => const BillingPreviewScreen(),
+        pageBuilder: (context, state) => SlideRightTransitionPage<void>(
+          key: state.pageKey,
+          child: const BillingPreviewScreen(),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -85,9 +93,12 @@ abstract final class AppRouter {
                   GoRoute(
                     path: ':id',
                     name: RouteNames.generatorDetail,
-                    builder: (context, state) {
+                    pageBuilder: (context, state) {
                       final id = state.pathParameters['id'] ?? '';
-                      return GeneratorDetailScreen(generatorId: id);
+                      return SlideRightTransitionPage<void>(
+                        key: state.pageKey,
+                        child: GeneratorDetailScreen(generatorId: id),
+                      );
                     },
                   ),
                 ],

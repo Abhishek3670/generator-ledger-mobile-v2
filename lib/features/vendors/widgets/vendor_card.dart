@@ -3,6 +3,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/vendor.dart';
 
+import '../../../core/navigation/hero_tags.dart';
+
 /// Card displaying details of a single vendor (name, ID, location, phone, accent border).
 class VendorCard extends StatelessWidget {
   /// The vendor information to display.
@@ -22,19 +24,24 @@ class VendorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRental = vendor.category == 'rental';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: const [
-          BoxShadow(
-            offset: Offset(0, 1),
-            blurRadius: 2,
-            color: Color(0x0D0F172A),
+    return Hero(
+      tag: HeroTags.vendorCard(vendor.id),
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border, width: 1),
+            boxShadow: const [
+              BoxShadow(
+                offset: Offset(0, 1),
+                blurRadius: 2,
+                color: Color(0x0D0F172A),
+              ),
+            ],
           ),
-        ],
-      ),
+
       child: ClipRRect(
         borderRadius: BorderRadius.circular(7),
         child: IntrinsicHeight(
@@ -128,6 +135,8 @@ class VendorCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
+    ),
     );
   }
 }

@@ -11,6 +11,7 @@ import 'package:ledger/data/repositories/billing_repository.dart';
 import 'package:ledger/shared/models/booking.dart';
 import 'package:ledger/shared/models/billing.dart';
 import 'package:ledger/features/billing/screens/billing_preview_screen.dart';
+import 'package:ledger/shared/widgets/skeleton_loading.dart';
 
 void main() {
   testWidgets('BillingPreviewScreen renders sticky header and bottom grand total', (tester) async {
@@ -53,8 +54,8 @@ void main() {
       ),
     ));
 
-    // Should show loading spinner initially
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    // Should show skeleton card loader initially
+    expect(find.byType(SkeletonCard), findsAtLeastNWidgets(1));
 
     await tester.pump(const Duration(milliseconds: 150));
 

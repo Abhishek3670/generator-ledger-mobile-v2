@@ -5,6 +5,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 import '../../../shared/widgets/capacity_chip_selector.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 class EditGeneratorModal extends StatefulWidget {
   final MockGenerator generator;
@@ -40,7 +42,7 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
     super.initState();
     _idController = TextEditingController(text: widget.generator.id);
     _typeController = TextEditingController(text: widget.generator.type);
-    _notesController = TextEditingController(); // Notes are optional and start blank or can check if there are fields
+    _notesController = TextEditingController(); // Notes are optional and start blank
     _selectedCategory = widget.generator.category;
     _selectedStatus = widget.generator.status;
     
@@ -78,12 +80,10 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Generator ID
-            _buildFieldLabel('GENERATOR ID'),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppTextField(
+              labelText: 'GENERATOR ID',
+              hintText: 'e.g. GEN-250KVA-XT',
               controller: _idController,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'e.g. GEN-250KVA-XT'),
               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter generator ID' : null,
             ),
             const SizedBox(height: 16),
@@ -102,12 +102,10 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
             const SizedBox(height: 16),
 
             // Type
-            _buildFieldLabel('TYPE'),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppTextField(
+              labelText: 'TYPE',
+              hintText: 'e.g. 6R / SL90 / HA',
               controller: _typeController,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'e.g. 6R / SL90 / HA'),
               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter type' : null,
             ),
             const SizedBox(height: 16),
@@ -185,13 +183,10 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
             const SizedBox(height: 16),
 
             // Notes
-            _buildFieldLabel('NOTES (OPTIONAL)'),
-            const SizedBox(height: 8),
-            TextFormField(
+            AppTextField(
+              labelText: 'NOTES (OPTIONAL)',
+              hintText: 'Add any relevant details...',
               controller: _notesController,
-              maxLines: 3,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Add any relevant details...'),
             ),
           ],
         ),
@@ -199,12 +194,14 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
+          AppButton(
+            label: 'CANCEL',
             onPressed: widget.onClose,
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
+            variant: AppButtonVariant.ghost,
           ),
           const SizedBox(width: 12),
-          ElevatedButton(
+          AppButton(
+            label: 'SAVE',
             onPressed: () {
               if (_formKey.currentState?.validate() ?? false) {
                 final updatedGen = MockGenerator(
@@ -217,13 +214,7 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
                 widget.onSave(updatedGen);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            variant: AppButtonVariant.accent,
           ),
         ],
       ),

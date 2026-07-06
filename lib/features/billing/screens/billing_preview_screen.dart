@@ -8,6 +8,7 @@ import 'package:ledger/core/theme/app_typography.dart';
 import 'package:ledger/core/utils/connectivity_service.dart';
 import 'package:ledger/shared/models/billing.dart';
 import 'package:ledger/features/billing/providers/billing_provider.dart';
+import 'package:ledger/shared/widgets/skeleton_loading.dart';
 
 class BillingPreviewScreen extends ConsumerStatefulWidget {
   const BillingPreviewScreen({super.key});
@@ -630,11 +631,11 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
 
                       // Grouped Billing List
                       if (isLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 32.0),
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                        Column(
+                          children: List.generate(4, (index) => const Padding(
+                            padding: EdgeInsets.only(bottom: 16.0),
+                            child: SkeletonCard(height: 80),
+                          )),
                         )
                       else if (billingState.hasError)
                         Padding(

@@ -15,12 +15,16 @@ class BackdropBlurOverlay extends StatelessWidget {
   /// Optional child widget to render on top of the blurred overlay.
   final Widget? child;
 
+  /// Optional opacity value for fading the backdrop blur.
+  final double opacity;
+
   /// Creates a [BackdropBlurOverlay].
   const BackdropBlurOverlay({
     super.key,
     required this.isVisible,
     this.onTap,
     this.child,
+    this.opacity = 1.0,
   });
 
   @override
@@ -28,15 +32,18 @@ class BackdropBlurOverlay extends StatelessWidget {
     if (!isVisible) return const SizedBox.shrink();
 
     return Positioned.fill(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-            child: Container(
-              color: AppColors.primary.withValues(alpha: 0.40), // Slate-900 color at 40% opacity
-              child: child,
+      child: Opacity(
+        opacity: opacity,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+              child: Container(
+                color: AppColors.primary.withValues(alpha: 0.40), // Slate-900 color at 40% opacity
+                child: child,
+              ),
             ),
           ),
         ),

@@ -10,6 +10,7 @@ import '../../../data/mock/mock_bookings.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/error_screen.dart';
+import '../../../shared/widgets/skeleton_loading.dart';
 import '../widgets/vendor_booking_group.dart';
 import '../modals/add_booking_modal.dart';
 import '../widgets/edit_booking_modal.dart';
@@ -188,11 +189,11 @@ class _BookingsDirectoryScreenState
 
                     bookingState.when(
                       data: (_) => _buildBookingContent(vendors, filteredBookings),
-                      loading: () => const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40),
-                          child: CircularProgressIndicator(),
-                        ),
+                      loading: () => Column(
+                        children: List.generate(4, (index) => const Padding(
+                          padding: EdgeInsets.only(bottom: 16.0),
+                          child: SkeletonCard(height: 80),
+                        )),
                       ),
                       error: (error, stack) => ErrorScreen(
                         message: error.toString(),
