@@ -87,6 +87,36 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
     ref.invalidate(billingProvider);
   }
 
+  Future<void> _selectDateFrom(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _parseDate(_dateFromController.text) ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dateFromController.text = DateFormat('dd-MM-yyyy').format(picked);
+      });
+    }
+  }
+
+  Future<void> _selectDateTo(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _parseDate(_dateToController.text) ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dateToController.text = DateFormat('dd-MM-yyyy').format(picked);
+      });
+    }
+  }
+
   DateTime? _parseDate(String input) {
     try {
       final parts = input.split('-');
@@ -265,6 +295,8 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                     const SizedBox(height: 6),
                                     TextField(
                                       controller: _dateFromController,
+                                      readOnly: true,
+                                      onTap: () => _selectDateFrom(context),
                                       decoration: InputDecoration(
                                         suffixIcon: const Icon(
                                           Icons.calendar_today,
@@ -304,6 +336,8 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                     const SizedBox(height: 6),
                                     TextField(
                                       controller: _dateToController,
+                                      readOnly: true,
+                                      onTap: () => _selectDateTo(context),
                                       decoration: InputDecoration(
                                         suffixIcon: const Icon(
                                           Icons.calendar_today,

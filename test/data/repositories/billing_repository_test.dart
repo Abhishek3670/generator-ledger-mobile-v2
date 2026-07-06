@@ -16,7 +16,7 @@ void main() {
         endDate: endDate,
       );
 
-      expect(fakeClient.lastGetPath, '/billing/lines');
+      expect(fakeClient.lastGetPath, '/api/billing/lines');
       expect(fakeClient.lastQueryParameters, {
         'from': '2026-01-01',
         'to': '2026-01-31',

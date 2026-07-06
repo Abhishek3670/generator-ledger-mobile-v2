@@ -5,7 +5,7 @@ class BillingRepository {
   BillingRepository({ApiClient? apiClient})
       : _apiClient = apiClient ?? ApiClient();
 
-  static const String billingLinesPath = '/billing/lines';
+  static const String billingLinesPath = '/api/billing/lines';
   static const String paymentsPath = '/api/billing/payments';
 
   final ApiClient _apiClient;
