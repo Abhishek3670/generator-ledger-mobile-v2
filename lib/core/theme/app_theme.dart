@@ -21,11 +21,12 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       textTheme: TextTheme(
-        displayLarge: AppTypography.displayLarge,
-        headlineMedium: AppTypography.headlineMedium,
-        headlineSmall: AppTypography.headlineSmall,
+        displayLarge: AppTypography.display,
+        headlineMedium: AppTypography.headline,
+        headlineSmall: AppTypography.title,
+        bodyLarge: AppTypography.bodyLarge,
         bodyMedium: AppTypography.bodyMedium,
-        bodySmall: AppTypography.bodySmall,
+        labelMedium: AppTypography.label,
         labelSmall: AppTypography.labelCaps,
       ),
       appBarTheme: AppBarTheme(
