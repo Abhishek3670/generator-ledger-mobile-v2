@@ -377,6 +377,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               AddUserModal(
                 onClose: () => setState(() => _showCreateModal = false),
                 onSave: (newUser) async {
+                  final messenger = ScaffoldMessenger.of(context);
                   setState(() => _isLoading = true);
                   try {
                     await ref.read(userProvider.notifier).addUser(User.fromMap(newUser));
@@ -384,12 +385,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       _showCreateModal = false;
                       _isLoading = false;
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(content: Text('User "${newUser['username']}" created successfully')),
                     );
                   } catch (e) {
                     setState(() => _isLoading = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(content: Text('Failed to create user: $e')),
                     );
                   }
@@ -404,6 +405,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   _selectedUserForEdit = null;
                 }),
                 onSave: (updatedUser) async {
+                  final messenger = ScaffoldMessenger.of(context);
                   setState(() => _isLoading = true);
                   try {
                     await ref.read(userProvider.notifier).updateUser(
@@ -415,12 +417,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       _selectedUserForEdit = null;
                       _isLoading = false;
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(content: Text('User "${updatedUser['username']}" updated successfully')),
                     );
                   } catch (e) {
                     setState(() => _isLoading = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(content: Text('Failed to update user: $e')),
                     );
                   }
@@ -438,6 +440,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   _selectedUserForDelete = null;
                 }),
                 onConfirm: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   setState(() => _isLoading = true);
                   try {
                     await ref
@@ -448,12 +451,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       _selectedUserForDelete = null;
                       _isLoading = false;
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('User deleted successfully')),
                     );
                   } catch (e) {
                     setState(() => _isLoading = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(content: Text('Failed to delete user: $e')),
                     );
                   }

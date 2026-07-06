@@ -26,7 +26,7 @@ void main() {
     AppRouter.tokenStorage = TokenStorage(backend: _FakeTokenStorageBackend());
   });
 
-  List<Override> _getOverrides() {
+  List<Override> getOverrides() {
     return [
       vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
       generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
@@ -38,7 +38,7 @@ void main() {
 
   testWidgets('unauthenticated launch renders login screen', (tester) async {
     await tester.pumpWidget(ProviderScope(
-      overrides: _getOverrides(),
+      overrides: getOverrides(),
       child: const LedgerApp(),
     ));
     await tester.pumpAndSettle();
@@ -53,7 +53,7 @@ void main() {
       await AppRouter.tokenStorage.saveToken('jwt-token');
 
       await tester.pumpWidget(ProviderScope(
-        overrides: _getOverrides(),
+        overrides: getOverrides(),
         child: const LedgerApp(),
       ));
       await tester.pumpAndSettle();
