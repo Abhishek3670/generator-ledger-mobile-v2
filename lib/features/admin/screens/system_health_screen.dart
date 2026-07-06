@@ -277,7 +277,7 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                                 ),
                                 Switch(
                                   value: HapticService.isEnabled,
-                                  activeColor: AppColors.accent,
+                                  activeThumbColor: AppColors.accent,
                                   activeTrackColor: AppColors.primary,
                                   onChanged: (value) async {
                                     await HapticService.setEnabled(value);
