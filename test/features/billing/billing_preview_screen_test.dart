@@ -39,6 +39,29 @@ void main() {
     // Verify grand total exists at the bottom
     expect(find.text('GRAND TOTAL'), findsOneWidget);
   });
+
+  testWidgets('BillingPreviewScreen renders loading and error states', (tester) async {
+    final errorRepository = _ErrorBillingRepository();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+        billingRepositoryProvider.overrideWithValue(errorRepository),
+        connectivityProvider.overrideWith((ref) => Stream.value(ConnectivityResult.wifi)),
+      ],
+      child: const MaterialApp(
+        home: Scaffold(body: BillingPreviewScreen()),
+      ),
+    ));
+
+    // Should show loading spinner initially
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 150));
+
+    // Should show error state message and Retry button
+    expect(find.text('Failed to load billing data'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+  });
 }
 
 class _FakeBookingRepository extends BookingRepository {
@@ -60,6 +83,38 @@ class _FakeBillingRepository extends BillingRepository {
     required DateTime endDate,
     String? vendorId,
   }) async {
-    return [];
+    await Future.delayed(const Duration(milliseconds: 100));
+    return [
+      BillingSummary(
+        vendorId: 'VEN-1',
+        vendorName: 'Mallu',
+        lines: [
+          BillingLine(
+            booking: Booking(
+              id: 'BKG-1',
+              vendorId: 'VEN-1',
+              vendorName: 'Mallu',
+              generatorId: 'GEN-1',
+              capacity: '20 kVA',
+              date: DateTime.utc(2026, 4, 15),
+              status: 'confirmed',
+            ),
+            pricePerCapacity: 1000,
+          ),
+        ],
+      ),
+    ];
+  }
+}
+
+class _ErrorBillingRepository extends BillingRepository {
+  @override
+  Future<List<BillingSummary>> getBillingPreview({
+    required DateTime startDate,
+    required DateTime endDate,
+    String? vendorId,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    throw Exception('API connection failed');
   }
 }

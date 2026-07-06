@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/repositories/billing_repository.dart';
+import 'package:ledger/data/repositories/billing_repository.dart';
 import '../../shared/models/billing.dart';
 
 /// Repository provider for billing operations

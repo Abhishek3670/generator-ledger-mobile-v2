@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/connectivity_service.dart';
-import '../../../data/mock/mock_bookings.dart';
-import '../providers/billing_provider.dart';
-import '../../bookings/providers/bookings_provider.dart';
+import 'package:ledger/core/theme/app_colors.dart';
+import 'package:ledger/core/theme/app_typography.dart';
+import 'package:ledger/core/utils/connectivity_service.dart';
+import 'package:ledger/shared/models/billing.dart';
+import 'package:ledger/features/billing/providers/billing_provider.dart';
 
 class BillingPreviewScreen extends ConsumerStatefulWidget {
   const BillingPreviewScreen({super.key});
@@ -39,13 +38,24 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
   final Map<String, double> _paidAmounts = {};
 
   bool _includeGrandTotal = true;
-  List<MockBooking> _filteredBookings = [];
-  bool _isLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _loadBillingData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final dateRange = ref.read(billingDateRangeProvider);
+        _dateFromController.text = _formatDateForInput(dateRange.startDate);
+        _dateToController.text = _formatDateForInput(dateRange.endDate);
+      }
+    });
+  }
+
+  String _formatDateForInput(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year;
+    return '$day-$month-$year';
   }
 
   @override
@@ -59,7 +69,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
     super.dispose();
   }
 
-  void _loadBillingData() {
+  void _onLoadButtonPressed() {
     final dateFrom = _parseDate(_dateFromController.text);
     final dateTo = _parseDate(_dateToController.text);
 
@@ -70,21 +80,11 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
       return;
     }
 
-    setState(() {
-      _filteredBookings = (ref.read(bookingProvider).valueOrNull ?? []).where((
-        booking,
-      ) {
-        if (booking.status != 'confirmed') return false;
-        // Check date range inclusive
-        final bookingDate = DateTime.utc(
-          booking.date.year,
-          booking.date.month,
-          booking.date.day,
-        );
-        return !bookingDate.isBefore(dateFrom) && !bookingDate.isAfter(dateTo);
-      }).toList();
-      _isLoaded = true;
-    });
+    ref.read(billingDateRangeProvider.notifier).state = BillingDateRange(
+      startDate: dateFrom,
+      endDate: dateTo,
+    );
+    ref.invalidate(billingProvider);
   }
 
   DateTime? _parseDate(String input) {
@@ -116,49 +116,32 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
       decimalDigits: 2,
     );
     final billingState = ref.watch(billingProvider);
-    final bookingState = ref.watch(bookingProvider);
     final connectivity = ref.watch(connectivityProvider);
-    final isLoading = billingState.isLoading || bookingState.isLoading;
+    final isLoading = billingState.isLoading;
 
-    ref.listen<AsyncValue<List<MockBooking>>>(bookingProvider, (previous, next) {
-      if (next.hasValue && !next.isLoading) {
-        _loadBillingData();
-      }
-    });
+    final summaries = billingState.valueOrNull ?? <BillingSummary>[];
 
-
-    // Apply search filter to the bookings loaded in date range
+    // Apply search filter to the summaries (vendors) loaded in date range
     final searchQuery = _searchController.text.toLowerCase().trim();
-    final bookingsToDisplay = _filteredBookings.where((booking) {
+    final summariesToDisplay = summaries.where((summary) {
       if (searchQuery.isEmpty) return true;
-      return booking.vendorName.toLowerCase().contains(searchQuery) ||
-          booking.vendorId.toLowerCase().contains(searchQuery);
+      return summary.vendorName.toLowerCase().contains(searchQuery) ||
+          summary.vendorId.toLowerCase().contains(searchQuery);
     }).toList();
 
-    // Group bookings by vendor
-    final Map<String, List<MockBooking>> groupedBookings = {};
-    for (var booking in bookingsToDisplay) {
-      groupedBookings.putIfAbsent(booking.vendorId, () => []).add(booking);
-    }
-
-    // Sort vendor groups by name
-    final sortedVendorIds = groupedBookings.keys.toList()
-      ..sort((a, b) {
-        final nameA = groupedBookings[a]!.first.vendorName;
-        final nameB = groupedBookings[b]!.first.vendorName;
-        return nameA.compareTo(nameB);
-      });
+    // Sort vendor summaries by name
+    final sortedSummaries = List<BillingSummary>.of(summariesToDisplay)
+      ..sort((a, b) => a.vendorName.compareTo(b.vendorName));
 
     double grandTotal = 0.0;
-    if (_includeGrandTotal && sortedVendorIds.isNotEmpty) {
-      for (var vendorId in sortedVendorIds) {
-        final vendorBookings = groupedBookings[vendorId]!;
+    if (_includeGrandTotal && sortedSummaries.isNotEmpty) {
+      for (var summary in sortedSummaries) {
         double vendorSubtotal = 0.0;
-        for (var booking in vendorBookings) {
-          final rate = _getRateForCapacity(booking.capacity);
+        for (var line in summary.lines) {
+          final rate = _getRateForCapacity(line.booking.capacity);
           vendorSubtotal += rate;
         }
-        final paidAmount = _paidAmounts[vendorId] ?? 0.0;
+        final paidAmount = _paidAmounts[summary.vendorId] ?? 0.0;
         grandTotal += (vendorSubtotal - paidAmount);
       }
     }
@@ -401,7 +384,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   ElevatedButton(
-                                    onPressed: _loadBillingData,
+                                    onPressed: _onLoadButtonPressed,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       shape: const StadiumBorder(),
@@ -518,9 +501,10 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                     const SizedBox(height: 24),
 
                     // Billing Data Section Title & Stats
-                    if (_isLoaded) ...[
-                      // Success banner
-                      Container(
+                    if (billingState.hasValue || billingState.isLoading || billingState.hasError) ...[
+                      if (billingState.hasValue && !billingState.hasError) ...[
+                        // Success banner
+                        Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFECFDF5),
@@ -598,7 +582,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                             const SizedBox(height: 8),
                             Text(
                               'Range: ${_dateFromController.text} to ${_dateToController.text} | '
-                              '${bookingsToDisplay.length} line(s) across ${sortedVendorIds.length} vendor(s).',
+                              '${sortedSummaries.fold<int>(0, (prev, s) => prev + s.lines.length)} line(s) across ${sortedSummaries.length} vendor(s).',
                               style: AppTypography.bodySmall.copyWith(
                                 fontSize: 12,
                                 color: AppColors.textSecondary,
@@ -608,6 +592,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      ],
 
                       // Grouped Billing List
                       if (isLoading)
@@ -617,7 +602,40 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                             child: CircularProgressIndicator(),
                           ),
                         )
-                      else if (bookingsToDisplay.isEmpty)
+                      else if (billingState.hasError)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32.0),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Failed to load billing data',
+                                  style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  billingState.error.toString(),
+                                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => ref.invalidate(billingProvider),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    shape: const StadiumBorder(),
+                                  ),
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (sortedSummaries.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 32.0),
                           child: Center(
@@ -711,16 +729,14 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                               ),
 
                               // Loop through vendor groups
-                              ...sortedVendorIds.map((vendorId) {
-                                final vendorBookings =
-                                    groupedBookings[vendorId]!;
-                                final vendorName =
-                                    vendorBookings.first.vendorName;
+                              ...sortedSummaries.map((summary) {
+                                final vendorId = summary.vendorId;
+                                final vendorName = summary.vendorName;
 
                                 double vendorSubtotal = 0.0;
-                                for (var booking in vendorBookings) {
+                                for (var line in summary.lines) {
                                   vendorSubtotal += _getRateForCapacity(
-                                    booking.capacity,
+                                    line.booking.capacity,
                                   );
                                 }
 
@@ -734,7 +750,8 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     // Group Rows
-                                    ...vendorBookings.map((booking) {
+                                    ...summary.lines.map((line) {
+                                      final booking = line.booking;
                                       final rate = _getRateForCapacity(
                                         booking.capacity,
                                       );
@@ -963,7 +980,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
             ),
 
             // Fixed Bottom Footer
-            if (_includeGrandTotal && sortedVendorIds.isNotEmpty)
+            if (_includeGrandTotal && sortedSummaries.isNotEmpty)
               Container(
                 color: AppColors.background,
                 padding: const EdgeInsets.all(16.0),

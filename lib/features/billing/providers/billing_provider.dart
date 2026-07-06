@@ -1,1 +1,1 @@
-export '../../../core/providers/billing_provider.dart';
+export 'package:ledger/core/providers/billing_provider.dart';
