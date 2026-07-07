@@ -437,27 +437,26 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   _showDeleteModal = false;
                   _selectedUserForDelete = null;
                 }),
-                onConfirm: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  setState(() => _isLoading = true);
-                  try {
-                    await ref
-                        .read(userProvider.notifier)
-                        .deleteUser(_selectedUserForDelete!['username']!);
-                    setState(() {
-                      _showDeleteModal = false;
-                      _selectedUserForDelete = null;
-                      _isLoading = false;
-                    });
-                    messenger.showSnackBar(
-                      const SnackBar(content: Text('User deleted successfully')),
-                    );
-                  } catch (e) {
-                    setState(() => _isLoading = false);
-                    messenger.showSnackBar(
-                      SnackBar(content: Text('Failed to delete user: $e')),
-                    );
-                  }
+                onConfirm: () {
+                  final username = _selectedUserForDelete!['username']!;
+                  ref.read(userProvider.notifier).deleteUser(username);
+                  setState(() {
+                    _showDeleteModal = false;
+                    _selectedUserForDelete = null;
+                  });
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('User "$username" deleted'),
+                      action: SnackBarAction(
+                        label: 'UNDO',
+                        onPressed: () {
+                          ref.read(userProvider.notifier).undoDeleteUser();
+                        },
+                      ),
+                      duration: const Duration(seconds: 5),
+                    ),
+                  );
                 },
               ),
             Positioned(

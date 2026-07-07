@@ -391,6 +391,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                   _selectedVendorForDelete = null;
                 }),
                 onConfirm: () {
+                  final vendorName = _selectedVendorForDelete!.name;
                   ref
                       .read(vendorProvider.notifier)
                       .deleteVendor(_selectedVendorForDelete!.id);
@@ -398,9 +399,17 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                     _showDeleteModal = false;
                     _selectedVendorForDelete = null;
                   });
+                  ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Vendor deleted successfully'),
+                    SnackBar(
+                      content: Text('Vendor "$vendorName" deleted'),
+                      action: SnackBarAction(
+                        label: 'UNDO',
+                        onPressed: () {
+                          ref.read(vendorProvider.notifier).undoDeleteVendor();
+                        },
+                      ),
+                      duration: const Duration(seconds: 5),
                     ),
                   );
                 },

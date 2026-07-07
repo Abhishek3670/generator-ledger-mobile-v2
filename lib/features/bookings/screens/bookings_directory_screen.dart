@@ -283,17 +283,24 @@ class _BookingsDirectoryScreenState
                   _showCancelModal = false;
                   _selectedBookingForCancel = null;
                 }),
-                onConfirm: () async {
+                onConfirm: () {
                   final bookingId = _selectedBookingForCancel!.id;
+                  ref.read(bookingProvider.notifier).deleteBooking(bookingId);
                   setState(() {
                     _showCancelModal = false;
                     _selectedBookingForCancel = null;
                   });
-                  await ref.read(bookingProvider.notifier).deleteBooking(bookingId);
-                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Booking cancelled successfully'),
+                    SnackBar(
+                      content: const Text('Booking cancelled'),
+                      action: SnackBarAction(
+                        label: 'UNDO',
+                        onPressed: () {
+                          ref.read(bookingProvider.notifier).undoDeleteBooking();
+                        },
+                      ),
+                      duration: const Duration(seconds: 5),
                     ),
                   );
                 },

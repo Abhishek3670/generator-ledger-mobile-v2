@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/booking_repository.dart';
@@ -22,6 +23,15 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
   final BookingRepository _repository;
 
   List<Booking> _cachedBookings = [];
+  Booking? _lastDeletedBooking;
+  int? _lastDeletedIndex;
+  Timer? _deleteTimer;
+
+  @override
+  void dispose() {
+    _deleteTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> loadBookings({
     DateTime? startDate,
@@ -76,19 +86,50 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
   }
 
   Future<void> deleteBooking(String bookingId) async {
-    final previous = List<Booking>.of(_cachedBookings);
-    _cachedBookings = _cachedBookings
-        .where((booking) => booking.id != bookingId)
-        .toList();
+    _deleteTimer?.cancel();
+    if (_lastDeletedBooking != null) {
+      await _repository.deleteBooking(_lastDeletedBooking!.id);
+      _lastDeletedBooking = null;
+    }
+
+    final index = _cachedBookings.indexWhere((b) => b.id == bookingId);
+    if (index == -1) return;
+
+    _lastDeletedBooking = _cachedBookings[index];
+    _lastDeletedIndex = index;
+
+    _cachedBookings = List<Booking>.from(_cachedBookings)..removeAt(index);
     state = AsyncValue.data(_cachedBookings);
 
-    try {
-      await _repository.deleteBooking(bookingId);
-      await loadBookings();
-    } catch (error, stackTrace) {
-      _cachedBookings = previous;
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
+    _deleteTimer = Timer(const Duration(seconds: 5), () async {
+      if (_lastDeletedBooking != null && _lastDeletedBooking!.id == bookingId) {
+        try {
+          await _repository.deleteBooking(bookingId);
+          _lastDeletedBooking = null;
+          _lastDeletedIndex = null;
+        } catch (error, stackTrace) {
+          if (_lastDeletedBooking != null && _lastDeletedIndex != null) {
+            _cachedBookings = List<Booking>.from(_cachedBookings)
+              ..insert(_lastDeletedIndex!.clamp(0, _cachedBookings.length), _lastDeletedBooking!);
+            state = AsyncValue.data(_cachedBookings);
+          }
+          _lastDeletedBooking = null;
+          _lastDeletedIndex = null;
+          state = AsyncValue.error(error, stackTrace);
+        }
+      }
+    });
+  }
+
+  void undoDeleteBooking() {
+    if (_lastDeletedBooking != null && _lastDeletedIndex != null) {
+      _deleteTimer?.cancel();
+      final insertIndex = _lastDeletedIndex!.clamp(0, _cachedBookings.length);
+      _cachedBookings = List<Booking>.from(_cachedBookings)
+        ..insert(insertIndex, _lastDeletedBooking!);
+      state = AsyncValue.data(_cachedBookings);
+      _lastDeletedBooking = null;
+      _lastDeletedIndex = null;
     }
   }
 }

@@ -510,6 +510,7 @@ class _GeneratorsDirectoryScreenState
                   _selectedGeneratorForDelete = null;
                 }),
                 onConfirm: () {
+                  final generatorId = _selectedGeneratorForDelete!.id;
                   ref
                       .read(generatorProvider.notifier)
                       .deleteGenerator(_selectedGeneratorForDelete!.id);
@@ -517,9 +518,17 @@ class _GeneratorsDirectoryScreenState
                     _showDeleteModal = false;
                     _selectedGeneratorForDelete = null;
                   });
+                  ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Generator deleted successfully'),
+                    SnackBar(
+                      content: Text('Generator "$generatorId" deleted'),
+                      action: SnackBarAction(
+                        label: 'UNDO',
+                        onPressed: () {
+                          ref.read(generatorProvider.notifier).undoDeleteGenerator();
+                        },
+                      ),
+                      duration: const Duration(seconds: 5),
                     ),
                   );
                 },

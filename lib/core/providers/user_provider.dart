@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/user_repository.dart';
@@ -26,6 +27,15 @@ class UserNotifier extends StateNotifier<AsyncValue<List<User>>> {
   final UserRepository _repository;
 
   List<User> _cachedUsers = [];
+  User? _lastDeletedUser;
+  int? _lastDeletedIndex;
+  Timer? _deleteTimer;
+
+  @override
+  void dispose() {
+    _deleteTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> loadUsers() async {
     state = const AsyncValue.loading();
@@ -72,25 +82,52 @@ class UserNotifier extends StateNotifier<AsyncValue<List<User>>> {
   }
 
   Future<void> deleteUser(String username) async {
-    final previous = List<User>.of(_cachedUsers);
-    final userToDelete = _cachedUsers.firstWhere(
-      (user) => user.username == username,
-      orElse: () => previous.first,
-    );
-    _cachedUsers = _cachedUsers
-        .where((user) => user.username != username)
-        .toList();
+    _deleteTimer?.cancel();
+    if (_lastDeletedUser != null) {
+      final id = _lastDeletedUser!.userId ?? _lastDeletedUser!.username;
+      await _repository.deleteUser(id);
+      _lastDeletedUser = null;
+    }
+
+    final index = _cachedUsers.indexWhere((u) => u.username == username);
+    if (index == -1) return;
+
+    _lastDeletedUser = _cachedUsers[index];
+    _lastDeletedIndex = index;
+
+    _cachedUsers = List<User>.from(_cachedUsers)..removeAt(index);
     state = AsyncValue.data(_cachedUsers);
 
-    try {
-      // Use userId if available, otherwise fallback to username
-      final id = userToDelete.userId ?? username;
-      await _repository.deleteUser(id);
-      await loadUsers();
-    } catch (error, stackTrace) {
-      _cachedUsers = previous;
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
+    _deleteTimer = Timer(const Duration(seconds: 5), () async {
+      if (_lastDeletedUser != null && _lastDeletedUser!.username == username) {
+        try {
+          final id = _lastDeletedUser!.userId ?? username;
+          await _repository.deleteUser(id);
+          _lastDeletedUser = null;
+          _lastDeletedIndex = null;
+        } catch (error, stackTrace) {
+          if (_lastDeletedUser != null && _lastDeletedIndex != null) {
+            _cachedUsers = List<User>.from(_cachedUsers)
+              ..insert(_lastDeletedIndex!.clamp(0, _cachedUsers.length), _lastDeletedUser!);
+            state = AsyncValue.data(_cachedUsers);
+          }
+          _lastDeletedUser = null;
+          _lastDeletedIndex = null;
+          state = AsyncValue.error(error, stackTrace);
+        }
+      }
+    });
+  }
+
+  void undoDeleteUser() {
+    if (_lastDeletedUser != null && _lastDeletedIndex != null) {
+      _deleteTimer?.cancel();
+      final insertIndex = _lastDeletedIndex!.clamp(0, _cachedUsers.length);
+      _cachedUsers = List<User>.from(_cachedUsers)
+        ..insert(insertIndex, _lastDeletedUser!);
+      state = AsyncValue.data(_cachedUsers);
+      _lastDeletedUser = null;
+      _lastDeletedIndex = null;
     }
   }
 }
