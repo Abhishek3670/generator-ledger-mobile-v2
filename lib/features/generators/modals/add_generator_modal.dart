@@ -90,9 +90,7 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
   void _initFormDefaults() {
     final defaults = ref.read(formDefaultsServiceProvider).getGeneratorDefaults();
     setState(() {
-      if (_selectedCategory == null) {
-        _selectedCategory = defaults.category;
-      }
+      _selectedCategory ??= defaults.category;
       _selectedStatus = defaults.status;
       _selectedCapacity = defaults.capacity;
       _typeController.text = defaults.type;

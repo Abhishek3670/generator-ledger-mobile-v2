@@ -59,9 +59,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   final _notesController = TextEditingController();
 
   // Focus nodes for interactive field styling
-  late final FocusNode _dropdownFocusNode;
   late final FocusNode _notesFocusNode;
-  bool _dropdownHasFocus = false;
   bool _notesHasFocus = false;
 
   // Custom validation error state variables
@@ -76,14 +74,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   @override
   void initState() {
     super.initState();
-    _dropdownFocusNode = FocusNode();
     _notesFocusNode = FocusNode();
-
-    _dropdownFocusNode.addListener(() {
-      setState(() {
-        _dropdownHasFocus = _dropdownFocusNode.hasFocus;
-      });
-    });
 
     _notesFocusNode.addListener(() {
       setState(() {
@@ -188,7 +179,6 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   @override
   void dispose() {
     _autoSaveTimer?.cancel();
-    _dropdownFocusNode.dispose();
     _notesFocusNode.dispose();
     _notesController.dispose();
     super.dispose();

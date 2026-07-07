@@ -15,7 +15,6 @@ import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/data/repositories/generator_repository.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
-import 'package:ledger/shared/widgets/vendor_search_input.dart';
 import 'package:ledger/shared/widgets/assignment_mode_toggle.dart';
 import 'package:ledger/shared/widgets/inline_calendar.dart';
 

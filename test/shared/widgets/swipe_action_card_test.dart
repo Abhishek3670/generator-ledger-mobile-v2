@@ -7,10 +7,10 @@ void main() {
   group('SwipeActionCard Widget Tests', () {
     testWidgets('renders child content successfully', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SwipeActionCard(
-              child: const Text('My Card Content'),
+              child: Text('My Card Content'),
             ),
           ),
         ),
@@ -41,6 +41,8 @@ void main() {
 
       // Verify Slidable structure
       expect(find.byType(Slidable), findsOneWidget);
+      expect(editTapped, isFalse);
+      expect(cancelTapped, isFalse);
     });
   });
 }

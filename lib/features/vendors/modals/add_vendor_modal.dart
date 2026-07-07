@@ -88,9 +88,7 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
     final defaults = ref.read(formDefaultsServiceProvider).getVendorDefaults();
     setState(() {
       _phoneController.text = '${defaults.countryCode} ';
-      if (_selectedCategory == null) {
-        _selectedCategory = 'retailer';
-      }
+      _selectedCategory ??= 'retailer';
     });
     _addListeners();
   }
