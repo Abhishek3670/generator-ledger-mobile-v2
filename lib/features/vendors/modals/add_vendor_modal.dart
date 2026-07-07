@@ -199,12 +199,14 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
                   child: Text('Rental', style: TextStyle(fontSize: 14)),
                 ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value;
-                });
-                _onFormChanged();
-              },
+              onChanged: widget.initialCategory != null
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                      _onFormChanged();
+                    },
               validator: (value) => value == null ? 'Please select a type' : null,
             ),
             const SizedBox(height: 16),

@@ -148,11 +148,11 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
     _overlayEntry = OverlayEntry(
       builder: (context) {
         return Positioned(
-          width: _layerLink.leaderSize?.width,
+          width: _layerLink.leaderSize?.width ?? 280,
           child: CompositedTransformFollower(
             link: _layerLink,
             showWhenUnlinked: false,
-            offset: const Offset(0, 48), // Directly below input container
+            offset: const Offset(0, 44 + 4), // Directly below input container (height 44 + 4 padding)
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
@@ -303,25 +303,25 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
   Widget build(BuildContext context) {
     final hasFocus = _focusNode.hasFocus;
 
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: KeyboardListener(
-        focusNode: FocusNode(skipTraversal: true),
-        onKeyEvent: _handleKeyEvent,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.labelText,
-              style: AppTypography.labelCaps.copyWith(
-                color: widget.errorText != null
-                    ? AppColors.error
-                    : (hasFocus ? AppColors.primary : AppColors.textSecondary),
-              ),
+    return KeyboardListener(
+      focusNode: FocusNode(skipTraversal: true),
+      onKeyEvent: _handleKeyEvent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            widget.labelText,
+            style: AppTypography.labelCaps.copyWith(
+              color: widget.errorText != null
+                  ? AppColors.error
+                  : (hasFocus ? AppColors.primary : AppColors.textSecondary),
             ),
-            const SizedBox(height: 8),
-            AnimatedContainer(
+          ),
+          const SizedBox(height: 8),
+          CompositedTransformTarget(
+            link: _layerLink,
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               height: 44,
               decoration: BoxDecoration(
@@ -388,6 +388,7 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
                 ),
               ),
             ),
+          ),
             if (widget.errorText != null) ...[
               const SizedBox(height: 6),
               Text(
@@ -399,7 +400,6 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
             ],
           ],
         ),
-      ),
-    );
+      );
   }
 }

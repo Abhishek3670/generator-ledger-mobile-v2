@@ -35,7 +35,8 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
   final _idController = TextEditingController();
   final _typeController = TextEditingController();
   final _notesController = TextEditingController();
-  String _selectedCapacity = '50';
+  String? _selectedCapacity;
+  String? _capacityError;
   String? _selectedCategory;
   String _selectedStatus = 'active';
   final _draftService = DraftService();
@@ -104,7 +105,7 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
       _idController.text = draft['id'] ?? '';
       _typeController.text = draft['type'] ?? '';
       _notesController.text = draft['notes'] ?? '';
-      _selectedCapacity = draft['capacity'] ?? '50';
+      _selectedCapacity = draft['capacity'];
       _selectedCategory = draft['category'] ?? 'retailer';
       _selectedStatus = draft['status'] ?? 'active';
     });
@@ -175,10 +176,13 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
               onCapacitySelected: (cap) {
                 setState(() {
                   _selectedCapacity = cap;
+                  _capacityError = null;
                 });
                 _onFormChanged();
               },
             ),
+            if (_capacityError != null)
+              _buildValidationError(_capacityError!),
             const SizedBox(height: 16),
 
             // Type
@@ -287,7 +291,11 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
           AppButton(
             label: 'CREATE',
             onPressed: () async {
-              if (_formKey.currentState?.validate() ?? false) {
+              setState(() {
+                _capacityError = _selectedCapacity == null ? 'Please select capacity' : null;
+              });
+              final isFormValid = _formKey.currentState?.validate() ?? false;
+              if (isFormValid && _selectedCapacity != null) {
                 final newGen = MockGenerator(
                   id: _idController.text.trim().toUpperCase(),
                   capacity: '$_selectedCapacity kVA',
@@ -301,6 +309,26 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
               }
             },
             variant: AppButtonVariant.accent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValidationError(String error) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6.0),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, size: 14, color: AppColors.danger),
+          const SizedBox(width: 4),
+          Text(
+            error,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.danger,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

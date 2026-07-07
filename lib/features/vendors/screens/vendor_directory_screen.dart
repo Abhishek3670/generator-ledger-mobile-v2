@@ -17,6 +17,7 @@ import '../modals/edit_vendor_modal.dart';
 import '../../../shared/widgets/destructive_confirmation_dialog.dart';
 import '../widgets/vendor_action_menu.dart';
 import '../providers/vendors_provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 /// Directory screen listing Retailer and Rental vendors.
 class VendorDirectoryScreen extends ConsumerStatefulWidget {
@@ -246,9 +247,10 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
 
     return Container(
       color: AppColors.background,
-      child: SafeArea(
-        child: Stack(
-          children: [
+      child: SlidableAutoCloseBehavior(
+        child: SafeArea(
+          child: Stack(
+            children: [
             RefreshIndicator(
               onRefresh: () async {
                 await ref.read(vendorProvider.notifier).loadVendors();
@@ -440,6 +442,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
               ),
           ],
         ),
+      ),
       ),
     );
   }

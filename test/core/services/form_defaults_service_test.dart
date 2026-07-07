@@ -42,8 +42,8 @@ void main() {
       final defaults = service.getGeneratorDefaults();
       expect(defaults.category, 'permanent');
       expect(defaults.status, 'active');
-      expect(defaults.type, 'Diesel');
-      expect(defaults.capacity, '50');
+      expect(defaults.type, 'HA');
+      expect(defaults.capacity, isNull);
     });
 
     test('returns correct vendor defaults', () async {

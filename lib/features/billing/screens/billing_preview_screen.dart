@@ -211,9 +211,11 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             // Fixed Top Header
             Container(
               color: AppColors.background,
@@ -248,7 +250,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
             // Scrollable Body
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 100.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -1058,49 +1060,54 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                 ),
               ),
             ),
-
-            // Fixed Bottom Footer - Floating Grand Total
-            if (_includeGrandTotal && sortedSummaries.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 20,
-                        offset: const Offset(0, -4),
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'GRAND TOTAL',
-                        style: AppTypography.headlineSmall.copyWith(
-                          color: Colors.white,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      Text(
-                        currencyFormatter.format(grandTotal),
-                        style: AppTypography.headlineMedium.copyWith(
-                          color: AppColors.accent,
-                          fontSize: 26,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
           ],
         ),
-      ),
-    );
+        if (_includeGrandTotal && sortedSummaries.isNotEmpty)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 20,
+                      offset: const Offset(0, -4),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'GRAND TOTAL',
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      currencyFormatter.format(grandTotal),
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: AppColors.accent,
+                        fontSize: 26,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  ),
+);
   }
 }

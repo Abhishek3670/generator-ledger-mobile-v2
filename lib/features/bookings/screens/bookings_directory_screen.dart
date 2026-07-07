@@ -17,6 +17,7 @@ import '../widgets/edit_booking_modal.dart';
 import '../providers/bookings_provider.dart';
 import '../../vendors/providers/vendors_provider.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 /// Directory screen listing bookings grouped by vendor.
 class BookingsDirectoryScreen extends ConsumerStatefulWidget {
@@ -148,9 +149,10 @@ class _BookingsDirectoryScreenState
 
     return Container(
       color: AppColors.background,
-      child: SafeArea(
-        child: Stack(
-          children: [
+      child: SlidableAutoCloseBehavior(
+        child: SafeArea(
+          child: Stack(
+            children: [
             RefreshIndicator(
               onRefresh: () async {
                 await ref.read(bookingProvider.notifier).loadBookings();
@@ -307,6 +309,7 @@ class _BookingsDirectoryScreenState
               ),
           ],
         ),
+      ),
       ),
     );
   }

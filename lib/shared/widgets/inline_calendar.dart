@@ -56,36 +56,16 @@ class _InlineCalendarState extends State<InlineCalendar> {
   }
 
   void _onDayTapped(DateTime day) {
-    // Reset range or select start/end
-    if (widget.startDate == null || (widget.startDate != null && widget.endDate != null)) {
-      widget.onRangeSelected(day, null);
-    } else {
-      if (day.isBefore(widget.startDate!)) {
-        widget.onRangeSelected(day, null);
-      } else {
-        widget.onRangeSelected(widget.startDate, day);
-      }
-    }
+    widget.onRangeSelected(day, null);
   }
 
   bool _isDateSelected(DateTime day) {
     if (widget.startDate == null) return false;
-    
-    // Check if matching start or end date
-    final startMatches = _isSameDay(day, widget.startDate!);
-    final endMatches = widget.endDate != null && _isSameDay(day, widget.endDate!);
-    
-    return startMatches || endMatches;
+    return _isSameDay(day, widget.startDate!);
   }
 
   bool _isDateInRange(DateTime day) {
-    if (widget.startDate == null || widget.endDate == null) return false;
-    
-    final midnightDay = DateTime(day.year, day.month, day.day);
-    final midnightStart = DateTime(widget.startDate!.year, widget.startDate!.month, widget.startDate!.day);
-    final midnightEnd = DateTime(widget.endDate!.year, widget.endDate!.month, widget.endDate!.day);
-    
-    return midnightDay.isAfter(midnightStart) && midnightDay.isBefore(midnightEnd);
+    return false;
   }
 
   bool _isSameDay(DateTime d1, DateTime d2) {

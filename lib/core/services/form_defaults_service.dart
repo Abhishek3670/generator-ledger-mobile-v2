@@ -26,13 +26,13 @@ class GeneratorDefaults {
   final String category;
   final String status;
   final String type;
-  final String capacity;
+  final String? capacity;
 
   GeneratorDefaults({
     required this.category,
     required this.status,
     required this.type,
-    required this.capacity,
+    this.capacity,
   });
 }
 
@@ -65,7 +65,7 @@ class FormDefaultsService {
     final now = DateTime.now();
     return BookingDefaults(
       startDate: now,
-      endDate: now.add(const Duration(days: 4)),
+      endDate: now,
       status: 'confirmed',
       lastVendorId: _prefsService.getLastVendor(),
       lastCapacities: _prefsService.getLastSelectedCapacities(),
@@ -76,8 +76,8 @@ class FormDefaultsService {
     return GeneratorDefaults(
       category: 'permanent',
       status: 'active',
-      type: 'Diesel',
-      capacity: '50',
+      type: 'HA',
+      capacity: null,
     );
   }
 

@@ -20,6 +20,7 @@ import '../modals/generator_detail_modal.dart';
 import '../widgets/generator_action_menu.dart';
 import '../providers/generators_provider.dart';
 import '../../../shared/widgets/destructive_confirmation_dialog.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 /// Directory screen listing fleet generators grouped by inventory categories.
 class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
@@ -211,9 +212,10 @@ class _GeneratorsDirectoryScreenState
 
     return Container(
       color: AppColors.background,
-      child: SafeArea(
-        child: Stack(
-          children: [
+      child: SlidableAutoCloseBehavior(
+        child: SafeArea(
+          child: Stack(
+            children: [
             RefreshIndicator(
               onRefresh: () async {
                 await ref.read(generatorProvider.notifier).loadGenerators();
@@ -535,6 +537,7 @@ class _GeneratorsDirectoryScreenState
               ),
           ],
         ),
+      ),
       ),
     );
   }
