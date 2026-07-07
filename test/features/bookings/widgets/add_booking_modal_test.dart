@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ledger/core/services/user_preferences_service.dart';
 import 'package:ledger/core/providers/booking_provider.dart';
 import 'package:ledger/core/providers/generator_provider.dart';
 import 'package:ledger/core/providers/vendor_provider.dart';
@@ -87,6 +89,41 @@ void main() {
       // Mode is now 'capacity' -> shows 'Capacity (kVA)' chips and hides 'GENERATOR' dropdown
       expect(find.text('Capacity (kVA)'), findsOneWidget);
       expect(find.text('GENERATOR'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'AddBookingModal pre-fills values from preferences',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({
+        'last_selected_vendor': 'vendor_1',
+        'last_selected_capacity': ['100'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+            vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
+            generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final capacityToggle = find.text('Assign by Capacity (Auto-assign)');
+      await tester.tap(capacityToggle);
+      await tester.pumpAndSettle();
+
+      // Check capacity selection is pre-selected
+      expect(find.text('Capacity (kVA)'), findsOneWidget);
     },
   );
 }

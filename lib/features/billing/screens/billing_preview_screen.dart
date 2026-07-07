@@ -9,6 +9,7 @@ import 'package:ledger/core/utils/connectivity_service.dart';
 import 'package:ledger/shared/models/billing.dart';
 import 'package:ledger/features/billing/providers/billing_provider.dart';
 import 'package:ledger/shared/widgets/skeleton_loading.dart';
+import 'package:ledger/core/services/user_preferences_service.dart';
 
 class BillingPreviewScreen extends ConsumerStatefulWidget {
   const BillingPreviewScreen({super.key});
@@ -19,12 +20,8 @@ class BillingPreviewScreen extends ConsumerStatefulWidget {
 }
 
 class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
-  final TextEditingController _dateFromController = TextEditingController(
-    text: '01-04-2026',
-  );
-  final TextEditingController _dateToController = TextEditingController(
-    text: '30-04-2026',
-  );
+  final TextEditingController _dateFromController = TextEditingController();
+  final TextEditingController _dateToController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
 
   final Map<String, TextEditingController> _rateControllers = {
@@ -45,9 +42,29 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        final prefs = ref.read(userPreferencesServiceProvider);
+        final cachedRange = prefs.getLastBillingDateRange();
+        final cachedVendorFilter = prefs.getLastBillingVendorFilter();
+        
+        if (cachedRange != null) {
+          ref.read(billingDateRangeProvider.notifier).state = BillingDateRange(
+            startDate: cachedRange['start']!,
+            endDate: cachedRange['end']!,
+            vendorId: (cachedVendorFilter != null && cachedVendorFilter.isNotEmpty) ? cachedVendorFilter : null,
+          );
+        } else if (cachedVendorFilter != null && cachedVendorFilter.isNotEmpty) {
+          final currentRange = ref.read(billingDateRangeProvider);
+          ref.read(billingDateRangeProvider.notifier).state = currentRange.copyWith(
+            vendorId: cachedVendorFilter,
+          );
+        }
+
         final dateRange = ref.read(billingDateRangeProvider);
         _dateFromController.text = _formatDateForInput(dateRange.startDate);
         _dateToController.text = _formatDateForInput(dateRange.endDate);
+        if (dateRange.vendorId != null) {
+          _searchController.text = dateRange.vendorId!;
+        }
       }
     });
   }
@@ -81,10 +98,18 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
       return;
     }
 
+    final vendorFilter = _searchController.text.trim();
+
     ref.read(billingDateRangeProvider.notifier).state = BillingDateRange(
       startDate: dateFrom,
       endDate: dateTo,
+      vendorId: vendorFilter.isNotEmpty ? vendorFilter : null,
     );
+
+    final prefs = ref.read(userPreferencesServiceProvider);
+    prefs.saveLastBillingDateRange(dateFrom, dateTo);
+    prefs.saveLastBillingVendorFilter(vendorFilter);
+
     ref.invalidate(billingProvider);
   }
 

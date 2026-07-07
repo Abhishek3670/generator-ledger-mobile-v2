@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
@@ -6,8 +7,9 @@ import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../core/services/form_defaults_service.dart';
 
-class AddVendorModal extends StatefulWidget {
+class AddVendorModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
   final Function(Vendor) onSave;
   final bool isVisible;
@@ -22,10 +24,10 @@ class AddVendorModal extends StatefulWidget {
   });
 
   @override
-  State<AddVendorModal> createState() => _AddVendorModalState();
+  ConsumerState<AddVendorModal> createState() => _AddVendorModalState();
 }
 
-class _AddVendorModalState extends State<AddVendorModal> {
+class _AddVendorModalState extends ConsumerState<AddVendorModal> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
@@ -37,6 +39,17 @@ class _AddVendorModalState extends State<AddVendorModal> {
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final defaults = ref.read(formDefaultsServiceProvider).getVendorDefaults();
+        setState(() {
+          _phoneController.text = '${defaults.countryCode} ';
+          if (_selectedCategory == null) {
+            _selectedCategory = 'retailer';
+          }
+        });
+      }
+    });
   }
 
   @override

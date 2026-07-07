@@ -15,6 +15,9 @@ import '../../../core/providers/booking_provider.dart';
 import '../../../core/providers/generator_provider.dart';
 import '../../../core/providers/vendor_provider.dart';
 
+import '../../../core/services/user_preferences_service.dart';
+import '../../../core/services/form_defaults_service.dart';
+
 /// A modal window used to create a new booking.
 ///
 /// Connected to Riverpod state management. Features left-aligned Space Grotesk headers,
@@ -45,8 +48,8 @@ class AddBookingModal extends ConsumerStatefulWidget {
 class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   String _assignmentMode = 'id'; // 'id' or 'capacity'
   List<String> _selectedCapacities = ['50'];
-  DateTime? _startDate = DateTime.now();
-  DateTime? _endDate = DateTime.now().add(const Duration(days: 4));
+  DateTime? _startDate;
+  DateTime? _endDate;
   String? _selectedVendorId;
   String? _selectedGeneratorId;
   final _notesController = TextEditingController();
@@ -78,6 +81,26 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       setState(() {
         _notesHasFocus = _notesFocusNode.hasFocus;
       });
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _applyDefaults();
+      }
+    });
+  }
+
+  void _applyDefaults() {
+    final defaults = ref.read(formDefaultsServiceProvider).getBookingDefaults();
+    setState(() {
+      _startDate = defaults.startDate;
+      _endDate = defaults.endDate;
+      if (defaults.lastVendorId != null) {
+        _selectedVendorId = defaults.lastVendorId;
+      }
+      if (defaults.lastCapacities != null && defaults.lastCapacities!.isNotEmpty) {
+        _selectedCapacities = defaults.lastCapacities!;
+      }
     });
   }
 
@@ -146,9 +169,21 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       capacity: capacityText,
       date: _startDate!,
       endDate: _endDate,
-      status: 'pending',
+      status: 'confirmed',
       notes: _notesController.text.trim(),
     );
+
+    final prefs = ref.read(userPreferencesServiceProvider);
+    prefs.saveLastVendor(_selectedVendorId!);
+    if (_assignmentMode == 'capacity') {
+      prefs.saveLastSelectedCapacities(_selectedCapacities);
+    } else {
+      final match = generators.firstWhere((g) => g.id == _selectedGeneratorId);
+      final rawCap = match.capacity.replaceAll(RegExp(r'[^0-9]'), '');
+      if (rawCap.isNotEmpty) {
+        prefs.saveLastSelectedCapacities([rawCap]);
+      }
+    }
 
     widget.onSave(newBooking);
   }

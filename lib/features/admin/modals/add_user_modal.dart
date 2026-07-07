@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../core/services/form_defaults_service.dart';
 
-class AddUserModal extends StatefulWidget {
+class AddUserModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
   final Function(Map<String, String>) onSave;
   final bool isVisible;
@@ -17,15 +19,29 @@ class AddUserModal extends StatefulWidget {
   });
 
   @override
-  State<AddUserModal> createState() => _AddUserModalState();
+  ConsumerState<AddUserModal> createState() => _AddUserModalState();
 }
 
-class _AddUserModalState extends State<AddUserModal> {
+class _AddUserModalState extends ConsumerState<AddUserModal> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   String _selectedRole = 'operator';
   String _selectedStatus = 'ACTIVE';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final defaults = ref.read(formDefaultsServiceProvider).getUserDefaults();
+        setState(() {
+          _selectedRole = defaults.role;
+          _selectedStatus = defaults.status;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {

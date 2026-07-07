@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
@@ -7,8 +8,9 @@ import '../../../shared/widgets/modal_scaffold.dart';
 import '../../../shared/widgets/capacity_chip_selector.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../core/services/form_defaults_service.dart';
 
-class AddGeneratorModal extends StatefulWidget {
+class AddGeneratorModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
   final Function(MockGenerator) onSave;
   final bool isVisible;
@@ -23,15 +25,15 @@ class AddGeneratorModal extends StatefulWidget {
   });
 
   @override
-  State<AddGeneratorModal> createState() => _AddGeneratorModalState();
+  ConsumerState<AddGeneratorModal> createState() => _AddGeneratorModalState();
 }
 
-class _AddGeneratorModalState extends State<AddGeneratorModal> {
+class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
   final _formKey = GlobalKey<FormState>();
   final _idController = TextEditingController();
   final _typeController = TextEditingController();
   final _notesController = TextEditingController();
-  String _selectedCapacity = '100';
+  String _selectedCapacity = '50';
   String? _selectedCategory;
   String _selectedStatus = 'active';
 
@@ -39,6 +41,19 @@ class _AddGeneratorModalState extends State<AddGeneratorModal> {
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final defaults = ref.read(formDefaultsServiceProvider).getGeneratorDefaults();
+        setState(() {
+          if (_selectedCategory == null) {
+            _selectedCategory = defaults.category;
+          }
+          _selectedStatus = defaults.status;
+          _selectedCapacity = defaults.capacity;
+          _typeController.text = defaults.type;
+        });
+      }
+    });
   }
 
   @override
