@@ -34,4 +34,43 @@ void main() {
     expect(find.text('4'), findsOneWidget);
     expect(find.text('8'), findsOneWidget);
   });
+
+  testWidgets('InlineCalendar supports multi-selection mode and notifies listeners when days are tapped', (WidgetTester tester) async {
+    List<DateTime> selectedDates = [];
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: StatefulBuilder(
+          builder: (context, setState) {
+            return InlineCalendar(
+              startDate: DateTime.utc(2026, 7, 1),
+              selectionMode: CalendarSelectionMode.multi,
+              selectedDates: selectedDates,
+              onDatesChanged: (dates) {
+                setState(() {
+                  selectedDates = dates;
+                });
+              },
+            );
+          },
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // Tap on July 8 (or whatever day number is visible and active)
+    await tester.tap(find.text('8'));
+    await tester.pumpAndSettle();
+
+    // Verify July 8 is selected
+    expect(selectedDates.length, 1);
+    expect(selectedDates.first.day, 8);
+
+    // Tap July 8 again to deselect
+    await tester.tap(find.text('8'));
+    await tester.pumpAndSettle();
+
+    // Verify list is empty
+    expect(selectedDates.isEmpty, true);
+  });
 }

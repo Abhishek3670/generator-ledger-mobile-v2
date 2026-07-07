@@ -242,14 +242,16 @@ class _BookingsDirectoryScreenState
             if (_showAddModal)
               AddBookingModal(
                 onClose: () => setState(() => _showAddModal = false),
-                onSave: (newBooking) async {
-                  await ref
-                      .read(bookingProvider.notifier)
-                      .addBooking(newBooking);
+                onSave: (newBookings) async {
+                  for (final booking in newBookings) {
+                    await ref
+                        .read(bookingProvider.notifier)
+                        .addBooking(booking);
+                  }
                   if (!context.mounted) return;
                   setState(() => _showAddModal = false);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Booking added successfully')),
+                    SnackBar(content: Text('${newBookings.length} booking(s) added successfully')),
                   );
                 },
               ),

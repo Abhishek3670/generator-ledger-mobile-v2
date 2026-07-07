@@ -32,7 +32,7 @@ class AddBookingModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
 
   /// Callback triggered when the booking is successfully created and saved.
-  final Function(Booking) onSave;
+  final Function(List<Booking>) onSave;
 
   /// Controls the visibility of this overlay.
   final bool isVisible;
@@ -54,6 +54,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   List<String> _selectedCapacities = ['50'];
   DateTime? _startDate;
   DateTime? _endDate;
+  List<DateTime> _selectedDates = [];
   String? _selectedVendorId;
   String? _selectedGeneratorId;
   final _notesController = TextEditingController();
@@ -127,6 +128,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     setState(() {
       _startDate = defaults.startDate;
       _endDate = defaults.endDate;
+      _selectedDates = defaults.startDate != null ? [defaults.startDate!] : [DateTime.now()];
       if (defaults.lastVendorId != null) {
         _selectedVendorId = defaults.lastVendorId;
       }
@@ -143,6 +145,10 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       _selectedCapacities = List<String>.from(draft['selectedCapacities'] ?? ['50']);
       _startDate = draft['startDate'] != null ? DateTime.parse(draft['startDate']) : null;
       _endDate = draft['endDate'] != null ? DateTime.parse(draft['endDate']) : null;
+      _selectedDates = (draft['selectedDates'] as List?)?.map((d) => DateTime.parse(d as String)).toList() ?? [];
+      if (_selectedDates.isEmpty && _startDate != null) {
+        _selectedDates = [_startDate!];
+      }
       _selectedVendorId = draft['selectedVendorId'];
       _selectedGeneratorId = draft['selectedGeneratorId'];
       _notesController.text = draft['notes'] ?? '';
@@ -169,6 +175,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       'selectedCapacities': _selectedCapacities,
       'startDate': _startDate?.toIso8601String(),
       'endDate': _endDate?.toIso8601String(),
+      'selectedDates': _selectedDates.map((d) => d.toIso8601String()).toList(),
       'selectedVendorId': _selectedVendorId,
       'selectedGeneratorId': _selectedGeneratorId,
       'notes': _notesController.text,
@@ -193,7 +200,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
           (_assignmentMode == 'id' && _selectedGeneratorId == null)
           ? 'Please select a generator ID'
           : null;
-      _dateError = _startDate == null ? 'Please select booking dates' : null;
+      _dateError = _selectedDates.isEmpty ? 'Please select booking dates' : null;
     });
 
     if (_vendorError != null || _generatorError != null || _dateError != null) {
@@ -233,17 +240,22 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       capacityText = match.capacity;
     }
 
-    final newBooking = Booking(
-      id: 'BK-${DateTime.now().millisecondsSinceEpoch}',
-      vendorId: _selectedVendorId!,
-      vendorName: selectedVendor.name,
-      generatorId: genId,
-      capacity: capacityText,
-      date: _startDate!,
-      endDate: _endDate,
-      status: 'confirmed',
-      notes: _notesController.text.trim(),
-    );
+    final List<Booking> newBookings = [];
+    final baseTime = DateTime.now().millisecondsSinceEpoch;
+    for (int i = 0; i < _selectedDates.length; i++) {
+      final date = _selectedDates[i];
+      newBookings.add(Booking(
+        id: 'BK-$baseTime-$i',
+        vendorId: _selectedVendorId!,
+        vendorName: selectedVendor.name,
+        generatorId: genId,
+        capacity: capacityText,
+        date: date,
+        endDate: date,
+        status: 'confirmed',
+        notes: _notesController.text.trim(),
+      ));
+    }
 
     final prefs = ref.read(userPreferencesServiceProvider);
     prefs.saveLastVendor(_selectedVendorId!);
@@ -259,7 +271,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
     _autoSaveTimer?.cancel();
     _draftService.clearDraft('add_booking');
-    widget.onSave(newBooking);
+    widget.onSave(newBookings);
   }
 
   StatusBadgeType _getStatusType(String status) {
@@ -465,13 +477,12 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                             // 5. Booking Dates
                             _buildSectionHeader('BOOKING DATES'),
                             const SizedBox(height: 8),
-                            InlineCalendar(
-                              startDate: _startDate,
-                              endDate: _endDate,
-                              onRangeSelected: (start, end) {
+                             InlineCalendar(
+                              selectionMode: CalendarSelectionMode.multi,
+                              selectedDates: _selectedDates,
+                              onDatesChanged: (dates) {
                                 setState(() {
-                                  _startDate = start;
-                                  _endDate = end;
+                                  _selectedDates = dates;
                                   _dateError = null;
                                 });
                                 _onFormChanged();
@@ -481,7 +492,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                               _buildValidationError(_dateError!),
 
                             // Date selection feedback display
-                            if (_startDate != null) ...[
+                            if (_selectedDates.isNotEmpty) ...[
                               const SizedBox(height: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -504,9 +515,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        _endDate == null
-                                            ? 'Selected: ${DateFormat('MMM dd, yyyy').format(_startDate!)}'
-                                            : 'Selected: ${DateFormat('MMM dd').format(_startDate!)} - ${DateFormat('MMM dd, yyyy').format(_endDate!)} (${_endDate!.difference(_startDate!).inDays + 1} days)',
+                                        'Selected: ${_selectedDates.map((d) => DateFormat('MMM d').format(d)).join(', ')} (${_selectedDates.length} days)',
                                         style: AppTypography.bodySmall.copyWith(
                                           fontWeight: FontWeight.w600,
                                           color: AppColors.primary,

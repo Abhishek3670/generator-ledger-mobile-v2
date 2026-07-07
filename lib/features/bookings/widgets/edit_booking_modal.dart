@@ -130,6 +130,7 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
             _buildFieldLabel('VENDOR'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _selectedVendorId,
               hint: Text('Select Vendor', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
               decoration: _inputDecoration(),
@@ -184,6 +185,7 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
               _buildFieldLabel('GENERATOR'),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _selectedGeneratorId,
                 hint: Text('Select Generator', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
                 decoration: _inputDecoration(),
