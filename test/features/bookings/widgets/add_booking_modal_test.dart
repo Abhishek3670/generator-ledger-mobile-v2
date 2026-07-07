@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ledger/core/services/user_preferences_service.dart';
 import 'package:ledger/core/providers/booking_provider.dart';
+import 'package:ledger/shared/widgets/autocomplete_field.dart';
+import 'package:ledger/shared/models/vendor.dart';
 import 'package:ledger/core/providers/generator_provider.dart';
 import 'package:ledger/core/providers/vendor_provider.dart';
 import 'package:ledger/data/mock/mock_bookings.dart';
@@ -48,7 +50,7 @@ void main() {
     expect(find.text('Optional Notes'), findsOneWidget);
 
     // Verify presence of child widgets
-    expect(find.byType(VendorSearchInput), findsOneWidget);
+    expect(find.byType(AutocompleteField<Vendor>), findsOneWidget);
     expect(find.byType(AssignmentModeToggle), findsOneWidget);
     expect(find.byType(InlineCalendar), findsOneWidget);
 

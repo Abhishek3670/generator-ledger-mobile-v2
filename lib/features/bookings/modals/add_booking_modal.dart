@@ -5,12 +5,15 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
+import '../../../shared/models/vendor.dart';
+import '../../../shared/models/generator.dart';
 import '../../../shared/widgets/backdrop_blur_overlay.dart';
 import '../../../shared/widgets/assignment_mode_toggle.dart';
 import '../../../shared/widgets/capacity_chip_selector.dart';
 import '../../../shared/widgets/vendor_search_input.dart';
 import '../../../shared/widgets/inline_calendar.dart';
 import '../../../shared/widgets/status_badge.dart';
+import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../core/providers/booking_provider.dart';
 import '../../../core/providers/generator_provider.dart';
 import '../../../core/providers/vendor_provider.dart';
@@ -205,8 +208,9 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   Widget build(BuildContext context) {
     if (!widget.isVisible) return const SizedBox.shrink();
 
-    final availableGenerators = ref.watch(generatorProvider).valueOrNull ?? [];
+    final List<Generator> availableGenerators = ref.watch(generatorProvider).valueOrNull ?? [];
     final bookings = ref.watch(bookingProvider).valueOrNull ?? [];
+    final List<Vendor> vendors = ref.watch(vendorProvider).valueOrNull ?? [];
 
     return Stack(
       children: [
@@ -300,19 +304,26 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // 1. Vendor Selection
-                            _buildFieldLabel('Vendor *'),
-                            const SizedBox(height: 8),
-                            VendorSearchInput(
-                              initialVendorId: _selectedVendorId,
-                              onVendorSelected: (vendor) {
+                            AutocompleteField<Vendor>(
+                              items: vendors,
+                              initialValue: _selectedVendorId != null
+                                  ? vendors.firstWhere(
+                                      (v) => v.id == _selectedVendorId,
+                                      orElse: () => vendors.first,
+                                    )
+                                  : null,
+                              displayStringForOption: (Vendor vendor) => vendor.name,
+                              searchFields: (Vendor vendor) => [vendor.name, vendor.id],
+                              onSelected: (Vendor? vendor) {
                                 setState(() {
                                   _selectedVendorId = vendor?.id;
                                   _vendorError = null;
                                 });
                               },
+                              hintText: 'Search by vendor name or ID',
+                              labelText: 'Vendor *',
+                              errorText: _vendorError,
                             ),
-                            if (_vendorError != null)
-                              _buildValidationError(_vendorError!),
                             const SizedBox(height: 20),
 
                             // 2. Existing Bookings
@@ -338,44 +349,29 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
                             // 4. Conditional Assignment Fields
                             if (_assignmentMode == 'id') ...[
-                              _buildFieldLabel('GENERATOR'),
-                              const SizedBox(height: 8),
-                              _buildFieldWrapper(
-                                focusNode: _dropdownFocusNode,
-                                hasFocus: _dropdownHasFocus,
-                                child: DropdownButtonFormField<String>(
-                                  focusNode: _dropdownFocusNode,
-                                  isExpanded: true,
-                                  initialValue: _selectedGeneratorId,
-                                  hint: Text(
-                                    'Select Generator',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  decoration: _inputDecoration(),
-                                  dropdownColor: AppColors.background,
-                                  items: availableGenerators.map((gen) {
-                                    return DropdownMenuItem<String>(
-                                      value: gen.id,
-                                      child: Text(
-                                        '${gen.id} (${gen.capacity} - ${gen.category})',
-                                        style: AppTypography.bodyMedium,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedGeneratorId = value;
-                                      _generatorError = null;
-                                    });
-                                  },
-                                ),
+                              AutocompleteField<Generator>(
+                                items: availableGenerators,
+                                initialValue: _selectedGeneratorId != null
+                                    ? availableGenerators.firstWhere(
+                                        (g) => g.id == _selectedGeneratorId,
+                                        orElse: () => availableGenerators.first,
+                                      )
+                                    : null,
+                                displayStringForOption: (Generator gen) =>
+                                    '${gen.id} (${gen.capacity} - ${gen.category})',
+                                searchFields: (Generator gen) => [gen.id, gen.capacity, gen.category],
+                                onSelected: (Generator? gen) {
+                                  setState(() {
+                                    _selectedGeneratorId = gen?.id;
+                                    _generatorError = null;
+                                  });
+                                },
+                                hintText: 'Type generator ID or capacity...',
+                                labelText: 'GENERATOR',
+                                errorText: _generatorError,
                               ),
-                              if (_generatorError != null)
-                                _buildValidationError(_generatorError!),
-                            ] else ...[
+                            ]
+ else ...[
                               _buildFieldLabel('Capacity (kVA)'),
                               const SizedBox(height: 8),
                               CapacityChipSelector(

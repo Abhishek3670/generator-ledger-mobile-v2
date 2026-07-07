@@ -10,6 +10,10 @@ import 'package:ledger/shared/models/billing.dart';
 import 'package:ledger/features/billing/providers/billing_provider.dart';
 import 'package:ledger/shared/widgets/skeleton_loading.dart';
 import 'package:ledger/core/services/user_preferences_service.dart';
+import 'package:ledger/shared/widgets/autocomplete_field.dart';
+import 'package:ledger/core/providers/vendor_provider.dart';
+import 'package:ledger/data/mock/mock_vendors.dart';
+import 'package:ledger/shared/models/vendor.dart';
 
 class BillingPreviewScreen extends ConsumerStatefulWidget {
   const BillingPreviewScreen({super.key});
@@ -171,6 +175,8 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
       symbol: '₹ ',
       decimalDigits: 2,
     );
+    final dateRange = ref.watch(billingDateRangeProvider);
+    final List<MockVendor> vendors = ref.watch(vendorProvider).valueOrNull ?? [];
     final billingState = ref.watch(billingProvider);
     final connectivity = ref.watch(connectivityProvider);
     final isLoading = billingState.isLoading;
@@ -390,6 +396,20 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 16),
+                          AutocompleteField<Vendor>(
+                            items: vendors,
+                            initialValue: dateRange.vendorId != null && vendors.any((v) => v.id == dateRange.vendorId || v.name == dateRange.vendorId)
+                                ? vendors.firstWhere((v) => v.id == dateRange.vendorId || v.name == dateRange.vendorId)
+                                : null,
+                            displayStringForOption: (Vendor vendor) => vendor.name,
+                            searchFields: (Vendor vendor) => [vendor.name, vendor.id],
+                            onSelected: (Vendor? vendor) {
+                              _searchController.text = vendor?.id ?? '';
+                            },
+                            hintText: 'Search by vendor name or ID',
+                            labelText: 'FILTER BY VENDOR',
                           ),
                           const SizedBox(height: 16),
                           const Divider(height: 1),
