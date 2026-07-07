@@ -19,6 +19,7 @@ import '../modals/edit_generator_modal.dart';
 import '../modals/generator_detail_modal.dart';
 import '../widgets/generator_action_menu.dart';
 import '../providers/generators_provider.dart';
+import '../../../shared/widgets/destructive_confirmation_dialog.dart';
 
 /// Directory screen listing fleet generators grouped by inventory categories.
 class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
@@ -40,11 +41,13 @@ class _GeneratorsDirectoryScreenState
 
   bool _showAddModal = false;
   bool _showEditModal = false;
+  bool _showDeleteModal = false;
   bool _showActionMenu = false;
   String? _modalInitialCategory;
   MockGenerator? _selectedGeneratorDetail;
   MockGenerator? _selectedGeneratorForAction;
   MockGenerator? _selectedGeneratorForEdit;
+  MockGenerator? _selectedGeneratorForDelete;
 
   @override
   void initState() {
@@ -123,12 +126,10 @@ class _GeneratorsDirectoryScreenState
             });
           },
           onDelete: (gen) {
-            ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Generator "${gen.id}" deleted successfully'),
-              ),
-            );
+            setState(() {
+              _selectedGeneratorForDelete = gen;
+              _showDeleteModal = true;
+            });
           },
         ),
         const SizedBox(height: 20),
@@ -150,12 +151,10 @@ class _GeneratorsDirectoryScreenState
             });
           },
           onDelete: (gen) {
-            ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Generator "${gen.id}" deleted successfully'),
-              ),
-            );
+            setState(() {
+              _selectedGeneratorForDelete = gen;
+              _showDeleteModal = true;
+            });
           },
         ),
         const SizedBox(height: 20),
@@ -177,12 +176,10 @@ class _GeneratorsDirectoryScreenState
             });
           },
           onDelete: (gen) {
-            ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Generator "${gen.id}" deleted successfully'),
-              ),
-            );
+            setState(() {
+              _selectedGeneratorForDelete = gen;
+              _showDeleteModal = true;
+            });
           },
         ),
       ],
@@ -493,7 +490,33 @@ class _GeneratorsDirectoryScreenState
                 },
                 onDelete: () {
                   final gen = _selectedGeneratorForAction!;
-                  ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
+                  setState(() {
+                    _showActionMenu = false;
+                    _selectedGeneratorForAction = null;
+                    _selectedGeneratorForDelete = gen;
+                    _showDeleteModal = true;
+                  });
+                },
+              ),
+
+            // Delete Generator Dialog
+            if (_showDeleteModal && _selectedGeneratorForDelete != null)
+              DestructiveConfirmationDialog(
+                title: 'DELETE GENERATOR',
+                message:
+                    'Are you sure you want to delete generator "${_selectedGeneratorForDelete!.id}"? This will remove the generator and its booking history.',
+                onCancel: () => setState(() {
+                  _showDeleteModal = false;
+                  _selectedGeneratorForDelete = null;
+                }),
+                onConfirm: () {
+                  ref
+                      .read(generatorProvider.notifier)
+                      .deleteGenerator(_selectedGeneratorForDelete!.id);
+                  setState(() {
+                    _showDeleteModal = false;
+                    _selectedGeneratorForDelete = null;
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Generator deleted successfully'),

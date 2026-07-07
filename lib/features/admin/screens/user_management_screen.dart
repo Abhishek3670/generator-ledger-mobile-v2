@@ -7,7 +7,7 @@ import '../../../shared/widgets/loading_overlay.dart';
 import '../providers/user_management_provider.dart';
 import '../modals/add_user_modal.dart';
 import '../modals/edit_user_modal.dart';
-import '../../../shared/widgets/confirmation_dialog.dart';
+import '../../../shared/widgets/destructive_confirmation_dialog.dart';
 
 class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
@@ -430,11 +430,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               ),
 
             if (_showDeleteModal && _selectedUserForDelete != null)
-              ConfirmationDialog(
+              DestructiveConfirmationDialog(
                 title: 'DELETE USER',
-                message: 'Are you sure you want to delete user "${_selectedUserForDelete!['username']}"? This action cannot be undone.',
-                confirmText: 'DELETE',
-                isDestructive: true,
+                message: 'Are you sure you want to delete user "${_selectedUserForDelete!['username']}"? They will lose access immediately.',
                 onCancel: () => setState(() {
                   _showDeleteModal = false;
                   _selectedUserForDelete = null;

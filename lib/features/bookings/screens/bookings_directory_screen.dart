@@ -16,6 +16,7 @@ import '../modals/add_booking_modal.dart';
 import '../widgets/edit_booking_modal.dart';
 import '../providers/bookings_provider.dart';
 import '../../vendors/providers/vendors_provider.dart';
+import '../../../shared/widgets/confirmation_dialog.dart';
 
 /// Directory screen listing bookings grouped by vendor.
 class BookingsDirectoryScreen extends ConsumerStatefulWidget {
@@ -31,7 +32,9 @@ class _BookingsDirectoryScreenState
   final _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showAddModal = false;
+  bool _showCancelModal = false;
   MockBooking? _editingBooking;
+  MockBooking? _selectedBookingForCancel;
 
   @override
   void initState() {
@@ -93,14 +96,11 @@ class _BookingsDirectoryScreenState
                   _editingBooking = booking;
                 });
               },
-              onDelete: (booking) async {
-                await ref.read(bookingProvider.notifier).deleteBooking(booking.id);
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Booking cancelled successfully'),
-                  ),
-                );
+              onDelete: (booking) {
+                setState(() {
+                  _selectedBookingForCancel = booking;
+                  _showCancelModal = true;
+                });
               },
             );
           },
@@ -266,6 +266,34 @@ class _BookingsDirectoryScreenState
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Booking updated successfully'),
+                    ),
+                  );
+                },
+              ),
+
+            // Cancel Booking Dialog
+            if (_showCancelModal && _selectedBookingForCancel != null)
+              ConfirmationDialog(
+                title: 'CANCEL BOOKING',
+                message:
+                    'Cancel this booking for "${_selectedBookingForCancel!.vendorName}"? The vendor will be notified.',
+                confirmText: 'CANCEL BOOKING',
+                isDestructive: true,
+                onCancel: () => setState(() {
+                  _showCancelModal = false;
+                  _selectedBookingForCancel = null;
+                }),
+                onConfirm: () async {
+                  final bookingId = _selectedBookingForCancel!.id;
+                  setState(() {
+                    _showCancelModal = false;
+                    _selectedBookingForCancel = null;
+                  });
+                  await ref.read(bookingProvider.notifier).deleteBooking(bookingId);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Booking cancelled successfully'),
                     ),
                   );
                 },

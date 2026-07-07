@@ -14,7 +14,7 @@ import '../../../shared/widgets/skeleton_loading.dart';
 import '../widgets/vendor_card.dart';
 import '../modals/add_vendor_modal.dart';
 import '../modals/edit_vendor_modal.dart';
-import '../../../shared/widgets/confirmation_dialog.dart';
+import '../../../shared/widgets/destructive_confirmation_dialog.dart';
 import '../widgets/vendor_action_menu.dart';
 import '../providers/vendors_provider.dart';
 
@@ -382,12 +382,10 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
 
             // Delete Vendor Dialog
             if (_showDeleteModal && _selectedVendorForDelete != null)
-              ConfirmationDialog(
+              DestructiveConfirmationDialog(
                 title: 'DELETE VENDOR',
                 message:
-                    'Are you sure you want to delete vendor "${_selectedVendorForDelete!.name}"? This action cannot be undone.',
-                confirmText: 'DELETE',
-                isDestructive: true,
+                    'Are you sure you want to delete vendor "${_selectedVendorForDelete!.name}"? This will remove the vendor and their booking history.',
                 onCancel: () => setState(() {
                   _showDeleteModal = false;
                   _selectedVendorForDelete = null;
