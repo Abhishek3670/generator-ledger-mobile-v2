@@ -416,8 +416,8 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                           const SizedBox(height: 16),
                           const Divider(height: 1),
                           const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Row(
                                 children: [
@@ -430,15 +430,19 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                       });
                                     },
                                   ),
-                                  Text(
-                                    'INCLUDE GRAND TOTAL',
-                                    style: AppTypography.labelCaps.copyWith(
-                                      color: AppColors.textSecondary,
+                                  Expanded(
+                                    child: Text(
+                                      'INCLUDE GRAND TOTAL',
+                                      style: AppTypography.labelCaps.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 12),
                               Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   OutlinedButton(
                                     onPressed: () {
