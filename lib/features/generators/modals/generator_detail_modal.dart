@@ -21,9 +21,7 @@ class GeneratorDetailModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusType = generator.status.toLowerCase() == 'active'
-        ? StatusBadgeType.active
-        : StatusBadgeType.cancelled;
+    final statusType = _getStatusBadgeType(generator.status);
 
     return ModalScaffold(
       title: 'GENERATOR DETAILS',
@@ -55,11 +53,26 @@ class GeneratorDetailModal extends StatelessWidget {
           // Detail rows
           _buildDetailRow('CAPACITY', generator.capacity),
           const SizedBox(height: 16),
-          _buildDetailRow('TYPE', generator.type),
+          _buildDetailRow('TYPE', generator.type.isEmpty ? '-' : generator.type),
           const SizedBox(height: 16),
           _buildDetailRow('CATEGORY', generator.category.toUpperCase()),
-          const SizedBox(height: 16),
-          _buildDetailRow('ASSIGNED VENDOR', generator.assignedVendor ?? 'NONE'),
+          if (generator.category == 'permanent' && generator.assignedVendor != null) ...[
+            const SizedBox(height: 16),
+            _buildDetailRow('ASSIGNED VENDOR', generator.assignedVendor!),
+          ],
+          const SizedBox(height: 24),
+          if (onEdit != null) ...[
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: onEdit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: const StadiumBorder(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text('EDIT', style: AppTypography.labelCaps.copyWith(color: Colors.white)),
+            ),
+          ],
         ],
       ),
       footer: Row(
@@ -69,19 +82,6 @@ class GeneratorDetailModal extends StatelessWidget {
             onPressed: onClose,
             child: Text('CLOSE', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
           ),
-          if (onEdit != null) ...[
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: onEdit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: const StadiumBorder(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: Text('EDIT', style: AppTypography.labelCaps.copyWith(color: Colors.white)),
-            ),
-          ],
         ],
       ),
     );
@@ -102,5 +102,18 @@ class GeneratorDetailModal extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  StatusBadgeType _getStatusBadgeType(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return StatusBadgeType.active;
+      case 'maintenance':
+        return StatusBadgeType.maintenance;
+      case 'retired':
+        return StatusBadgeType.retired;
+      default:
+        return StatusBadgeType.active;
+    }
   }
 }

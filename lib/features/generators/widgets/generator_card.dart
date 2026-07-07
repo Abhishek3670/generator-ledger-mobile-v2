@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/swipe_action_card.dart';
+import '../../../shared/widgets/elevated_card.dart';
 
 import '../../../core/navigation/hero_tags.dart';
 
@@ -33,24 +35,15 @@ class GeneratorCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Hero(
         tag: HeroTags.generatorCard(generator.id),
-        child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: const [
-          BoxShadow(
-            offset: Offset(0, 1),
-            blurRadius: 2,
-            color: Color(0x0D0F172A),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        child: ElevatedCard(
+          elevation: 1,
+          borderRadius: 8,
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -66,9 +59,9 @@ class GeneratorCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const StatusBadge(
-                label: 'Active',
-                type: StatusBadgeType.active,
+              StatusBadge(
+                label: generator.status.toUpperCase(),
+                type: _getStatusBadgeType(generator.status),
               ),
             ],
           ),
@@ -116,8 +109,9 @@ class GeneratorCard extends StatelessWidget {
         ],
       ),
     ),
-    ),
-    );
+  ),
+),
+);
 
     if (generator.category == 'retailer') {
       return SwipeActionCard(
@@ -127,5 +121,18 @@ class GeneratorCard extends StatelessWidget {
     }
 
     return cardContent;
+  }
+
+  StatusBadgeType _getStatusBadgeType(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return StatusBadgeType.active;
+      case 'maintenance':
+        return StatusBadgeType.maintenance;
+      case 'retired':
+        return StatusBadgeType.retired;
+      default:
+        return StatusBadgeType.active;
+    }
   }
 }

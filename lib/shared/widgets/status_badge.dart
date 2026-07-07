@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/theme/app_spacing.dart';
 
 /// Semantic status categories for status badges.
 enum StatusBadgeType {
@@ -14,8 +15,14 @@ enum StatusBadgeType {
   /// Pending status (e.g. Awaiting Approval)
   pending,
 
-  /// Cancelled, Offline, or Error status
+  /// Cancelled status
   cancelled,
+
+  /// Maintenance status for generators
+  maintenance,
+
+  /// Retired status for generators
+  retired,
 }
 
 /// A pill-shaped status indicator badge.
@@ -43,21 +50,19 @@ class StatusBadge extends StatelessWidget {
 
     switch (type) {
       case StatusBadgeType.confirmed:
+      case StatusBadgeType.active:
         backgroundColor = AppColors.successLight;
         textColor = AppColors.successText;
         icon = Icons.check;
         break;
-      case StatusBadgeType.active:
-        backgroundColor = AppColors.infoLight;
-        textColor = AppColors.infoText;
-        icon = Icons.info_outline;
-        break;
       case StatusBadgeType.pending:
+      case StatusBadgeType.maintenance:
         backgroundColor = AppColors.warningLight;
         textColor = AppColors.warningText;
         icon = Icons.access_time;
         break;
       case StatusBadgeType.cancelled:
+      case StatusBadgeType.retired:
         backgroundColor = AppColors.errorLight;
         textColor = AppColors.errorText;
         icon = Icons.cancel_outlined;
@@ -65,7 +70,10 @@ class StatusBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(AppDimensions.pillRadius),

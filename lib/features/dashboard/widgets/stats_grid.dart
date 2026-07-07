@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/elevated_card.dart';
 
 /// Horizontal 3-column stats summary panel displaying counters for bookings, gensets, and vendors.
 class StatsGrid extends StatelessWidget {
@@ -58,47 +59,40 @@ class StatsGrid extends StatelessWidget {
     required String value,
     required String subtext,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: const [
-          BoxShadow(
-            offset: Offset(0, 1),
-            blurRadius: 2,
-            color: Color(0x0D0F172A),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: AppTypography.labelCaps.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 10,
+    return ElevatedCard(
+      elevation: 1,
+      borderRadius: AppDimensions.functionalRadius,
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: AppTypography.labelCaps.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 10,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: AppTypography.headlineMedium.copyWith(
-              color: AppColors.primary,
-              height: 1.1,
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: AppTypography.headlineMedium.copyWith(
+                color: AppColors.primary,
+                height: 1.1,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtext,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 10,
+            const SizedBox(height: 4),
+            Text(
+              subtext,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 10,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

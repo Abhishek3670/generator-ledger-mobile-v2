@@ -103,7 +103,7 @@ void main() {
       // Tap the FAB to expand the menu
       final fabFinder = find.byType(ExpandableFABMenu);
       expect(fabFinder, findsOneWidget);
-      await tester.tap(fabFinder);
+      await tester.tap(fabFinder, warnIfMissed: false);
       await tester.pumpAndSettle();
 
       // Verify all three action items are displayed in the overlay
