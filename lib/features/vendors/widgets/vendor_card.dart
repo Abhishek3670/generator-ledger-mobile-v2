@@ -148,6 +148,7 @@ class VendorCard extends StatelessWidget {
       );
 
     return SwipeActionCard(
+      itemId: vendor.id,
       onModify: onModify,
       onDelete: onDelete,
       child: cardContent,

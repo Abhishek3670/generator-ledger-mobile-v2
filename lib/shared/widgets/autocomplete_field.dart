@@ -76,13 +76,24 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
       _updateSuggestions(_controller.text);
       _showOverlay();
     } else {
-      _hideOverlay();
-      // If the user unfocused and didn't select an item, revert text to matching the current value if any, or clear
-      if (widget.initialValue != null) {
-        _controller.text = widget.displayStringForOption(widget.initialValue as T);
-      } else {
-        _controller.clear();
-      }
+      // Delay hiding the overlay to allow tap events on suggestions to fire first
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (!_focusNode.hasFocus && mounted) {
+          _hideOverlay();
+          // If the user unfocused and didn't select an item, revert text to matching the current value if any, or clear
+          if (widget.initialValue != null) {
+            _controller.text = widget.displayStringForOption(widget.initialValue as T);
+          } else if (_controller.text.isNotEmpty) {
+            // Check if current text matches a selected item before clearing
+            final hasMatch = widget.items.any(
+              (item) => widget.displayStringForOption(item) == _controller.text,
+            );
+            if (!hasMatch) {
+              _controller.clear();
+            }
+          }
+        }
+      });
     }
   }
 

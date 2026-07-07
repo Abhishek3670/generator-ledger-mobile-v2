@@ -60,6 +60,7 @@ class InventoryGroupSection extends StatelessWidget {
     }
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),

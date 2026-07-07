@@ -175,7 +175,7 @@ void main() {
   testWidgets('SwipeActionCard renders successfully', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(body: SwipeActionCard(child: Text('Swipe Content'))),
+        home: Scaffold(body: SwipeActionCard(itemId: 'test-item', child: Text('Swipe Content'))),
       ),
     );
     expect(find.byType(SwipeActionCard), findsOneWidget);

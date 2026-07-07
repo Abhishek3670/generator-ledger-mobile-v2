@@ -118,6 +118,7 @@ class GeneratorCard extends StatelessWidget {
 );
 
     return SwipeActionCard(
+      itemId: generator.id,
       onModify: onModify,
       onDelete: onDelete,
       child: cardContent,

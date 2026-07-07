@@ -90,6 +90,7 @@ class BookingListItem extends StatelessWidget {
     );
 
     return SwipeActionCard(
+      itemId: booking.id,
       onModify: onModify,
       onDelete: onDelete,
       deleteLabel: 'Cancel',

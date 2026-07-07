@@ -86,6 +86,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
       children: [
         // Retailer Vendors Group Section
         Container(
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(
@@ -163,6 +164,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
 
         // Rental Vendors Group Section
         Container(
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(

@@ -749,18 +749,24 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      b.generatorId,
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
+                                    Flexible(
+                                      child: Text(
+                                        b.generatorId,
+                                        style: AppTypography.bodyMedium.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    Text(
-                                      '(${b.capacity})',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary,
+                                    Flexible(
+                                      child: Text(
+                                        '(${b.capacity})',
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],

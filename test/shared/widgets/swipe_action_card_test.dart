@@ -10,6 +10,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: SwipeActionCard(
+              itemId: 'test-item-1',
               child: Text('My Card Content'),
             ),
           ),
@@ -27,6 +28,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: SwipeActionCard(
+              itemId: 'test-item-2',
               modifyLabel: 'Edit Booking',
               deleteLabel: 'Cancel Booking',
               modifyIcon: Icons.edit,
