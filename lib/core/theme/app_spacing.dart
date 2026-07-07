@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Centralized Spacing scale and layout patterns.
 abstract final class AppSpacing {
   /// Extra small spacing (4.0) - tight spacing within components (e.g. icon to text)
