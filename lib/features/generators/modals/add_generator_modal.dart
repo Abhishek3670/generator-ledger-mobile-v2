@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../../shared/widgets/capacity_chip_selector.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../core/services/form_defaults_service.dart';
+import '../../../core/services/draft_service.dart';
 
 class AddGeneratorModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
@@ -36,6 +38,9 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
   String _selectedCapacity = '50';
   String? _selectedCategory;
   String _selectedStatus = 'active';
+  final _draftService = DraftService();
+  Timer? _autoSaveTimer;
+  bool _listenersAdded = false;
 
   @override
   void initState() {
@@ -43,21 +48,99 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
     _selectedCategory = widget.initialCategory;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final defaults = ref.read(formDefaultsServiceProvider).getGeneratorDefaults();
-        setState(() {
-          if (_selectedCategory == null) {
-            _selectedCategory = defaults.category;
-          }
-          _selectedStatus = defaults.status;
-          _selectedCapacity = defaults.capacity;
-          _typeController.text = defaults.type;
-        });
+        _checkDraft();
       }
     });
   }
 
+  Future<void> _checkDraft() async {
+    final draft = await _draftService.loadDraft('add_generator');
+    if (draft != null && mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Resume Draft?'),
+          content: const Text('We found a saved draft of this generator form. Would you like to resume editing?'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _draftService.clearDraft('add_generator');
+                _initFormDefaults();
+              },
+              child: const Text('Discard'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _restoreDraft(draft);
+              },
+              child: const Text('Resume'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _initFormDefaults();
+    }
+  }
+
+  void _initFormDefaults() {
+    final defaults = ref.read(formDefaultsServiceProvider).getGeneratorDefaults();
+    setState(() {
+      if (_selectedCategory == null) {
+        _selectedCategory = defaults.category;
+      }
+      _selectedStatus = defaults.status;
+      _selectedCapacity = defaults.capacity;
+      _typeController.text = defaults.type;
+    });
+    _addListeners();
+  }
+
+  void _restoreDraft(Map<String, dynamic> draft) {
+    setState(() {
+      _idController.text = draft['id'] ?? '';
+      _typeController.text = draft['type'] ?? '';
+      _notesController.text = draft['notes'] ?? '';
+      _selectedCapacity = draft['capacity'] ?? '50';
+      _selectedCategory = draft['category'] ?? 'retailer';
+      _selectedStatus = draft['status'] ?? 'active';
+    });
+    _addListeners();
+  }
+
+  void _addListeners() {
+    if (_listenersAdded) return;
+    _idController.addListener(_onFormChanged);
+    _typeController.addListener(_onFormChanged);
+    _notesController.addListener(_onFormChanged);
+    _listenersAdded = true;
+  }
+
+  void _onFormChanged() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+      _saveDraft();
+    });
+  }
+
+  Future<void> _saveDraft() async {
+    final draft = {
+      'id': _idController.text,
+      'type': _typeController.text,
+      'notes': _notesController.text,
+      'capacity': _selectedCapacity,
+      'category': _selectedCategory,
+      'status': _selectedStatus,
+    };
+    await _draftService.saveDraft('add_generator', draft);
+  }
+
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _idController.dispose();
     _typeController.dispose();
     _notesController.dispose();
@@ -93,6 +176,7 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
                 setState(() {
                   _selectedCapacity = cap;
                 });
+                _onFormChanged();
               },
             ),
             const SizedBox(height: 16),
@@ -151,6 +235,7 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
                       setState(() {
                         _selectedCategory = value;
                       });
+                      _onFormChanged();
                     },
               validator: (value) => value == null ? 'Please select category' : null,
             ),
@@ -176,6 +261,7 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
                 setState(() {
                   _selectedStatus = value ?? 'active';
                 });
+                _onFormChanged();
               },
             ),
             const SizedBox(height: 16),
@@ -200,7 +286,7 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
           const SizedBox(width: 12),
           AppButton(
             label: 'CREATE',
-            onPressed: () {
+            onPressed: () async {
               if (_formKey.currentState?.validate() ?? false) {
                 final newGen = MockGenerator(
                   id: _idController.text.trim().toUpperCase(),
@@ -209,6 +295,8 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
                   status: _selectedStatus,
                   category: _selectedCategory!,
                 );
+                _autoSaveTimer?.cancel();
+                await _draftService.clearDraft('add_generator');
                 widget.onSave(newGen);
               }
             },

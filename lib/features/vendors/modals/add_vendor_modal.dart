@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../../shared/widgets/modal_scaffold.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../core/services/form_defaults_service.dart';
+import '../../../core/services/draft_service.dart';
 
 class AddVendorModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
@@ -34,6 +36,9 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
   String? _selectedCategory;
+  final _draftService = DraftService();
+  Timer? _autoSaveTimer;
+  bool _listenersAdded = false;
 
   @override
   void initState() {
@@ -41,19 +46,96 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
     _selectedCategory = widget.initialCategory;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final defaults = ref.read(formDefaultsServiceProvider).getVendorDefaults();
-        setState(() {
-          _phoneController.text = '${defaults.countryCode} ';
-          if (_selectedCategory == null) {
-            _selectedCategory = 'retailer';
-          }
-        });
+        _checkDraft();
       }
     });
   }
 
+  Future<void> _checkDraft() async {
+    final draft = await _draftService.loadDraft('add_vendor');
+    if (draft != null && mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Resume Draft?'),
+          content: const Text('We found a saved draft of this vendor form. Would you like to resume editing?'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _draftService.clearDraft('add_vendor');
+                _initFormDefaults();
+              },
+              child: const Text('Discard'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _restoreDraft(draft);
+              },
+              child: const Text('Resume'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _initFormDefaults();
+    }
+  }
+
+  void _initFormDefaults() {
+    final defaults = ref.read(formDefaultsServiceProvider).getVendorDefaults();
+    setState(() {
+      _phoneController.text = '${defaults.countryCode} ';
+      if (_selectedCategory == null) {
+        _selectedCategory = 'retailer';
+      }
+    });
+    _addListeners();
+  }
+
+  void _restoreDraft(Map<String, dynamic> draft) {
+    setState(() {
+      _nameController.text = draft['name'] ?? '';
+      _locationController.text = draft['location'] ?? '';
+      _phoneController.text = draft['phone'] ?? '';
+      _notesController.text = draft['notes'] ?? '';
+      _selectedCategory = draft['category'] ?? 'retailer';
+    });
+    _addListeners();
+  }
+
+  void _addListeners() {
+    if (_listenersAdded) return;
+    _nameController.addListener(_onFormChanged);
+    _locationController.addListener(_onFormChanged);
+    _phoneController.addListener(_onFormChanged);
+    _notesController.addListener(_onFormChanged);
+    _listenersAdded = true;
+  }
+
+  void _onFormChanged() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+      _saveDraft();
+    });
+  }
+
+  Future<void> _saveDraft() async {
+    final draft = {
+      'name': _nameController.text,
+      'location': _locationController.text,
+      'phone': _phoneController.text,
+      'notes': _notesController.text,
+      'category': _selectedCategory,
+    };
+    await _draftService.saveDraft('add_vendor', draft);
+  }
+
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _nameController.dispose();
     _locationController.dispose();
     _phoneController.dispose();
@@ -121,6 +203,7 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
                 setState(() {
                   _selectedCategory = value;
                 });
+                _onFormChanged();
               },
               validator: (value) => value == null ? 'Please select a type' : null,
             ),
@@ -146,7 +229,7 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
           const SizedBox(width: 12),
           AppButton(
             label: 'CREATE',
-            onPressed: () {
+            onPressed: () async {
               if (_formKey.currentState?.validate() ?? false) {
                 final newVendor = Vendor(
                   id: 'VEN-${DateTime.now().millisecondsSinceEpoch}',
@@ -155,6 +238,8 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
                   phone: _phoneController.text.trim(),
                   category: _selectedCategory!,
                 );
+                _autoSaveTimer?.cancel();
+                await _draftService.clearDraft('add_vendor');
                 widget.onSave(newVendor);
               }
             },

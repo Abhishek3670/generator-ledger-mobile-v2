@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +11,6 @@ import '../../../shared/models/generator.dart';
 import '../../../shared/widgets/backdrop_blur_overlay.dart';
 import '../../../shared/widgets/assignment_mode_toggle.dart';
 import '../../../shared/widgets/capacity_chip_selector.dart';
-import '../../../shared/widgets/vendor_search_input.dart';
 import '../../../shared/widgets/inline_calendar.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
@@ -20,6 +20,7 @@ import '../../../core/providers/vendor_provider.dart';
 
 import '../../../core/services/user_preferences_service.dart';
 import '../../../core/services/form_defaults_service.dart';
+import '../../../core/services/draft_service.dart';
 
 /// A modal window used to create a new booking.
 ///
@@ -68,6 +69,10 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   String? _generatorError;
   String? _dateError;
 
+  final _draftService = DraftService();
+  Timer? _autoSaveTimer;
+  bool _listenersAdded = false;
+
   @override
   void initState() {
     super.initState();
@@ -88,9 +93,42 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _applyDefaults();
+        _checkDraft();
       }
     });
+  }
+
+  Future<void> _checkDraft() async {
+    final draft = await _draftService.loadDraft('add_booking');
+    if (draft != null && mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Resume Draft?'),
+          content: const Text('We found a saved draft of this booking form. Would you like to resume editing?'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _draftService.clearDraft('add_booking');
+                _applyDefaults();
+              },
+              child: const Text('Discard'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _restoreDraft(draft);
+              },
+              child: const Text('Resume'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _applyDefaults();
+    }
   }
 
   void _applyDefaults() {
@@ -105,10 +143,51 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         _selectedCapacities = defaults.lastCapacities!;
       }
     });
+    _addListeners();
+  }
+
+  void _restoreDraft(Map<String, dynamic> draft) {
+    setState(() {
+      _assignmentMode = draft['assignmentMode'] ?? 'id';
+      _selectedCapacities = List<String>.from(draft['selectedCapacities'] ?? ['50']);
+      _startDate = draft['startDate'] != null ? DateTime.parse(draft['startDate']) : null;
+      _endDate = draft['endDate'] != null ? DateTime.parse(draft['endDate']) : null;
+      _selectedVendorId = draft['selectedVendorId'];
+      _selectedGeneratorId = draft['selectedGeneratorId'];
+      _notesController.text = draft['notes'] ?? '';
+    });
+    _addListeners();
+  }
+
+  void _addListeners() {
+    if (_listenersAdded) return;
+    _notesController.addListener(_onFormChanged);
+    _listenersAdded = true;
+  }
+
+  void _onFormChanged() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+      _saveDraft();
+    });
+  }
+
+  Future<void> _saveDraft() async {
+    final draft = {
+      'assignmentMode': _assignmentMode,
+      'selectedCapacities': _selectedCapacities,
+      'startDate': _startDate?.toIso8601String(),
+      'endDate': _endDate?.toIso8601String(),
+      'selectedVendorId': _selectedVendorId,
+      'selectedGeneratorId': _selectedGeneratorId,
+      'notes': _notesController.text,
+    };
+    await _draftService.saveDraft('add_booking', draft);
   }
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _dropdownFocusNode.dispose();
     _notesFocusNode.dispose();
     _notesController.dispose();
@@ -188,6 +267,8 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       }
     }
 
+    _autoSaveTimer?.cancel();
+    _draftService.clearDraft('add_booking');
     widget.onSave(newBooking);
   }
 
@@ -319,6 +400,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                   _selectedVendorId = vendor?.id;
                                   _vendorError = null;
                                 });
+                                _onFormChanged();
                               },
                               hintText: 'Search by vendor name or ID',
                               labelText: 'Vendor *',
@@ -343,6 +425,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                   _assignmentMode = mode;
                                   _generatorError = null;
                                 });
+                                _onFormChanged();
                               },
                             ),
                             const SizedBox(height: 20),
@@ -365,6 +448,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                     _selectedGeneratorId = gen?.id;
                                     _generatorError = null;
                                   });
+                                  _onFormChanged();
                                 },
                                 hintText: 'Type generator ID or capacity...',
                                 labelText: 'GENERATOR',
@@ -382,6 +466,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                   setState(() {
                                     _selectedCapacities = caps;
                                   });
+                                  _onFormChanged();
                                 },
                               ),
                             ],
@@ -399,6 +484,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                   _endDate = end;
                                   _dateError = null;
                                 });
+                                _onFormChanged();
                               },
                             ),
                             if (_dateError != null)

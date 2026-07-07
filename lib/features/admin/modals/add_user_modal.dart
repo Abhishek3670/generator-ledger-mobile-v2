@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
@@ -5,6 +6,7 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
 import '../../../core/services/form_defaults_service.dart';
+import '../../../core/services/draft_service.dart';
 
 class AddUserModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
@@ -28,23 +30,99 @@ class _AddUserModalState extends ConsumerState<AddUserModal> {
   final _passwordController = TextEditingController();
   String _selectedRole = 'operator';
   String _selectedStatus = 'ACTIVE';
+  final _draftService = DraftService();
+  Timer? _autoSaveTimer;
+  bool _listenersAdded = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final defaults = ref.read(formDefaultsServiceProvider).getUserDefaults();
-        setState(() {
-          _selectedRole = defaults.role;
-          _selectedStatus = defaults.status;
-        });
+        _checkDraft();
       }
     });
   }
 
+  Future<void> _checkDraft() async {
+    final draft = await _draftService.loadDraft('add_user');
+    if (draft != null && mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Resume Draft?'),
+          content: const Text('We found a saved draft of this user form. Would you like to resume editing?'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _draftService.clearDraft('add_user');
+                _initFormDefaults();
+              },
+              child: const Text('Discard'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _restoreDraft(draft);
+              },
+              child: const Text('Resume'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _initFormDefaults();
+    }
+  }
+
+  void _initFormDefaults() {
+    final defaults = ref.read(formDefaultsServiceProvider).getUserDefaults();
+    setState(() {
+      _selectedRole = defaults.role;
+      _selectedStatus = defaults.status;
+    });
+    _addListeners();
+  }
+
+  void _restoreDraft(Map<String, dynamic> draft) {
+    setState(() {
+      _usernameController.text = draft['username'] ?? '';
+      _passwordController.text = draft['password'] ?? '';
+      _selectedRole = draft['role'] ?? 'operator';
+      _selectedStatus = draft['status'] ?? 'ACTIVE';
+    });
+    _addListeners();
+  }
+
+  void _addListeners() {
+    if (_listenersAdded) return;
+    _usernameController.addListener(_onFormChanged);
+    _passwordController.addListener(_onFormChanged);
+    _listenersAdded = true;
+  }
+
+  void _onFormChanged() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+      _saveDraft();
+    });
+  }
+
+  Future<void> _saveDraft() async {
+    final draft = {
+      'username': _usernameController.text,
+      'password': _passwordController.text,
+      'role': _selectedRole,
+      'status': _selectedStatus,
+    };
+    await _draftService.saveDraft('add_user', draft);
+  }
+
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -109,6 +187,7 @@ class _AddUserModalState extends ConsumerState<AddUserModal> {
                   setState(() {
                     _selectedRole = val;
                   });
+                  _onFormChanged();
                 }
               },
             ),
@@ -129,6 +208,7 @@ class _AddUserModalState extends ConsumerState<AddUserModal> {
                   setState(() {
                     _selectedStatus = val;
                   });
+                  _onFormChanged();
                 }
               },
             ),
@@ -144,9 +224,11 @@ class _AddUserModalState extends ConsumerState<AddUserModal> {
           ),
           const SizedBox(width: 12),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (_formKey.currentState?.validate() ?? false) {
                 final dateStr = DateTime.now().toString().substring(0, 10);
+                _autoSaveTimer?.cancel();
+                await _draftService.clearDraft('add_user');
                 widget.onSave({
                   'username': _usernameController.text.trim().toLowerCase(),
                   'role': _selectedRole,
