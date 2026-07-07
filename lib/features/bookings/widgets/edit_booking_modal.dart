@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
-import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
 
 class EditBookingModal extends ConsumerStatefulWidget {
   final Booking booking;
@@ -117,12 +117,10 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
       );
     }).toList();
 
-    return ModalScaffold(
-      title: 'EDIT BOOKING',
-      isVisible: widget.isVisible,
-      onClose: widget.onClose,
-      body: Form(
-        key: _formKey,
+    if (!widget.isVisible) return const SizedBox.shrink();
+
+    final formContent = Form(
+      key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -298,7 +296,12 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
             ),
           ],
         ),
-      ),
+      );
+
+    return DraggableFormSheet(
+      title: 'Edit Booking',
+      category: 'bookings',
+      onClose: widget.onClose,
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -345,6 +348,7 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
           ),
         ],
       ),
+      child: formContent,
     );
   }
 

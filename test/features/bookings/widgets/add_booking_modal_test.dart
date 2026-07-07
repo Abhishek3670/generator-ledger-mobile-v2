@@ -84,6 +84,7 @@ void main() {
       // Tap on the Capacity toggle button
       final capacityToggle = find.text('Assign by Capacity (Auto-assign)');
       expect(capacityToggle, findsOneWidget);
+      await tester.ensureVisible(capacityToggle);
       await tester.tap(capacityToggle);
       await tester.pump();
 
@@ -120,6 +121,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final capacityToggle = find.text('Assign by Capacity (Auto-assign)');
+      await tester.ensureVisible(capacityToggle);
       await tester.tap(capacityToggle);
       await tester.pumpAndSettle();
 

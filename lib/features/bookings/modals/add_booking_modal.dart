@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
 import '../../../shared/models/vendor.dart';
 import '../../../shared/models/generator.dart';
-import '../../../shared/widgets/backdrop_blur_overlay.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../shared/widgets/assignment_mode_toggle.dart';
 import '../../../shared/widgets/capacity_chip_selector.dart';
 import '../../../shared/widgets/inline_calendar.dart';
@@ -287,6 +286,40 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     }
   }
 
+  Future<bool> _onDismissAttempt() async {
+    final isFormDirty = _selectedVendorId != null ||
+        _notesController.text.isNotEmpty ||
+        _selectedGeneratorId != null ||
+        _selectedDates.isNotEmpty;
+
+    if (!isFormDirty) {
+      await _draftService.clearDraft('add_booking');
+      return true;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard Draft?'),
+        content: const Text('You have unsaved changes. Do you want to discard this draft or keep editing?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep Editing'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop(true);
+              await _draftService.clearDraft('add_booking');
+            },
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.isVisible) return const SizedBox.shrink();
@@ -295,324 +328,224 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     final bookings = ref.watch(bookingProvider).valueOrNull ?? [];
     final List<Vendor> vendors = ref.watch(vendorProvider).valueOrNull ?? [];
 
-    return Stack(
-      children: [
-        // Backdrop Overlay
-        BackdropBlurOverlay(isVisible: widget.isVisible, onTap: widget.onClose),
-
-        // Centered Card Container
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.mobileGutter),
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                constraints: const BoxConstraints(
-                  maxWidth: 500,
-                  maxHeight: 750,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.background, // bg-background (#fafafa)
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.modalRadius,
-                  ),
-                  border: Border.all(
-                    color: AppColors.outlineVariant,
-                    width: 1,
-                  ), // border-outline-variant (#c6c6cd)
-                  boxShadow: [
-                    BoxShadow(
-                      offset: const Offset(0, 10),
-                      blurRadius: 30,
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header (Left-aligned, space grotesk)
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'BOOKINGS',
-                                  style: AppTypography.labelCaps.copyWith(
-                                    color: AppColors.textSecondary,
-                                    letterSpacing: 2.2, // .2em letter spacing
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Create Booking',
-                                  style: AppTypography.headlineMedium.copyWith(
-                                    color: AppColors.primary,
-                                    fontFamily: 'SpaceGrotesk',
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: widget.onClose,
-                            icon: const Icon(
-                              Icons.close,
-                              color: AppColors.textSecondary,
-                            ),
-                            splashRadius: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(
-                      color: AppColors.outlineVariant,
-                      height: 1,
-                      thickness: 1,
-                    ),
-
-                    // Scrollable content
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // 1. Vendor Selection
-                            AutocompleteField<Vendor>(
-                              items: vendors,
-                              initialValue: _selectedVendorId != null
-                                  ? vendors.firstWhere(
-                                      (v) => v.id == _selectedVendorId,
-                                      orElse: () => vendors.first,
-                                    )
-                                  : null,
-                              displayStringForOption: (Vendor vendor) => vendor.name,
-                              searchFields: (Vendor vendor) => [vendor.name, vendor.id],
-                              onSelected: (Vendor? vendor) {
-                                setState(() {
-                                  _selectedVendorId = vendor?.id;
-                                  _vendorError = null;
-                                });
-                                _onFormChanged();
-                              },
-                              hintText: 'Search by vendor name or ID',
-                              labelText: 'Vendor *',
-                              errorText: _vendorError,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // 2. Existing Bookings
-                            _buildExistingBookingsSection(
-                              bookings,
-                              _selectedVendorId,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // 3. Generator Assignment Mode
-                            _buildSectionHeader('GENERATOR ASSIGNMENT'),
-                            const SizedBox(height: 8),
-                            AssignmentModeToggle(
-                              currentMode: _assignmentMode,
-                              onModeChanged: (mode) {
-                                setState(() {
-                                  _assignmentMode = mode;
-                                  _generatorError = null;
-                                });
-                                _onFormChanged();
-                              },
-                            ),
-                            const SizedBox(height: 20),
-
-                            // 4. Conditional Assignment Fields
-                            if (_assignmentMode == 'id') ...[
-                              AutocompleteField<Generator>(
-                                items: availableGenerators,
-                                initialValue: _selectedGeneratorId != null
-                                    ? availableGenerators.firstWhere(
-                                        (g) => g.id == _selectedGeneratorId,
-                                        orElse: () => availableGenerators.first,
-                                      )
-                                    : null,
-                                displayStringForOption: (Generator gen) =>
-                                    '${gen.id} (${gen.capacity} - ${gen.category})',
-                                searchFields: (Generator gen) => [gen.id, gen.capacity, gen.category],
-                                onSelected: (Generator? gen) {
-                                  setState(() {
-                                    _selectedGeneratorId = gen?.id;
-                                    _generatorError = null;
-                                  });
-                                  _onFormChanged();
-                                },
-                                hintText: 'Type generator ID or capacity...',
-                                labelText: 'GENERATOR',
-                                errorText: _generatorError,
-                              ),
-                            ]
- else ...[
-                              _buildFieldLabel('Capacity (kVA)'),
-                              const SizedBox(height: 8),
-                              CapacityChipSelector(
-                                capacities: const ['20', '30', '50', '100'],
-                                selectedCapacities: _selectedCapacities,
-                                isMultiSelect: true,
-                                onCapacitiesChanged: (caps) {
-                                  setState(() {
-                                    _selectedCapacities = caps;
-                                  });
-                                  _onFormChanged();
-                                },
-                              ),
-                            ],
-                            const SizedBox(height: 20),
-
-                            // 5. Booking Dates
-                            _buildSectionHeader('BOOKING DATES'),
-                            const SizedBox(height: 8),
-                             InlineCalendar(
-                              selectionMode: CalendarSelectionMode.multi,
-                              selectedDates: _selectedDates,
-                              onDatesChanged: (dates) {
-                                setState(() {
-                                  _selectedDates = dates;
-                                  _dateError = null;
-                                });
-                                _onFormChanged();
-                              },
-                            ),
-                            if (_dateError != null)
-                              _buildValidationError(_dateError!),
-
-                            // Date selection feedback display
-                            if (_selectedDates.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.05,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today,
-                                      size: 14,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Selected: ${_selectedDates.map((d) => DateFormat('MMM d').format(d)).join(', ')} (${_selectedDates.length} days)',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 20),
-
-                            // 6. Notes
-                            _buildFieldLabel('Optional Notes'),
-                            const SizedBox(height: 8),
-                            _buildFieldWrapper(
-                              focusNode: _notesFocusNode,
-                              hasFocus: _notesHasFocus,
-                              child: TextFormField(
-                                focusNode: _notesFocusNode,
-                                controller: _notesController,
-                                maxLines: 3,
-                                style: AppTypography.bodyMedium,
-                                decoration: _inputDecoration(
-                                  hintText: 'Add any notes...',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const Divider(
-                      color: AppColors.outlineVariant,
-                      height: 1,
-                      thickness: 1,
-                    ),
-
-                    // Footer actions
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      color: AppColors.surface,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          OutlinedButton(
-                            onPressed: widget.onClose,
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                color: AppColors.outlineVariant,
-                                width: 1,
-                              ),
-                              shape: const StadiumBorder(),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: Text(
-                              'Cancel',
-                              style: AppTypography.labelCaps.copyWith(
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            onPressed: _submitForm,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accent,
-                              foregroundColor: AppColors.primary,
-                              elevation: 0,
-                              shape: const StadiumBorder(),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: Text(
-                              'Create Booking',
-                              style: AppTypography.labelCaps.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+    return DraggableFormSheet(
+      title: 'Create Booking',
+      category: 'bookings',
+      onClose: widget.onClose,
+      onDismissAttempt: _onDismissAttempt,
+      footer: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          OutlinedButton(
+            onPressed: () async {
+              if (await _onDismissAttempt()) {
+                widget.onClose();
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(
+                color: AppColors.outlineVariant,
+                width: 1,
+              ),
+              shape: const StadiumBorder(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+            ),
+            child: Text(
+              'Cancel',
+              style: AppTypography.labelCaps.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: _submitForm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: AppColors.primary,
+              elevation: 0,
+              shape: const StadiumBorder(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+            ),
+            child: Text(
+              'Create Booking',
+              style: AppTypography.labelCaps.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Vendor Selection
+          AutocompleteField<Vendor>(
+            items: vendors,
+            initialValue: _selectedVendorId != null
+                ? vendors.firstWhere(
+                    (v) => v.id == _selectedVendorId,
+                    orElse: () => vendors.first,
+                  )
+                : null,
+            displayStringForOption: (Vendor vendor) => vendor.name,
+            searchFields: (Vendor vendor) => [vendor.name, vendor.id],
+            onSelected: (Vendor? vendor) {
+              setState(() {
+                _selectedVendorId = vendor?.id;
+                _vendorError = null;
+              });
+              _onFormChanged();
+            },
+            hintText: 'Search by vendor name or ID',
+            labelText: 'Vendor *',
+            errorText: _vendorError,
+          ),
+          const SizedBox(height: 20),
+
+          // 2. Existing Bookings
+          _buildExistingBookingsSection(
+            bookings,
+            _selectedVendorId,
+          ),
+          const SizedBox(height: 20),
+
+          // 3. Generator Assignment Mode
+          _buildSectionHeader('GENERATOR ASSIGNMENT'),
+          const SizedBox(height: 8),
+          AssignmentModeToggle(
+            currentMode: _assignmentMode,
+            onModeChanged: (mode) {
+              setState(() {
+                _assignmentMode = mode;
+                _generatorError = null;
+              });
+              _onFormChanged();
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // 4. Conditional Assignment Fields
+          if (_assignmentMode == 'id') ...[
+            AutocompleteField<Generator>(
+              items: availableGenerators,
+              initialValue: _selectedGeneratorId != null
+                  ? availableGenerators.firstWhere(
+                      (g) => g.id == _selectedGeneratorId,
+                      orElse: () => availableGenerators.first,
+                    )
+                  : null,
+              displayStringForOption: (Generator gen) =>
+                  '${gen.id} (${gen.capacity} - ${gen.category})',
+              searchFields: (Generator gen) => [gen.id, gen.capacity, gen.category],
+              onSelected: (Generator? gen) {
+                setState(() {
+                  _selectedGeneratorId = gen?.id;
+                  _generatorError = null;
+                });
+                _onFormChanged();
+              },
+              hintText: 'Type generator ID or capacity...',
+              labelText: 'GENERATOR',
+              errorText: _generatorError,
+            ),
+          ] else ...[
+            _buildFieldLabel('Capacity (kVA)'),
+            const SizedBox(height: 8),
+            CapacityChipSelector(
+              capacities: const ['20', '30', '50', '100'],
+              selectedCapacities: _selectedCapacities,
+              isMultiSelect: true,
+              onCapacitiesChanged: (caps) {
+                setState(() {
+                  _selectedCapacities = caps;
+                });
+                _onFormChanged();
+              },
+            ),
+          ],
+          const SizedBox(height: 20),
+
+          // 5. Booking Dates
+          _buildSectionHeader('BOOKING DATES'),
+          const SizedBox(height: 8),
+          InlineCalendar(
+            selectionMode: CalendarSelectionMode.multi,
+            selectedDates: _selectedDates,
+            onDatesChanged: (dates) {
+              setState(() {
+                _selectedDates = dates;
+                _dateError = null;
+              });
+              _onFormChanged();
+            },
+          ),
+          if (_dateError != null)
+            _buildValidationError(_dateError!),
+
+          // Date selection feedback display
+          if (_selectedDates.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(
+                  alpha: 0.05,
+                ),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Selected: ${_selectedDates.map((d) => DateFormat('MMM d').format(d)).join(', ')} (${_selectedDates.length} days)',
+                      style: AppTypography.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+
+          // 6. Notes
+          _buildFieldLabel('Optional Notes'),
+          const SizedBox(height: 8),
+          _buildFieldWrapper(
+            focusNode: _notesFocusNode,
+            hasFocus: _notesHasFocus,
+            child: TextFormField(
+              focusNode: _notesFocusNode,
+              controller: _notesController,
+              maxLines: 3,
+              style: AppTypography.bodyMedium,
+              decoration: _inputDecoration(
+                hintText: 'Add any notes...',
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
