@@ -12,10 +12,17 @@ class VendorBookingGroup extends StatelessWidget {
   final MockVendor vendor;
 
   /// The list of bookings associated with this vendor.
+  /// The list of bookings associated with this vendor.
   final List<Booking> bookings;
 
   /// Optional callback when a booking inside this group is tapped.
   final Function(Booking)? onBookingTap;
+
+  /// Optional callback when a booking inside this group is swiped to edit.
+  final Function(Booking)? onModify;
+
+  /// Optional callback when a booking inside this group is swiped to cancel/delete.
+  final Function(Booking)? onDelete;
 
   /// Creates a [VendorBookingGroup].
   const VendorBookingGroup({
@@ -23,6 +30,8 @@ class VendorBookingGroup extends StatelessWidget {
     required this.vendor,
     required this.bookings,
     this.onBookingTap,
+    this.onModify,
+    this.onDelete,
   });
 
   @override
@@ -50,6 +59,8 @@ class VendorBookingGroup extends StatelessWidget {
               BookingListItem(
                 booking: booking,
                 onTap: onBookingTap != null ? () => onBookingTap!(booking) : null,
+                onModify: onModify != null ? () => onModify!(booking) : null,
+                onDelete: onDelete != null ? () => onDelete!(booking) : null,
               ),
               if (!isLast)
                 const Divider(

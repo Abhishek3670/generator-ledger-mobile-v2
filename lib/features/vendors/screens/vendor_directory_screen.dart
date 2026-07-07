@@ -140,6 +140,18 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                           _showActionMenu = true;
                         });
                       },
+                      onModify: () {
+                        setState(() {
+                          _selectedVendorForEdit = vendor;
+                          _showEditModal = true;
+                        });
+                      },
+                      onDelete: () {
+                        setState(() {
+                          _selectedVendorForDelete = vendor;
+                          _showDeleteModal = true;
+                        });
+                      },
                     );
                   },
                 ),
@@ -203,6 +215,18 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                         setState(() {
                           _selectedVendorForAction = vendor;
                           _showActionMenu = true;
+                        });
+                      },
+                      onModify: () {
+                        setState(() {
+                          _selectedVendorForEdit = vendor;
+                          _showEditModal = true;
+                        });
+                      },
+                      onDelete: () {
+                        setState(() {
+                          _selectedVendorForDelete = vendor;
+                          _showDeleteModal = true;
                         });
                       },
                     );

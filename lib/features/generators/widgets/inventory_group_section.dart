@@ -22,6 +22,9 @@ class InventoryGroupSection extends StatelessWidget {
   /// Callback when a card is swiped to modify.
   final Function(MockGenerator)? onModify;
 
+  /// Callback when a card is swiped to delete.
+  final Function(MockGenerator)? onDelete;
+
   /// Callback when a card is tapped.
   final Function(MockGenerator)? onGeneratorTap;
 
@@ -33,6 +36,7 @@ class InventoryGroupSection extends StatelessWidget {
     required this.category,
     required this.generators,
     this.onModify,
+    this.onDelete,
     this.onGeneratorTap,
   });
 
@@ -145,6 +149,7 @@ class InventoryGroupSection extends StatelessWidget {
                 return GeneratorCard(
                   generator: generator,
                   onModify: onModify != null ? () => onModify!(generator) : null,
+                  onDelete: onDelete != null ? () => onDelete!(generator) : null,
                   onTap: onGeneratorTap != null ? () => onGeneratorTap!(generator) : null,
                 );
               },

@@ -17,6 +17,9 @@ class GeneratorCard extends StatelessWidget {
   /// Optional callback when "Modify" swipe action is triggered.
   final VoidCallback? onModify;
 
+  /// Optional callback when "Delete" swipe action is triggered.
+  final VoidCallback? onDelete;
+
   /// Optional callback when the card is tapped.
   final VoidCallback? onTap;
 
@@ -25,6 +28,7 @@ class GeneratorCard extends StatelessWidget {
     super.key,
     required this.generator,
     this.onModify,
+    this.onDelete,
     this.onTap,
   });
 
@@ -113,14 +117,11 @@ class GeneratorCard extends StatelessWidget {
 ),
 );
 
-    if (generator.category == 'retailer') {
-      return SwipeActionCard(
-        onModify: onModify,
-        child: cardContent,
-      );
-    }
-
-    return cardContent;
+    return SwipeActionCard(
+      onModify: onModify,
+      onDelete: onDelete,
+      child: cardContent,
+    );
   }
 
   StatusBadgeType _getStatusBadgeType(String status) {

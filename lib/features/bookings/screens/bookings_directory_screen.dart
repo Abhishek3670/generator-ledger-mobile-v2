@@ -88,6 +88,20 @@ class _BookingsDirectoryScreenState
                   _editingBooking = booking;
                 });
               },
+              onModify: (booking) {
+                setState(() {
+                  _editingBooking = booking;
+                });
+              },
+              onDelete: (booking) async {
+                await ref.read(bookingProvider.notifier).deleteBooking(booking.id);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Booking cancelled successfully'),
+                  ),
+                );
+              },
             );
           },
         ),

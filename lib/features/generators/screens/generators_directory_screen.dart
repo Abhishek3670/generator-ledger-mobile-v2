@@ -118,9 +118,17 @@ class _GeneratorsDirectoryScreenState
           },
           onModify: (gen) {
             setState(() {
-              _selectedGeneratorForAction = gen;
-              _showActionMenu = true;
+              _selectedGeneratorForEdit = gen;
+              _showEditModal = true;
             });
+          },
+          onDelete: (gen) {
+            ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Generator "${gen.id}" deleted successfully'),
+              ),
+            );
           },
         ),
         const SizedBox(height: 20),
@@ -135,6 +143,20 @@ class _GeneratorsDirectoryScreenState
           onGeneratorTap: (gen) {
             context.push('/generators/${gen.id}');
           },
+          onModify: (gen) {
+            setState(() {
+              _selectedGeneratorForEdit = gen;
+              _showEditModal = true;
+            });
+          },
+          onDelete: (gen) {
+            ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Generator "${gen.id}" deleted successfully'),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 20),
 
@@ -147,6 +169,20 @@ class _GeneratorsDirectoryScreenState
           generators: emergencyGensets,
           onGeneratorTap: (gen) {
             context.push('/generators/${gen.id}');
+          },
+          onModify: (gen) {
+            setState(() {
+              _selectedGeneratorForEdit = gen;
+              _showEditModal = true;
+            });
+          },
+          onDelete: (gen) {
+            ref.read(generatorProvider.notifier).deleteGenerator(gen.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Generator "${gen.id}" deleted successfully'),
+              ),
+            );
           },
         ),
       ],
