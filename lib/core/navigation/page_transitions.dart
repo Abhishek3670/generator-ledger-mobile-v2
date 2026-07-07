@@ -1,31 +1,50 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
-/// Custom [CustomTransitionPage] that slides the child page in from the right.
+/// Custom [Page] that slides the child page in from the right.
 /// Used for standard directional screen navigation (forward push, backward pop).
-class SlideRightTransitionPage<T> extends CustomTransitionPage<T> {
-  SlideRightTransitionPage({
-    required super.child,
+/// Supports edge-swipe back gestures.
+class SlideRightTransitionPage<T> extends Page<T> {
+  final Widget child;
+  final bool swipeBack;
+
+  const SlideRightTransitionPage({
+    required this.child,
+    this.swipeBack = true,
     super.key,
     super.name,
     super.arguments,
     super.restorationId,
-    Duration duration = const Duration(milliseconds: 300),
-  }) : super(
-          transitionDuration: duration,
-          reverseTransitionDuration: duration,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            final slideTween = Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).chain(CurveTween(curve: Curves.easeInOutCubic));
+  });
 
-            return SlideTransition(
-              position: animation.drive(slideTween),
-              child: child,
-            );
-          },
+  @override
+  Route<T> createRoute(BuildContext context) {
+    return _SlideRightPageRoute<T>(
+      settings: this,
+      child: child,
+      swipeBack: swipeBack,
+    );
+  }
+}
+
+class _SlideRightPageRoute<T> extends CupertinoPageRoute<T> {
+  final Widget child;
+  final bool swipeBack;
+
+  _SlideRightPageRoute({
+    required this.child,
+    required this.swipeBack,
+    super.settings,
+  }) : super(
+          builder: (context) => child,
         );
+
+  @override
+  bool get popGestureEnabled {
+    if (!swipeBack) return false;
+    if (animation == null) return false;
+    return super.popGestureEnabled;
+  }
 }
 
 /// Custom [CustomTransitionPage] that slides the child modal up from the bottom,

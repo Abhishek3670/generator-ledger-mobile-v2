@@ -49,6 +49,7 @@ abstract final class AppRouter {
         name: RouteNames.login,
         pageBuilder: (context, state) => SlideRightTransitionPage<void>(
           key: state.pageKey,
+          swipeBack: false,
           child: const LoginScreen(),
         ),
       ),
