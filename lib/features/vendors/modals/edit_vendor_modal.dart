@@ -3,7 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/vendor.dart';
-import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 
@@ -51,70 +51,73 @@ class _EditVendorModalState extends State<EditVendorModal> {
 
   @override
   Widget build(BuildContext context) {
-    return ModalScaffold(
-      title: 'EDIT VENDOR',
-      isVisible: widget.isVisible,
-      onClose: widget.onClose,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Vendor Name
-            AppTextField(
-              labelText: 'NAME',
-              hintText: 'Enter Vendor Name',
-              controller: _nameController,
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a name' : null,
-            ),
-            const SizedBox(height: 16),
+    if (!widget.isVisible) return const SizedBox.shrink();
 
-            // Location
-            AppTextField(
-              labelText: 'LOCATION',
-              hintText: 'Enter Location',
-              controller: _locationController,
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a location' : null,
-            ),
-            const SizedBox(height: 16),
+    final formContent = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Vendor Name
+          AppTextField(
+            labelText: 'NAME',
+            hintText: 'Enter Vendor Name',
+            controller: _nameController,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a name' : null,
+          ),
+          const SizedBox(height: 16),
 
-            // Phone
-            AppTextField(
-              labelText: 'PHONE',
-              hintText: 'Enter Phone Number',
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a phone number' : null,
-            ),
-            const SizedBox(height: 16),
+          // Location
+          AppTextField(
+            labelText: 'LOCATION',
+            hintText: 'Enter Location',
+            controller: _locationController,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a location' : null,
+          ),
+          const SizedBox(height: 16),
 
-            // Category Selection
-            _buildFieldLabel('TYPE'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
-              hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem<String>(
-                  value: 'retailer',
-                  child: Text('Retailer', style: TextStyle(fontSize: 14)),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'rental',
-                  child: Text('Rental', style: TextStyle(fontSize: 14)),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value;
-                });
-              },
-              validator: (value) => value == null ? 'Please select a type' : null,
-            ),
-          ],
-        ),
+          // Phone
+          AppTextField(
+            labelText: 'PHONE',
+            hintText: 'Enter Phone Number',
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a phone number' : null,
+          ),
+          const SizedBox(height: 16),
+
+          // Category Selection
+          _buildFieldLabel('TYPE'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedCategory,
+            hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem<String>(
+                value: 'retailer',
+                child: Text('Retailer', style: TextStyle(fontSize: 14)),
+              ),
+              DropdownMenuItem<String>(
+                value: 'rental',
+                child: Text('Rental', style: TextStyle(fontSize: 14)),
+              ),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedCategory = value;
+              });
+            },
+            validator: (value) => value == null ? 'Please select a type' : null,
+          ),
+        ],
       ),
+    );
+
+    return DraggableFormSheet(
+      title: 'Edit Vendor',
+      category: 'vendors',
+      onClose: widget.onClose,
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -142,6 +145,7 @@ class _EditVendorModalState extends State<EditVendorModal> {
           ),
         ],
       ),
+      child: formContent,
     );
   }
 

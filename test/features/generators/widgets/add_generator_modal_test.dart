@@ -16,7 +16,7 @@ void main() {
       ),
     ));
 
-    expect(find.text('ADD GENERATOR'), findsOneWidget);
+    expect(find.text('Add Generator'), findsOneWidget);
     expect(find.text('GENERATOR ID'), findsOneWidget);
     expect(find.text('CAPACITY (kVA)'), findsOneWidget);
     expect(find.text('TYPE'), findsOneWidget);
@@ -38,7 +38,7 @@ void main() {
       ),
     ));
 
-    expect(find.text('ADD GENERATOR'), findsOneWidget);
+    expect(find.text('Add Generator'), findsOneWidget);
     expect(find.text('GENERATOR ID'), findsOneWidget);
 
     final dropdown = tester.firstWidget<DropdownButton<String>>(find.byType(DropdownButton<String>));

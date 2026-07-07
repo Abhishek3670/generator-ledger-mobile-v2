@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../core/services/form_defaults_service.dart';
 import '../../../core/services/draft_service.dart';
 
@@ -128,98 +128,138 @@ class _AddUserModalState extends ConsumerState<AddUserModal> {
     super.dispose();
   }
 
+  Future<bool> _onDismissAttempt() async {
+    final isFormDirty = _usernameController.text.isNotEmpty ||
+        _passwordController.text.isNotEmpty;
+
+    if (!isFormDirty) {
+      await _draftService.clearDraft('add_user');
+      return true;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard Draft?'),
+        content: const Text('You have unsaved changes. Do you want to discard this draft or keep editing?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep Editing'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop(true);
+              await _draftService.clearDraft('add_user');
+            },
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ModalScaffold(
-      title: 'CREATE USER',
-      isVisible: widget.isVisible,
-      onClose: widget.onClose,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Username Field
-            _buildFieldLabel('USERNAME'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _usernameController,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Enter username'),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a username';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
+    if (!widget.isVisible) return const SizedBox.shrink();
 
-            // Password Field
-            _buildFieldLabel('PASSWORD'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Enter password'),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a password';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
+    final formContent = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Username Field
+          _buildFieldLabel('USERNAME'),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _usernameController,
+            style: AppTypography.bodyMedium,
+            decoration: _inputDecoration(hintText: 'Enter username'),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter a username';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
 
-            // Role Field
-            _buildFieldLabel('ROLE'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedRole,
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem(value: 'operator', child: Text('Operator')),
-                DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    _selectedRole = val;
-                  });
-                  _onFormChanged();
-                }
-              },
-            ),
-            const SizedBox(height: 16),
+          // Password Field
+          _buildFieldLabel('PASSWORD'),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _passwordController,
+            obscureText: true,
+            style: AppTypography.bodyMedium,
+            decoration: _inputDecoration(hintText: 'Enter password'),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter a password';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
 
-            // Status Field
-            _buildFieldLabel('STATUS'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedStatus,
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem(value: 'ACTIVE', child: Text('Active')),
-                DropdownMenuItem(value: 'INACTIVE', child: Text('Inactive')),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    _selectedStatus = val;
-                  });
-                  _onFormChanged();
-                }
-              },
-            ),
-          ],
-        ),
+          // Role Field
+          _buildFieldLabel('ROLE'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedRole,
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem(value: 'operator', child: Text('Operator')),
+              DropdownMenuItem(value: 'admin', child: Text('Admin')),
+            ],
+            onChanged: (val) {
+              if (val != null) {
+                setState(() {
+                  _selectedRole = val;
+                });
+                _onFormChanged();
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Status Field
+          _buildFieldLabel('STATUS'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedStatus,
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem(value: 'ACTIVE', child: Text('Active')),
+              DropdownMenuItem(value: 'INACTIVE', child: Text('Inactive')),
+            ],
+            onChanged: (val) {
+              if (val != null) {
+                setState(() {
+                  _selectedStatus = val;
+                });
+                _onFormChanged();
+              }
+            },
+          ),
+        ],
       ),
+    );
+
+    return DraggableFormSheet(
+      title: 'Create User',
+      category: 'users',
+      onClose: widget.onClose,
+      onDismissAttempt: _onDismissAttempt,
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           TextButton(
-            onPressed: widget.onClose,
+            onPressed: () async {
+              if (await _onDismissAttempt()) {
+                widget.onClose();
+              }
+            },
             child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
           ),
           const SizedBox(width: 12),
@@ -248,6 +288,7 @@ class _AddUserModalState extends ConsumerState<AddUserModal> {
           ),
         ],
       ),
+      child: formContent,
     );
   }
 

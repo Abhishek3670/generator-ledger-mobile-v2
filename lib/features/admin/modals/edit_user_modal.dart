@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
 
 class EditUserModal extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -44,73 +44,76 @@ class _EditUserModalState extends State<EditUserModal> {
 
   @override
   Widget build(BuildContext context) {
-    return ModalScaffold(
-      title: 'EDIT USER',
-      isVisible: widget.isVisible,
-      onClose: widget.onClose,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Username Field (disabled or read-only if username is identifier)
-            _buildFieldLabel('USERNAME'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _usernameController,
-              readOnly: true,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Enter username'),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a username';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
+    if (!widget.isVisible) return const SizedBox.shrink();
 
-            // Role Field
-            _buildFieldLabel('ROLE'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedRole,
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem(value: 'operator', child: Text('Operator')),
-                DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    _selectedRole = val;
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 16),
+    final formContent = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Username Field (disabled or read-only if username is identifier)
+          _buildFieldLabel('USERNAME'),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _usernameController,
+            readOnly: true,
+            style: AppTypography.bodyMedium,
+            decoration: _inputDecoration(hintText: 'Enter username'),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter a username';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
 
-            // Status Field
-            _buildFieldLabel('STATUS'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedStatus,
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem(value: 'ACTIVE', child: Text('Active')),
-                DropdownMenuItem(value: 'INACTIVE', child: Text('Inactive')),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    _selectedStatus = val;
-                  });
-                }
-              },
-            ),
-          ],
-        ),
+          // Role Field
+          _buildFieldLabel('ROLE'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedRole,
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem(value: 'operator', child: Text('Operator')),
+              DropdownMenuItem(value: 'admin', child: Text('Admin')),
+            ],
+            onChanged: (val) {
+              if (val != null) {
+                setState(() {
+                  _selectedRole = val;
+                });
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Status Field
+          _buildFieldLabel('STATUS'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedStatus,
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem(value: 'ACTIVE', child: Text('Active')),
+              DropdownMenuItem(value: 'INACTIVE', child: Text('Inactive')),
+            ],
+            onChanged: (val) {
+              if (val != null) {
+                setState(() {
+                  _selectedStatus = val;
+                });
+              }
+            },
+          ),
+        ],
       ),
+    );
+
+    return DraggableFormSheet(
+      title: 'Edit User',
+      category: 'users',
+      onClose: widget.onClose,
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -140,6 +143,7 @@ class _EditUserModalState extends State<EditUserModal> {
           ),
         ],
       ),
+      child: formContent,
     );
   }
 

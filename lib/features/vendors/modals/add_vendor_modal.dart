@@ -5,7 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/vendor.dart';
-import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../core/services/form_defaults_service.dart';
@@ -141,89 +141,131 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
     super.dispose();
   }
 
+  Future<bool> _onDismissAttempt() async {
+    final isFormDirty = _nameController.text.isNotEmpty ||
+        _locationController.text.isNotEmpty ||
+        _phoneController.text.isNotEmpty ||
+        _notesController.text.isNotEmpty;
+
+    if (!isFormDirty) {
+      await _draftService.clearDraft('add_vendor');
+      return true;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard Draft?'),
+        content: const Text('You have unsaved changes. Do you want to discard this draft or keep editing?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep Editing'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop(true);
+              await _draftService.clearDraft('add_vendor');
+            },
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ModalScaffold(
-      title: 'ADD VENDOR',
-      isVisible: widget.isVisible,
-      onClose: widget.onClose,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Vendor Name
-            AppTextField(
-              labelText: 'NAME',
-              hintText: 'Enter Vendor Name',
-              controller: _nameController,
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a name' : null,
-            ),
-            const SizedBox(height: 16),
+    if (!widget.isVisible) return const SizedBox.shrink();
 
-            // Location
-            AppTextField(
-              labelText: 'LOCATION',
-              hintText: 'Enter Location',
-              controller: _locationController,
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a location' : null,
-            ),
-            const SizedBox(height: 16),
+    final formContent = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Vendor Name
+          AppTextField(
+            labelText: 'NAME',
+            hintText: 'Enter Vendor Name',
+            controller: _nameController,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a name' : null,
+          ),
+          const SizedBox(height: 16),
 
-            // Phone
-            AppTextField(
-              labelText: 'PHONE',
-              hintText: 'Enter Phone Number',
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a phone number' : null,
-            ),
-            const SizedBox(height: 16),
+          // Location
+          AppTextField(
+            labelText: 'LOCATION',
+            hintText: 'Enter Location',
+            controller: _locationController,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a location' : null,
+          ),
+          const SizedBox(height: 16),
 
-            // Category Selection
-            _buildFieldLabel('TYPE'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
-              hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem<String>(
-                  value: 'retailer',
-                  child: Text('Retailer', style: TextStyle(fontSize: 14)),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'rental',
-                  child: Text('Rental', style: TextStyle(fontSize: 14)),
-                ),
-              ],
-              onChanged: widget.initialCategory != null
-                  ? null
-                  : (value) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                      _onFormChanged();
-                    },
-              validator: (value) => value == null ? 'Please select a type' : null,
-            ),
-            const SizedBox(height: 16),
+          // Phone
+          AppTextField(
+            labelText: 'PHONE',
+            hintText: 'Enter Phone Number',
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a phone number' : null,
+          ),
+          const SizedBox(height: 16),
 
-            // Notes
-            AppTextField(
-              labelText: 'NOTES (OPTIONAL)',
-              hintText: 'Add any relevant details...',
-              controller: _notesController,
-            ),
-          ],
-        ),
+          // Category Selection
+          _buildFieldLabel('TYPE'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedCategory,
+            hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem<String>(
+                value: 'retailer',
+                child: Text('Retailer', style: TextStyle(fontSize: 14)),
+              ),
+              DropdownMenuItem<String>(
+                value: 'rental',
+                child: Text('Rental', style: TextStyle(fontSize: 14)),
+              ),
+            ],
+            onChanged: widget.initialCategory != null
+                ? null
+                : (value) {
+                    setState(() {
+                      _selectedCategory = value;
+                    });
+                    _onFormChanged();
+                  },
+            validator: (value) => value == null ? 'Please select a type' : null,
+          ),
+          const SizedBox(height: 16),
+
+          // Notes
+          AppTextField(
+            labelText: 'NOTES (OPTIONAL)',
+            hintText: 'Add any relevant details...',
+            controller: _notesController,
+          ),
+        ],
       ),
+    );
+
+    return DraggableFormSheet(
+      title: 'Add Vendor',
+      category: 'vendors',
+      onClose: widget.onClose,
+      onDismissAttempt: _onDismissAttempt,
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           AppButton(
             label: 'CANCEL',
-            onPressed: widget.onClose,
+            onPressed: () async {
+              if (await _onDismissAttempt()) {
+                widget.onClose();
+              }
+            },
             variant: AppButtonVariant.ghost,
           ),
           const SizedBox(width: 12),
@@ -247,6 +289,7 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
           ),
         ],
       ),
+      child: formContent,
     );
   }
 
