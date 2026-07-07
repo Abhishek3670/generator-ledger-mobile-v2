@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/token_storage.dart';
+import '../services/deep_link_service.dart';
 import '../../shared/widgets/side_navigation_drawer.dart';
 import '../../shared/widgets/admin_bottom_nav_bar.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
@@ -27,6 +28,21 @@ abstract final class AppRouter {
   static final _authRefresh = _AuthRefreshNotifier();
   static TokenStorage tokenStorage = TokenStorage();
 
+  /// The [DeepLinkService] instance, initialized after the router is created.
+  /// Accessible so external code (e.g., main.dart) can call [init] on it.
+  static late final DeepLinkService deepLinkService;
+
+  /// Whether [deepLinkService] has been initialized.
+  static bool _deepLinkServiceInitialized = false;
+
+  /// Initialize the deep link service. Must be called once after app startup.
+  static Future<void> initDeepLinks() async {
+    if (_deepLinkServiceInitialized) return;
+    deepLinkService = DeepLinkService(router: router);
+    await deepLinkService.init();
+    _deepLinkServiceInitialized = true;
+  }
+
   static void refreshAuthState() {
     _authRefresh.refresh();
   }
@@ -40,7 +56,14 @@ abstract final class AppRouter {
       final isAuthenticated = token != null && token.isNotEmpty;
       final isLoggingIn = state.matchedLocation == '/login';
       if (!isAuthenticated && !isLoggingIn) return '/login';
-      if (isAuthenticated && isLoggingIn) return '/dashboard';
+      if (isAuthenticated && isLoggingIn) {
+        // After login, check if a deep link arrived while unauthenticated.
+        if (_deepLinkServiceInitialized) {
+          final pending = deepLinkService.consumePendingDeepLink();
+          if (pending != null) return pending;
+        }
+        return '/dashboard';
+      }
       return null;
     },
     routes: [
