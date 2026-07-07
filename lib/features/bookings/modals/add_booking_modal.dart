@@ -128,7 +128,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     setState(() {
       _startDate = defaults.startDate;
       _endDate = defaults.endDate;
-      _selectedDates = defaults.startDate != null ? [defaults.startDate!] : [DateTime.now()];
+      _selectedDates = [defaults.startDate];
       if (defaults.lastVendorId != null) {
         _selectedVendorId = defaults.lastVendorId;
       }
