@@ -143,7 +143,6 @@ class _DraggableFormSheetState extends State<DraggableFormSheet> {
                   ],
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Pill drag handle
