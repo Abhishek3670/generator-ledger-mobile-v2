@@ -251,42 +251,31 @@ class _AddUserModalState extends ConsumerState<AddUserModal> {
       category: 'users',
       onClose: widget.onClose,
       onDismissAttempt: _onDismissAttempt,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: () async {
-              if (await _onDismissAttempt()) {
-                widget.onClose();
-              }
-            },
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
+      footer: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState?.validate() ?? false) {
+              final dateStr = DateTime.now().toString().substring(0, 10);
+              _autoSaveTimer?.cancel();
+              await _draftService.clearDraft('add_user');
+              widget.onSave({
+                'username': _usernameController.text.trim().toLowerCase(),
+                'role': _selectedRole,
+                'status': _selectedStatus,
+                'lastLogin': 'NEVER',
+                'created': dateStr,
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () async {
-              if (_formKey.currentState?.validate() ?? false) {
-                final dateStr = DateTime.now().toString().substring(0, 10);
-                _autoSaveTimer?.cancel();
-                await _draftService.clearDraft('add_user');
-                widget.onSave({
-                  'username': _usernameController.text.trim().toLowerCase(),
-                  'role': _selectedRole,
-                  'status': _selectedStatus,
-                  'lastLogin': 'NEVER',
-                  'created': dateStr,
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('CREATE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-          ),
-        ],
+          child: Text('CREATE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+        ),
       ),
       child: formContent,
     );

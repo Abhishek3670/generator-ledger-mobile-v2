@@ -315,42 +315,28 @@ class _AddGeneratorModalState extends ConsumerState<AddGeneratorModal> {
       category: 'generators',
       onClose: widget.onClose,
       onDismissAttempt: _onDismissAttempt,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          AppButton(
-            label: 'CANCEL',
-            onPressed: () async {
-              if (await _onDismissAttempt()) {
-                widget.onClose();
-              }
-            },
-            variant: AppButtonVariant.ghost,
-          ),
-          const SizedBox(width: 12),
-          AppButton(
-            label: 'CREATE',
-            onPressed: () async {
-              setState(() {
-                _capacityError = _selectedCapacity == null ? 'Please select capacity' : null;
-              });
-              final isFormValid = _formKey.currentState?.validate() ?? false;
-              if (isFormValid && _selectedCapacity != null) {
-                final newGen = MockGenerator(
-                  id: _idController.text.trim().toUpperCase(),
-                  capacity: '$_selectedCapacity kVA',
-                  type: _typeController.text.trim(),
-                  status: _selectedStatus,
-                  category: _selectedCategory!,
-                );
-                _autoSaveTimer?.cancel();
-                await _draftService.clearDraft('add_generator');
-                widget.onSave(newGen);
-              }
-            },
-            variant: AppButtonVariant.accent,
-          ),
-        ],
+      footer: AppButton(
+        label: 'CREATE',
+        isFullWidth: true,
+        onPressed: () async {
+          setState(() {
+            _capacityError = _selectedCapacity == null ? 'Please select capacity' : null;
+          });
+          final isFormValid = _formKey.currentState?.validate() ?? false;
+          if (isFormValid && _selectedCapacity != null) {
+            final newGen = MockGenerator(
+              id: _idController.text.trim().toUpperCase(),
+              capacity: '$_selectedCapacity kVA',
+              type: _typeController.text.trim(),
+              status: _selectedStatus,
+              category: _selectedCategory!,
+            );
+            _autoSaveTimer?.cancel();
+            await _draftService.clearDraft('add_generator');
+            widget.onSave(newGen);
+          }
+        },
+        variant: AppButtonVariant.accent,
       ),
       child: formContent,
     );

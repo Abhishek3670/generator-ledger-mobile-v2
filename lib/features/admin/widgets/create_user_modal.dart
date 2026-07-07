@@ -103,36 +103,29 @@ class _CreateUserModalState extends State<CreateUserModal> {
       title: 'Create User',
       category: 'users',
       onClose: widget.onClose,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: widget.onClose,
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                final dateStr = DateTime.now().toString().substring(0, 10);
-                widget.onSave({
-                  'username': _usernameController.text.trim().toLowerCase(),
-                  'role': _selectedRole,
-                  'status': _selectedStatus,
-                  'lastLogin': 'NEVER',
-                  'created': dateStr,
-                });
+      footer: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState?.validate() ?? false) {
+              final dateStr = DateTime.now().toString().substring(0, 10);
+              widget.onSave({
+                'username': _usernameController.text.trim().toLowerCase(),
+                'role': _selectedRole,
+                'status': _selectedStatus,
+                'lastLogin': 'NEVER',
+                'created': dateStr,
+              });
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('CREATE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-        ],
+          child: Text('CREATE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+        ),
       ),
       child: formContent,
     );

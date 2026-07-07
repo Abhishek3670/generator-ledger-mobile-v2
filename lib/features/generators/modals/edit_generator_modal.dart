@@ -194,32 +194,22 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
       title: 'Edit Generator',
       category: 'generators',
       onClose: widget.onClose,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          AppButton(
-            label: 'CANCEL',
-            onPressed: widget.onClose,
-            variant: AppButtonVariant.ghost,
-          ),
-          const SizedBox(width: 12),
-          AppButton(
-            label: 'SAVE',
-            onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                final updatedGen = MockGenerator(
-                  id: _idController.text.trim().toUpperCase(),
-                  capacity: '$_selectedCapacity kVA',
-                  type: _typeController.text.trim(),
-                  status: _selectedStatus,
-                  category: _selectedCategory!,
-                );
-                widget.onSave(updatedGen);
-              }
-            },
-            variant: AppButtonVariant.accent,
-          ),
-        ],
+      footer: AppButton(
+        label: 'SAVE',
+        isFullWidth: true,
+        onPressed: () {
+          if (_formKey.currentState?.validate() ?? false) {
+            final updatedGen = MockGenerator(
+              id: _idController.text.trim().toUpperCase(),
+              capacity: '$_selectedCapacity kVA',
+              type: _typeController.text.trim(),
+              status: _selectedStatus,
+              category: _selectedCategory!,
+            );
+            widget.onSave(updatedGen);
+          }
+        },
+        variant: AppButtonVariant.accent,
       ),
       child: formContent,
     );

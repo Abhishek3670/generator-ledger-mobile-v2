@@ -114,34 +114,27 @@ class _EditUserModalState extends State<EditUserModal> {
       title: 'Edit User',
       category: 'users',
       onClose: widget.onClose,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: widget.onClose,
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
+      footer: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState?.validate() ?? false) {
+              widget.onSave({
+                ...widget.user,
+                'username': _usernameController.text.trim().toLowerCase(),
+                'role': _selectedRole,
+                'status': _selectedStatus,
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                widget.onSave({
-                  ...widget.user,
-                  'username': _usernameController.text.trim().toLowerCase(),
-                  'role': _selectedRole,
-                  'status': _selectedStatus,
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-          ),
-        ],
+          child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+        ),
       ),
       child: formContent,
     );

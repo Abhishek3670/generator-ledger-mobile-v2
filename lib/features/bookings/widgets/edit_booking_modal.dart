@@ -302,51 +302,44 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
       title: 'Edit Booking',
       category: 'bookings',
       onClose: widget.onClose,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: widget.onClose,
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                final matchVendor = vendors.where((v) => v.id == _selectedVendorId);
-                final vendorName = matchVendor.isNotEmpty ? matchVendor.first.name : (_selectedVendorId ?? '');
+      footer: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState?.validate() ?? false) {
+              final matchVendor = vendors.where((v) => v.id == _selectedVendorId);
+              final vendorName = matchVendor.isNotEmpty ? matchVendor.first.name : (_selectedVendorId ?? '');
 
-                String genId = _selectedGeneratorId ?? 'AUTO-ASSIGN';
-                if (_assignmentMode == 'capacity') {
-                  final matchGen = generators.where((g) => g.capacity.contains(_selectedCapacity));
-                  if (matchGen.isNotEmpty) {
-                    genId = matchGen.first.id;
-                  } else if (generators.isNotEmpty) {
-                    genId = generators.first.id;
-                  }
+              String genId = _selectedGeneratorId ?? 'AUTO-ASSIGN';
+              if (_assignmentMode == 'capacity') {
+                final matchGen = generators.where((g) => g.capacity.contains(_selectedCapacity));
+                if (matchGen.isNotEmpty) {
+                  genId = matchGen.first.id;
+                } else if (generators.isNotEmpty) {
+                  genId = generators.first.id;
                 }
-
-                final updatedBooking = Booking(
-                  id: widget.booking.id,
-                  vendorId: _selectedVendorId!,
-                  vendorName: vendorName,
-                  generatorId: genId,
-                  capacity: _capacityController.text.trim(),
-                  date: _startDate,
-                  status: widget.booking.status,
-                );
-                widget.onSave(updatedBooking);
               }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+
+              final updatedBooking = Booking(
+                id: widget.booking.id,
+                vendorId: _selectedVendorId!,
+                vendorName: vendorName,
+                generatorId: genId,
+                capacity: _capacityController.text.trim(),
+                date: _startDate,
+                status: widget.booking.status,
+              );
+              widget.onSave(updatedBooking);
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-        ],
+          child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+        ),
       ),
       child: formContent,
     );

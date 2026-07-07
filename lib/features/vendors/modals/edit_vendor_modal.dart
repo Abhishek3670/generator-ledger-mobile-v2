@@ -118,32 +118,22 @@ class _EditVendorModalState extends State<EditVendorModal> {
       title: 'Edit Vendor',
       category: 'vendors',
       onClose: widget.onClose,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          AppButton(
-            label: 'CANCEL',
-            onPressed: widget.onClose,
-            variant: AppButtonVariant.ghost,
-          ),
-          const SizedBox(width: 12),
-          AppButton(
-            label: 'SAVE',
-            onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                final updatedVendor = Vendor(
-                  id: widget.vendor.id,
-                  name: _nameController.text.trim(),
-                  location: _locationController.text.trim(),
-                  phone: _phoneController.text.trim(),
-                  category: _selectedCategory!,
-                );
-                widget.onSave(updatedVendor);
-              }
-            },
-            variant: AppButtonVariant.accent,
-          ),
-        ],
+      footer: AppButton(
+        label: 'SAVE',
+        isFullWidth: true,
+        onPressed: () {
+          if (_formKey.currentState?.validate() ?? false) {
+            final updatedVendor = Vendor(
+              id: widget.vendor.id,
+              name: _nameController.text.trim(),
+              location: _locationController.text.trim(),
+              phone: _phoneController.text.trim(),
+              category: _selectedCategory!,
+            );
+            widget.onSave(updatedVendor);
+          }
+        },
+        variant: AppButtonVariant.accent,
       ),
       child: formContent,
     );

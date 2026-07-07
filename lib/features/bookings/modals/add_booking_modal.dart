@@ -333,56 +333,28 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       category: 'bookings',
       onClose: widget.onClose,
       onDismissAttempt: _onDismissAttempt,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          OutlinedButton(
-            onPressed: () async {
-              if (await _onDismissAttempt()) {
-                widget.onClose();
-              }
-            },
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(
-                color: AppColors.outlineVariant,
-                width: 1,
-              ),
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-            ),
-            child: Text(
-              'Cancel',
-              style: AppTypography.labelCaps.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
-              ),
+      footer: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: _submitForm,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            elevation: 0,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 12,
             ),
           ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: _submitForm,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              elevation: 0,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-            ),
-            child: Text(
-              'Create Booking',
-              style: AppTypography.labelCaps.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
+          child: Text(
+            'Create Booking',
+            style: AppTypography.labelCaps.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ],
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

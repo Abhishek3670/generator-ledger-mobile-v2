@@ -256,38 +256,24 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
       category: 'vendors',
       onClose: widget.onClose,
       onDismissAttempt: _onDismissAttempt,
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          AppButton(
-            label: 'CANCEL',
-            onPressed: () async {
-              if (await _onDismissAttempt()) {
-                widget.onClose();
-              }
-            },
-            variant: AppButtonVariant.ghost,
-          ),
-          const SizedBox(width: 12),
-          AppButton(
-            label: 'CREATE',
-            onPressed: () async {
-              if (_formKey.currentState?.validate() ?? false) {
-                final newVendor = Vendor(
-                  id: 'VEN-${DateTime.now().millisecondsSinceEpoch}',
-                  name: _nameController.text.trim(),
-                  location: _locationController.text.trim(),
-                  phone: _phoneController.text.trim(),
-                  category: _selectedCategory!,
-                );
-                _autoSaveTimer?.cancel();
-                await _draftService.clearDraft('add_vendor');
-                widget.onSave(newVendor);
-              }
-            },
-            variant: AppButtonVariant.accent,
-          ),
-        ],
+      footer: AppButton(
+        label: 'CREATE',
+        isFullWidth: true,
+        onPressed: () async {
+          if (_formKey.currentState?.validate() ?? false) {
+            final newVendor = Vendor(
+              id: 'VEN-${DateTime.now().millisecondsSinceEpoch}',
+              name: _nameController.text.trim(),
+              location: _locationController.text.trim(),
+              phone: _phoneController.text.trim(),
+              category: _selectedCategory!,
+            );
+            _autoSaveTimer?.cancel();
+            await _draftService.clearDraft('add_vendor');
+            widget.onSave(newVendor);
+          }
+        },
+        variant: AppButtonVariant.accent,
       ),
       child: formContent,
     );
