@@ -29,7 +29,7 @@ class AssignmentModeToggle extends StatelessWidget {
         const Spacer(),
         Switch(
           value: isIdMode,
-          activeColor: AppColors.primary,
+          activeThumbColor: AppColors.primary,
           activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
           inactiveThumbColor: Colors.white,
           inactiveTrackColor: AppColors.border,
