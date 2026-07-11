@@ -28,12 +28,12 @@ class AssignmentModeToggle extends StatelessWidget {
         ),
         const Spacer(),
         Switch(
-          value: isIdMode,
+          value: !isIdMode,
           activeThumbColor: AppColors.primary,
           activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
           inactiveThumbColor: Colors.white,
           inactiveTrackColor: AppColors.border,
-          onChanged: (value) => onModeChanged(value ? 'id' : 'capacity'),
+          onChanged: (value) => onModeChanged(value ? 'capacity' : 'id'),
         ),
       ],
     );

@@ -4,7 +4,7 @@ import 'package:ledger/shared/widgets/assignment_mode_toggle.dart';
 
 void main() {
   testWidgets('AssignmentModeToggle renders switch and triggers callback', (WidgetTester tester) async {
-    String selectedMode = 'id';
+    String selectedMode = 'capacity';
 
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
@@ -23,25 +23,25 @@ void main() {
       ),
     ));
 
-    expect(find.text('Assign by Generator ID'), findsOneWidget);
+    expect(find.text('Assign by Capacity'), findsOneWidget);
     expect(find.byType(Switch), findsOneWidget);
 
     // Get the Switch widget
     final switchFinder = find.byType(Switch);
-    expect(tester.widget<Switch>(switchFinder).value, isTrue);
-
-    // Tap on Switch to toggle to capacity mode
-    await tester.tap(switchFinder);
-    await tester.pumpAndSettle();
-    expect(selectedMode, 'capacity');
-    expect(find.text('Assign by Capacity'), findsOneWidget);
     expect(tester.widget<Switch>(switchFinder).value, isFalse);
 
-    // Tap on Switch to toggle back to id mode
+    // Tap on Switch to toggle to id mode
     await tester.tap(switchFinder);
     await tester.pumpAndSettle();
     expect(selectedMode, 'id');
     expect(find.text('Assign by Generator ID'), findsOneWidget);
     expect(tester.widget<Switch>(switchFinder).value, isTrue);
+
+    // Tap on Switch to toggle back to capacity mode
+    await tester.tap(switchFinder);
+    await tester.pumpAndSettle();
+    expect(selectedMode, 'capacity');
+    expect(find.text('Assign by Capacity'), findsOneWidget);
+    expect(tester.widget<Switch>(switchFinder).value, isFalse);
   });
 }
