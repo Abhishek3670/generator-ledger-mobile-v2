@@ -21,6 +21,7 @@ import '../widgets/generator_action_menu.dart';
 import '../providers/generators_provider.dart';
 import '../../../shared/widgets/destructive_confirmation_dialog.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../../core/routing/app_router.dart';
 
 /// Directory screen listing fleet generators grouped by inventory categories.
 class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
@@ -32,7 +33,7 @@ class GeneratorsDirectoryScreen extends ConsumerStatefulWidget {
 }
 
 class _GeneratorsDirectoryScreenState
-    extends ConsumerState<GeneratorsDirectoryScreen> {
+    extends ConsumerState<GeneratorsDirectoryScreen> with RouteAware {
   final _searchController = TextEditingController();
   final _dateController = TextEditingController();
   String _searchQuery = '';
@@ -50,6 +51,17 @@ class _GeneratorsDirectoryScreenState
   MockGenerator? _selectedGeneratorForEdit;
   MockGenerator? _selectedGeneratorForDelete;
 
+  int _slidableResetCounter = 0;
+  int? _lastIndex;
+
+  void _closeAllSwipeRows() {
+    if (mounted) {
+      setState(() {
+        _slidableResetCounter++;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -59,13 +71,25 @@ class _GeneratorsDirectoryScreenState
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AppRouter.routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
   void dispose() {
+    AppRouter.routeObserver.unsubscribe(this);
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _dateController.dispose();
     _dateFocusNode.removeListener(_onDateFocusChange);
     _dateFocusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didPushNext() {
+    _closeAllSwipeRows();
   }
 
   void _onDateFocusChange() {
@@ -117,6 +141,7 @@ class _GeneratorsDirectoryScreenState
               'Gensets rented out to retail vendors for events like marriages.',
           category: 'retailer',
           generators: retailerGensets,
+          slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
             context.push('/generators/${gen.id}');
           },
@@ -142,6 +167,7 @@ class _GeneratorsDirectoryScreenState
               'Gensets permanently parked at Rental Vendor properties such as marriage halls.',
           category: 'permanent',
           generators: permanentGensets,
+          slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
             context.push('/generators/${gen.id}');
           },
@@ -167,6 +193,7 @@ class _GeneratorsDirectoryScreenState
               'Backup gensets kept ready when any genset fails or emergency coverage is requested.',
           category: 'emergency',
           generators: emergencyGensets,
+          slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
             context.push('/generators/${gen.id}');
           },
@@ -192,6 +219,16 @@ class _GeneratorsDirectoryScreenState
     final generatorsAsync = ref.watch(generatorProvider);
     final connectivity = ref.watch(connectivityProvider);
     final generators = generatorsAsync.valueOrNull ?? [];
+
+    // Detect tab changes to close swipe actions
+    try {
+      final shell = StatefulNavigationShell.of(context);
+      final currentIndex = shell.currentIndex;
+      if (_lastIndex != null && _lastIndex != currentIndex) {
+        _closeAllSwipeRows();
+      }
+      _lastIndex = currentIndex;
+    } catch (_) {}
 
     final filteredGenerators = generators.where((gen) {
       if (_searchQuery.isEmpty) return true;

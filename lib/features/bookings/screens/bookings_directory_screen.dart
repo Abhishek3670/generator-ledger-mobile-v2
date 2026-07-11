@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -18,6 +19,7 @@ import '../providers/bookings_provider.dart';
 import '../../vendors/providers/vendors_provider.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../../core/routing/app_router.dart';
 
 /// Directory screen listing bookings grouped by vendor.
 class BookingsDirectoryScreen extends ConsumerStatefulWidget {
@@ -29,13 +31,24 @@ class BookingsDirectoryScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingsDirectoryScreenState
-    extends ConsumerState<BookingsDirectoryScreen> {
+    extends ConsumerState<BookingsDirectoryScreen> with RouteAware {
   final _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showAddModal = false;
   bool _showCancelModal = false;
   MockBooking? _editingBooking;
   MockBooking? _selectedBookingForCancel;
+
+  int _slidableResetCounter = 0;
+  int? _lastIndex;
+
+  void _closeAllSwipeRows() {
+    if (mounted) {
+      setState(() {
+        _slidableResetCounter++;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -44,10 +57,22 @@ class _BookingsDirectoryScreenState
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AppRouter.routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
   void dispose() {
+    AppRouter.routeObserver.unsubscribe(this);
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didPushNext() {
+    _closeAllSwipeRows();
   }
 
   void _onSearchChanged() {
@@ -87,6 +112,7 @@ class _BookingsDirectoryScreenState
             return VendorBookingGroup(
               vendor: vendor,
               bookings: vendorBookings,
+              slidableResetCounter: _slidableResetCounter,
               onBookingTap: (booking) {
                 setState(() {
                   _editingBooking = booking;
@@ -139,13 +165,24 @@ class _BookingsDirectoryScreenState
     final bookingState = ref.watch(bookingProvider);
     final connectivity = ref.watch(connectivityProvider);
     final bookings = bookingState.valueOrNull ?? [];
-    final vendors = ref.watch(vendorProvider).valueOrNull ?? [];
+    final vendors = List<Vendor>.from(ref.watch(vendorProvider).valueOrNull ?? [])
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     final filteredBookings = bookings.where((booking) {
       if (_searchQuery.isEmpty) return true;
       return booking.vendorName.toLowerCase().contains(_searchQuery) ||
           booking.vendorId.toLowerCase().contains(_searchQuery) ||
           booking.generatorId.toLowerCase().contains(_searchQuery);
     }).toList();
+
+    // Detect tab changes to close swipe actions
+    try {
+      final shell = StatefulNavigationShell.of(context);
+      final currentIndex = shell.currentIndex;
+      if (_lastIndex != null && _lastIndex != currentIndex) {
+        _closeAllSwipeRows();
+      }
+      _lastIndex = currentIndex;
+    } catch (_) {}
 
     return Container(
       color: AppColors.background,

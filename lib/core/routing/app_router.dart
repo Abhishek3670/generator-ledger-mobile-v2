@@ -25,6 +25,7 @@ import 'route_names.dart';
 
 /// Full router configuration for the application.
 abstract final class AppRouter {
+  static final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
   static final _authRefresh = _AuthRefreshNotifier();
   static TokenStorage tokenStorage = TokenStorage();
 
@@ -50,6 +51,7 @@ abstract final class AppRouter {
   /// Global router declaration using [GoRouter] and stateful nested navigation.
   static final router = GoRouter(
     initialLocation: '/dashboard',
+    observers: [routeObserver],
     refreshListenable: _authRefresh,
     redirect: (context, state) async {
       final token = await tokenStorage.getToken();

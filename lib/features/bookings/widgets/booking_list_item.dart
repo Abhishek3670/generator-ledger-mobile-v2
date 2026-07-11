@@ -34,8 +34,8 @@ class BookingListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusType = _getStatusBadgeType(booking.status);
-    final dateString = DateFormat('yyyy-MM-dd').format(booking.date);
-    final generatorItems = _parseGeneratorItems();
+    final dateString = booking.formatBookingDate();
+    final generatorItems = booking.parseGeneratorItems();
 
     final cardContent = GestureDetector(
       onTap: onTap,
@@ -97,17 +97,6 @@ class BookingListItem extends StatelessWidget {
       deleteIcon: Icons.cancel_outlined,
       child: cardContent,
     );
-  }
-
-  List<Map<String, String>> _parseGeneratorItems() {
-    return booking.generators.map((genId) {
-      final match = RegExp(r'(\d+)kva', caseSensitive: false).firstMatch(genId);
-      String capacity = match != null ? '${match.group(1)} kVA' : 'N/A';
-      if (capacity == 'N/A' && booking.generators.length == 1) {
-        capacity = booking.capacity;
-      }
-      return {'id': genId, 'capacity': capacity};
-    }).toList();
   }
 
   StatusBadgeType _getStatusBadgeType(String status) {

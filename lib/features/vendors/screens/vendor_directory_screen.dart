@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -15,9 +16,9 @@ import '../widgets/vendor_card.dart';
 import '../modals/add_vendor_modal.dart';
 import '../modals/edit_vendor_modal.dart';
 import '../../../shared/widgets/destructive_confirmation_dialog.dart';
-import '../widgets/vendor_action_menu.dart';
 import '../providers/vendors_provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../../core/routing/app_router.dart';
 
 /// Directory screen listing Retailer and Rental vendors.
 class VendorDirectoryScreen extends ConsumerStatefulWidget {
@@ -28,17 +29,27 @@ class VendorDirectoryScreen extends ConsumerStatefulWidget {
       _VendorDirectoryScreenState();
 }
 
-class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
+class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen>
+    with RouteAware {
   final _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showAddModal = false;
   bool _showEditModal = false;
   bool _showDeleteModal = false;
-  bool _showActionMenu = false;
   String? _modalInitialCategory;
-  Vendor? _selectedVendorForAction;
   Vendor? _selectedVendorForEdit;
   Vendor? _selectedVendorForDelete;
+
+  int _slidableResetCounter = 0;
+  int? _lastIndex;
+
+  void _closeAllSwipeRows() {
+    if (mounted) {
+      setState(() {
+        _slidableResetCounter++;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -47,10 +58,22 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AppRouter.routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
   void dispose() {
+    AppRouter.routeObserver.unsubscribe(this);
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didPushNext() {
+    _closeAllSwipeRows();
   }
 
   void _onSearchChanged() {
@@ -135,13 +158,8 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                   itemBuilder: (context, index) {
                     final vendor = retailerVendors[index];
                     return VendorCard(
+                      key: ValueKey('${vendor.id}_$_slidableResetCounter'),
                       vendor: vendor,
-                      onMorePressed: () {
-                        setState(() {
-                          _selectedVendorForAction = vendor;
-                          _showActionMenu = true;
-                        });
-                      },
                       onModify: () {
                         setState(() {
                           _selectedVendorForEdit = vendor;
@@ -213,13 +231,8 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                   itemBuilder: (context, index) {
                     final vendor = rentalVendors[index];
                     return VendorCard(
+                      key: ValueKey('${vendor.id}_$_slidableResetCounter'),
                       vendor: vendor,
-                      onMorePressed: () {
-                        setState(() {
-                          _selectedVendorForAction = vendor;
-                          _showActionMenu = true;
-                        });
-                      },
                       onModify: () {
                         setState(() {
                           _selectedVendorForEdit = vendor;
@@ -246,6 +259,16 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
   Widget build(BuildContext context) {
     final vendorsAsync = ref.watch(vendorProvider);
     final connectivity = ref.watch(connectivityProvider);
+
+    // Detect tab changes to close swipe actions
+    try {
+      final shell = StatefulNavigationShell.of(context);
+      final currentIndex = shell.currentIndex;
+      if (_lastIndex != null && _lastIndex != currentIndex) {
+        _closeAllSwipeRows();
+      }
+      _lastIndex = currentIndex;
+    } catch (_) {}
 
     return Container(
       color: AppColors.background,
@@ -416,30 +439,6 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen> {
                       duration: const Duration(seconds: 5),
                     ),
                   );
-                },
-              ),
-
-            // Vendor Action Menu
-            if (_showActionMenu && _selectedVendorForAction != null)
-              VendorActionMenu(
-                vendor: _selectedVendorForAction!,
-                onClose: () => setState(() {
-                  _showActionMenu = false;
-                  _selectedVendorForAction = null;
-                }),
-                onEdit: () {
-                  final v = _selectedVendorForAction!;
-                  setState(() {
-                    _selectedVendorForEdit = v;
-                    _showEditModal = true;
-                  });
-                },
-                onDelete: () {
-                  final v = _selectedVendorForAction!;
-                  setState(() {
-                    _selectedVendorForDelete = v;
-                    _showDeleteModal = true;
-                  });
                 },
               ),
           ],

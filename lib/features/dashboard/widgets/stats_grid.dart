@@ -15,16 +15,31 @@ class StatsGrid extends StatelessWidget {
   /// The total number of vendors.
   final int totalVendors;
 
+  /// Generator category breakdown.
+  final Map<String, int>? generatorsByCategory;
+
+  /// Vendor category breakdown.
+  final Map<String, int>? vendorsByCategory;
+
   /// Creates a [StatsGrid].
   const StatsGrid({
     super.key,
     required this.totalBookings,
     required this.totalGensets,
     required this.totalVendors,
+    this.generatorsByCategory,
+    this.vendorsByCategory,
   });
 
   @override
   Widget build(BuildContext context) {
+    final genRetailer = generatorsByCategory?['retailer'] ?? 0;
+    final genPermanent = generatorsByCategory?['permanent'] ?? 0;
+    final genEmergency = generatorsByCategory?['emergency'] ?? 0;
+
+    final vendorRetailer = vendorsByCategory?['retailer'] ?? 0;
+    final vendorRental = vendorsByCategory?['rental'] ?? 0;
+
     return Row(
       children: [
         Expanded(
@@ -39,7 +54,9 @@ class StatsGrid extends StatelessWidget {
           child: _buildStatCard(
             label: 'Gensets',
             value: '$totalGensets',
-            subtext: '$totalGensets active',
+            subtext: generatorsByCategory != null
+                ? '$totalGensets active\n($genRetailer + $genPermanent + $genEmergency)'
+                : '$totalGensets active',
           ),
         ),
         const SizedBox(width: AppDimensions.spacingXs),
@@ -47,7 +64,9 @@ class StatsGrid extends StatelessWidget {
           child: _buildStatCard(
             label: 'Vendors',
             value: '$totalVendors',
-            subtext: '$totalVendors partners',
+            subtext: vendorsByCategory != null
+                ? '$totalVendors partners\n($vendorRetailer + $vendorRental)'
+                : '$totalVendors partners',
           ),
         ),
       ],
@@ -88,8 +107,10 @@ class StatsGrid extends StatelessWidget {
               subtext,
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: 9,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

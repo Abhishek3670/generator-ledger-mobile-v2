@@ -147,6 +147,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   totalBookings: summary.totalBookings,
                   totalGensets: summary.totalGenerators,
                   totalVendors: summary.totalVendors,
+                  generatorsByCategory: summary.generatorsByCategory,
+                  vendorsByCategory: summary.vendorsByCategory,
                 ),
                 const SizedBox(height: 20),
 
@@ -154,7 +156,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 CalendarView(
                   selectedDay: _selectedDay,
                   focusedDay: _focusedDay,
-                  bookings: bookings,
+                  bookings: bookings.where((b) => b.status.toLowerCase() == 'confirmed').toList(),
                   onDaySelected: (selectedDay) {
                     setState(() {
                       _selectedDay = selectedDay;

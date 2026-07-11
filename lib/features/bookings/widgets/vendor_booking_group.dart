@@ -24,6 +24,9 @@ class VendorBookingGroup extends StatelessWidget {
   /// Optional callback when a booking inside this group is swiped to cancel/delete.
   final Function(Booking)? onDelete;
 
+  /// Optional counter to force closing all slidable items.
+  final int slidableResetCounter;
+
   /// Creates a [VendorBookingGroup].
   const VendorBookingGroup({
     super.key,
@@ -32,6 +35,7 @@ class VendorBookingGroup extends StatelessWidget {
     this.onBookingTap,
     this.onModify,
     this.onDelete,
+    this.slidableResetCounter = 0,
   });
 
   @override
@@ -57,6 +61,7 @@ class VendorBookingGroup extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BookingListItem(
+                key: ValueKey('${booking.id}_$slidableResetCounter'),
                 booking: booking,
                 onTap: onBookingTap != null ? () => onBookingTap!(booking) : null,
                 onModify: onModify != null ? () => onModify!(booking) : null,

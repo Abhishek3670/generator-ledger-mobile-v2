@@ -49,7 +49,7 @@ class AddBookingModal extends ConsumerStatefulWidget {
 }
 
 class _AddBookingModalState extends ConsumerState<AddBookingModal> {
-  String _assignmentMode = 'id'; // 'id' or 'capacity'
+  String _assignmentMode = 'capacity'; // 'id' or 'capacity'
   List<String> _selectedCapacities = ['50'];
   DateTime? _startDate;
   DateTime? _endDate;
@@ -140,7 +140,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
   void _restoreDraft(Map<String, dynamic> draft) {
     setState(() {
-      _assignmentMode = draft['assignmentMode'] ?? 'id';
+      _assignmentMode = draft['assignmentMode'] ?? 'capacity';
       _selectedCapacities = List<String>.from(draft['selectedCapacities'] ?? ['50']);
       _startDate = draft['startDate'] != null ? DateTime.parse(draft['startDate']) : null;
       _endDate = draft['endDate'] != null ? DateTime.parse(draft['endDate']) : null;
@@ -433,7 +433,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             _buildFieldLabel('Capacity (kVA)'),
             const SizedBox(height: 8),
             CapacityChipSelector(
-              capacities: const ['20', '30', '50', '100'],
+              capacities: const ['15', '20', '30', '45', '50', '82', '100', '125', '160'],
               selectedCapacities: _selectedCapacities,
               isMultiSelect: true,
               onCapacitiesChanged: (caps) {
@@ -652,33 +652,31 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        b.generatorId,
-                                        style: AppTypography.bodyMedium.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
+                                ...b.parseGeneratorItems().map((item) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 2.0),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      child: Text(
-                                        '(${b.capacity})',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: AppColors.textSecondary,
+                                      children: [
+                                        TextSpan(text: item['id'] ?? ''),
+                                        const TextSpan(text: ' '),
+                                        TextSpan(
+                                          text: '(${item['capacity'] ?? ''})',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.normal,
+                                          ),
                                         ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                )),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${DateFormat('MMM dd').format(b.startDate)} - ${DateFormat('MMM dd, yyyy').format(b.endDate)}',
+                                  b.formatBookingDate(),
                                   style: AppTypography.bodySmall.copyWith(
                                     color: AppColors.textSecondary,
                                     fontSize: 12,

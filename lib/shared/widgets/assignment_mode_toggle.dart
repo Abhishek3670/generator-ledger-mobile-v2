@@ -15,67 +15,25 @@ class AssignmentModeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIdSelected = currentMode == 'id';
-    final isCapacitySelected = currentMode == 'capacity';
+    final isIdMode = currentMode == 'id';
 
     return Row(
       children: [
-        // Assign by Generator ID
-        Expanded(
-          child: GestureDetector(
-            onTap: () => onModeChanged('id'),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: isIdSelected ? AppColors.primary : Colors.white,
-                border: Border.all(
-                  color: isIdSelected ? AppColors.primary : AppColors.border,
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(9999),
-              ),
-              child: Text(
-                'Assign by Generator ID',
-                textAlign: TextAlign.center,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isIdSelected ? Colors.white : AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+        Text(
+          isIdMode ? 'Assign by Generator ID' : 'Assign by Capacity',
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(width: 12),
-        // Assign by Capacity (Auto-assign)
-        Expanded(
-          child: GestureDetector(
-            onTap: () => onModeChanged('capacity'),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: isCapacitySelected ? AppColors.primary : Colors.white,
-                border: Border.all(
-                  color: isCapacitySelected ? AppColors.primary : AppColors.border,
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(9999),
-              ),
-              child: Text(
-                'Assign by Capacity (Auto-assign)',
-                textAlign: TextAlign.center,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isCapacitySelected ? Colors.white : AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
+        const Spacer(),
+        Switch(
+          value: isIdMode,
+          activeColor: AppColors.primary,
+          activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+          inactiveThumbColor: Colors.white,
+          inactiveTrackColor: AppColors.border,
+          onChanged: (value) => onModeChanged(value ? 'id' : 'capacity'),
         ),
       ],
     );

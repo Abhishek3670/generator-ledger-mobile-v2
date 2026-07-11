@@ -77,20 +77,20 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Initially mode is 'id' -> shows 'GENERATOR' dropdown field
-      expect(find.text('GENERATOR'), findsOneWidget);
-      expect(find.text('Capacity (kVA)'), findsNothing);
-
-      // Tap on the Capacity toggle button
-      final capacityToggle = find.text('Assign by Capacity (Auto-assign)');
-      expect(capacityToggle, findsOneWidget);
-      await tester.ensureVisible(capacityToggle);
-      await tester.tap(capacityToggle);
-      await tester.pump();
-
-      // Mode is now 'capacity' -> shows 'Capacity (kVA)' chips and hides 'GENERATOR' dropdown
+      // Initially mode is 'capacity' -> shows 'Capacity (kVA)' chips and hides 'GENERATOR' dropdown
       expect(find.text('Capacity (kVA)'), findsOneWidget);
       expect(find.text('GENERATOR'), findsNothing);
+
+      // Tap on the Switch to toggle
+      final switchFinder = find.byType(Switch);
+      expect(switchFinder, findsOneWidget);
+      await tester.ensureVisible(switchFinder);
+      await tester.tap(switchFinder);
+      await tester.pumpAndSettle();
+
+      // Mode is now 'id' -> shows 'GENERATOR' dropdown field and hides 'Capacity (kVA)'
+      expect(find.text('GENERATOR'), findsOneWidget);
+      expect(find.text('Capacity (kVA)'), findsNothing);
     },
   );
 
@@ -118,11 +118,6 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
-
-      final capacityToggle = find.text('Assign by Capacity (Auto-assign)');
-      await tester.ensureVisible(capacityToggle);
-      await tester.tap(capacityToggle);
       await tester.pumpAndSettle();
 
       // Check capacity selection is pre-selected

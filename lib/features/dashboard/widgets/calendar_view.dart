@@ -42,10 +42,11 @@ class _CalendarViewState extends State<CalendarView> {
   }
 
   List<Booking> _getBookingsForDay(DateTime day) {
+    final dayOnly = DateTime(day.year, day.month, day.day);
     return widget.bookings.where((b) {
-      return b.date.year == day.year &&
-          b.date.month == day.month &&
-          b.date.day == day.day;
+      final start = DateTime(b.startDate.year, b.startDate.month, b.startDate.day);
+      final end = DateTime(b.endDate.year, b.endDate.month, b.endDate.day);
+      return !dayOnly.isBefore(start) && !dayOnly.isAfter(end);
     }).toList();
   }
 

@@ -27,9 +27,10 @@ class DailyBookingsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dailyBookings = bookings.where((b) {
-      return b.date.year == selectedDay.year &&
-          b.date.month == selectedDay.month &&
-          b.date.day == selectedDay.day;
+      final dayOnly = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+      final start = DateTime(b.startDate.year, b.startDate.month, b.startDate.day);
+      final end = DateTime(b.endDate.year, b.endDate.month, b.endDate.day);
+      return !dayOnly.isBefore(start) && !dayOnly.isAfter(end);
     }).toList();
 
     final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDay);

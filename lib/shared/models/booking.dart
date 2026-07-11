@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class Booking {
   final String bookingId;
   final String vendorId;
@@ -173,5 +175,25 @@ class Booking {
     }
     // Default capacity if missing
     return 'N/A';
+  }
+
+  List<Map<String, String>> parseGeneratorItems() {
+    return generators.map((genId) {
+      final match = RegExp(r'(\d+)kva', caseSensitive: false).firstMatch(genId);
+      String capacityVal = match != null ? '${match.group(1)} kVA' : 'N/A';
+      if (capacityVal == 'N/A' && generators.length == 1) {
+        capacityVal = capacity;
+      }
+      return {'id': genId, 'capacity': capacityVal};
+    }).toList();
+  }
+
+  String formatBookingDate() {
+    final start = startDate;
+    final end = endDate;
+    if (start.year == end.year && start.month == end.month && start.day == end.day) {
+      return DateFormat('yyyy-MM-dd').format(start);
+    }
+    return '${DateFormat('MMM d').format(start)} – ${DateFormat('MMM d, yyyy').format(end)}';
   }
 }

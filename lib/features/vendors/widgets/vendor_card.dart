@@ -11,9 +11,6 @@ class VendorCard extends StatelessWidget {
   /// The vendor information to display.
   final Vendor vendor;
 
-  /// Optional callback when vertical actions dropdown is clicked.
-  final VoidCallback? onMorePressed;
-
   /// Optional callback when swipe-to-edit is triggered.
   final VoidCallback? onModify;
 
@@ -24,7 +21,6 @@ class VendorCard extends StatelessWidget {
   const VendorCard({
     super.key,
     required this.vendor,
-    this.onMorePressed,
     this.onModify,
     this.onDelete,
   });
@@ -92,13 +88,6 @@ class VendorCard extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                onPressed: onMorePressed,
-                                icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
                               ),
                             ],
                           ),
