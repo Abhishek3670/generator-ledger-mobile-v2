@@ -27,6 +27,29 @@ class BookingRepository {
     );
   }
 
+  Future<List<Booking>> getVendorBookings(String vendorId) async {
+    return _apiClient.get<List<Booking>>(
+      '/api/vendors/$vendorId/bookings',
+      fromJson: (json) => _parseVendorBookingsResponse(json),
+    );
+  }
+
+  List<Booking> _parseVendorBookingsResponse(dynamic json) {
+    final rawMap = json as Map<String, dynamic>;
+    final vendorId = rawMap['vendor_id']?.toString() ?? '';
+    final vendorName = rawMap['vendor_name']?.toString() ?? '';
+    
+    final bookingsRaw = rawMap['bookings'] as List<dynamic>? ?? [];
+    return bookingsRaw
+        .map((item) {
+          final itemMap = Map<String, dynamic>.from(item as Map);
+          itemMap.putIfAbsent('vendor_id', () => vendorId);
+          itemMap.putIfAbsent('vendor_name', () => vendorName);
+          return Booking.fromMap(itemMap);
+        })
+        .toList();
+  }
+
   Future<Booking> createBooking(Booking booking) async {
     return _apiClient.post<Booking>(
       bookingsPath,

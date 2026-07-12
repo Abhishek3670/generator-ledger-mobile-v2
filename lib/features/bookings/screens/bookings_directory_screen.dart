@@ -85,53 +85,54 @@ class _BookingsDirectoryScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Vendor Groups List
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: vendors.length,
-          separatorBuilder: (context, index) {
-            final vendor = vendors[index];
-            final vendorBookings = filteredBookings
-                .where((b) => b.vendorId == vendor.id)
-                .toList();
-            return vendorBookings.isEmpty
-                ? const SizedBox.shrink()
-                : const SizedBox(height: 20);
-          },
-          itemBuilder: (context, index) {
-            final vendor = vendors[index];
-            final vendorBookings = filteredBookings
-                .where((b) => b.vendorId == vendor.id)
-                .toList();
+        for (final vendor in vendors)
+          Consumer(
+            builder: (context, ref, child) {
+              final vendorBookingsState = ref.watch(vendorBookingsProvider(vendor.id));
+              return vendorBookingsState.when(
+                data: (bookings) {
+                  final filtered = bookings.where((booking) {
+                    if (_searchQuery.isEmpty) return true;
+                    return booking.vendorName.toLowerCase().contains(_searchQuery) ||
+                        booking.vendorId.toLowerCase().contains(_searchQuery) ||
+                        booking.generatorId.toLowerCase().contains(_searchQuery);
+                  }).toList();
 
-            if (vendorBookings.isEmpty) {
-              return const SizedBox.shrink();
-            }
+                  if (filtered.isEmpty) return const SizedBox.shrink();
 
-            return VendorBookingGroup(
-              vendor: vendor,
-              bookings: vendorBookings,
-              slidableResetCounter: _slidableResetCounter,
-              onBookingTap: (booking) {
-                setState(() {
-                  _editingBooking = booking;
-                });
-              },
-              onModify: (booking) {
-                setState(() {
-                  _editingBooking = booking;
-                });
-              },
-              onDelete: (booking) {
-                setState(() {
-                  _selectedBookingForCancel = booking;
-                  _showCancelModal = true;
-                });
-              },
-            );
-          },
-        ),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: VendorBookingGroup(
+                      vendor: vendor,
+                      bookings: filtered,
+                      slidableResetCounter: _slidableResetCounter,
+                      onBookingTap: (booking) {
+                        setState(() {
+                          _editingBooking = booking;
+                        });
+                      },
+                      onModify: (booking) {
+                        setState(() {
+                          _editingBooking = booking;
+                        });
+                      },
+                      onDelete: (booking) {
+                        setState(() {
+                          _selectedBookingForCancel = booking;
+                          _showCancelModal = true;
+                        });
+                      },
+                    ),
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.only(bottom: 20.0),
+                  child: SkeletonCard(height: 120),
+                ),
+                error: (error, stack) => const SizedBox.shrink(),
+              );
+            },
+          ),
 
         // Empty State
         if (filteredBookings.isEmpty)
@@ -192,6 +193,10 @@ class _BookingsDirectoryScreenState
             children: [
             RefreshIndicator(
               onRefresh: () async {
+                ref.invalidate(bookingProvider);
+                for (final vendor in vendors) {
+                  ref.invalidate(vendorBookingsProvider(vendor.id));
+                }
                 await ref.read(bookingProvider.notifier).loadBookings();
               },
               child: SingleChildScrollView(

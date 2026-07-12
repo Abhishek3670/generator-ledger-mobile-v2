@@ -6,6 +6,7 @@ import 'package:ledger/core/providers/vendor_provider.dart';
 import 'package:ledger/data/mock/mock_bookings.dart';
 import 'package:ledger/data/mock/mock_vendors.dart';
 import 'package:ledger/data/repositories/booking_repository.dart';
+import 'package:ledger/shared/models/booking.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/screens/bookings_directory_screen.dart';
 import 'package:ledger/features/bookings/widgets/vendor_booking_group.dart';
@@ -103,5 +104,10 @@ class _FakeBookingRepository extends BookingRepository {
     String? status,
   }) async {
     return List.of(mockBookings);
+  }
+
+  @override
+  Future<List<Booking>> getVendorBookings(String vendorId) async {
+    return mockBookings.where((b) => b.vendorId == vendorId).toList();
   }
 }
