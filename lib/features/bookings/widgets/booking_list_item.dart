@@ -55,7 +55,7 @@ class BookingListItem extends StatelessWidget {
                       style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
                     ),
                     StatusBadge(
-                      label: booking.status.toUpperCase(),
+                      label: isConfirmed ? '' : booking.status.toUpperCase(),
                       type: statusType,
                       iconOnly: isConfirmed,
                     ),
@@ -64,7 +64,7 @@ class BookingListItem extends StatelessWidget {
                 const SizedBox(height: 6),
                 ...generatorItems.map((item) {
                   final genId = item['id'] ?? '';
-                  final isEmergency = genId.toUpperCase().contains('HA');
+                  final isEmergency = genId.toUpperCase().contains('EMERGENCY') || genId.toUpperCase().contains('HA');
                   final itemColor = isEmergency ? AppColors.danger : AppColors.primary;
                   final capacityColor = isEmergency ? AppColors.danger : AppColors.textSecondary;
 

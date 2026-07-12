@@ -86,7 +86,7 @@ class StatsGrid extends StatelessWidget {
       borderRadius: AppDimensions.functionalRadius,
       backgroundColor: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
