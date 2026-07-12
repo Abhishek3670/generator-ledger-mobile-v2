@@ -137,22 +137,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API request authentication with Bearer tokens
 - Input validation on all forms
 
+## [1.0.1] - 2026-07-12
+
+### M13 Post-Launch Remediation (Batch 1 + Batch 2)
+
+#### Fixed
+- **Dashboard stat cards** uneven height when category breakdowns present — enforced uniform height via IntrinsicHeight + 16px padding (WO-089, WO-093, WO-094)
+- **Generator assignment toggle** inverted Switch value logic corrected (WO-089)
+- **Vendor 3-dot menu** removed, swipe state no longer persists across navigation (WO-090)
+- **Calendar date-range counting** — bookings spanning multiple days now counted on every day in range (WO-091)
+- **Booking list display** — per-generator capacity shown, date ranges displayed, vendor sort applied (WO-092)
+- **Billing buttons** — replaced text labels ("PRINT"/"LOAD") with icon-only buttons (Icons.print/Icons.download), moved inline with "Include Grand Total" checkbox (WO-096)
+- **Status badge** — "CONFIRMED" text removed, replaced with ✓ icon-only pill badge (WO-095)
+
+#### Changed
+- **Booking list** now groups gensets by individual per-item `start_dt` instead of showing all generators under a single date range (WO-095, WO-097)
+- **Booking data source** switched from `/api/bookings` (minimal) to `/api/vendors/{id}/bookings` (full items with per-item dates) via new `vendorBookingsProvider` (WO-097)
+- **Emergency gensets** rendered in red text using `is_emergency` flag from API (WO-095)
+- **Dashboard stat cards** now show category breakdowns: gensets by type (retailer + permanent + emergency), vendors by type (retailer + rental) (WO-093)
+
+#### Added
+- `BookingItem` data model preserving per-item `start_dt`, `is_emergency`, `capacity_kva` (WO-097)
+- `Booking.groupItemsByDate()` method for date-grouped rendering (WO-097)
+- `vendorBookingsProvider` Riverpod family provider for per-vendor API calls (WO-097)
+- `BookingRepository.getVendorBookings()` calling `/api/vendors/{id}/bookings` (WO-097)
+
+#### Technical
+- 142 automated tests passing
+- Flutter analyze: 0 issues
+- All changes on `release/v1.0.0` branch
+
 ## [Unreleased]
 
-### Planned for M13-PostLaunch
-- Multi-generator booking redesign with proper edit flow
+### Planned
+- Empty states & onboarding (ON HOLD per CEO decision)
 - PDF/CSV export functionality for billing
 - Enhanced offline mode with create/update support
 - Dark mode support
 - Push notifications for booking reminders
 - Advanced filtering and search
 - Performance optimizations
-- Analytics dashboard enhancements
 
 ---
 
 ## Version History
 
+- **1.0.1** (2026-07-12) - Post-launch remediation (9 fixes across 2 batches)
 - **1.0.0** (2026-07-07) - Initial production release ("Genesis")
 - **1.0.0-rc.1** (2026-07-07) - Release candidate 1
 
@@ -166,4 +196,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[1.0.0]: https://github.com/your-org/generator-ledger-mobile-v2/releases/tag/v1.0.0
+[1.0.1]: https://github.com/Abhishek3670/generator-ledger-mobile-v2/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Abhishek3670/generator-ledger-mobile-v2/releases/tag/v1.0.0
