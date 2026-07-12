@@ -189,11 +189,6 @@ class Booking {
   }
 
   String formatBookingDate() {
-    final start = startDate;
-    final end = endDate;
-    if (start.year == end.year && start.month == end.month && start.day == end.day) {
-      return DateFormat('yyyy-MM-dd').format(start);
-    }
-    return '${DateFormat('MMM d').format(start)} – ${DateFormat('MMM d, yyyy').format(end)}';
+    return DateFormat('yyyy-MM-dd').format(startDate);
   }
 }
