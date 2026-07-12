@@ -438,12 +438,6 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
                                   Tooltip(
                                     message: 'Print Invoice',
                                     child: OutlinedButton(
