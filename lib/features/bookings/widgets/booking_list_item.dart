@@ -64,7 +64,17 @@ class BookingListItem extends StatelessWidget {
                 const SizedBox(height: 6),
                 ...generatorItems.map((item) {
                   final genId = item['id'] ?? '';
-                  final isEmergency = genId.toUpperCase().contains('EMERGENCY') || genId.toUpperCase().contains('HA');
+                  final matchingItem = booking.items.firstWhere(
+                    (it) => it.generatorId == genId,
+                    orElse: () => BookingItem(
+                      generatorId: genId,
+                      startDt: '',
+                      itemStatus: '',
+                      isEmergency: genId.toUpperCase().contains('EMERGENCY') || genId.toUpperCase().contains('HA'),
+                      remarks: '',
+                    ),
+                  );
+                  final isEmergency = matchingItem.isEmergency;
                   final itemColor = isEmergency ? AppColors.danger : AppColors.primary;
                   final capacityColor = isEmergency ? AppColors.danger : AppColors.textSecondary;
 

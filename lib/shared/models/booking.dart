@@ -1,5 +1,53 @@
 import 'package:intl/intl.dart';
 
+class BookingItem {
+  final String generatorId;
+  final int? capacityKva;
+  final String startDt;  // "2026-04-19" — the per-item date
+  final String? endDt;
+  final String itemStatus;
+  final bool isEmergency;
+  final String remarks;
+
+  BookingItem({
+    required this.generatorId,
+    this.capacityKva,
+    required this.startDt,
+    this.endDt,
+    required this.itemStatus,
+    required this.isEmergency,
+    required this.remarks,
+  });
+
+  factory BookingItem.fromMap(Map<String, dynamic> map) {
+    final startDtRaw = (map['start_dt'] ?? map['startDt'] ?? '').toString();
+    final isEmergency = map['is_emergency'] == true || map['inventory_type'] == 'emergency';
+    final capacityKva = map['capacity_kva'] is num ? (map['capacity_kva'] as num).toInt() : null;
+
+    return BookingItem(
+      generatorId: (map['generator_id'] ?? '').toString(),
+      capacityKva: capacityKva,
+      startDt: startDtRaw,
+      endDt: (map['end_dt'] ?? map['endDt'] ?? '').toString(),
+      itemStatus: (map['item_status'] ?? map['status'] ?? '').toString(),
+      isEmergency: isEmergency,
+      remarks: (map['remarks'] ?? '').toString(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'generator_id': generatorId,
+      'capacity_kva': capacityKva,
+      'start_dt': startDt,
+      'end_dt': endDt,
+      'item_status': itemStatus,
+      'is_emergency': isEmergency,
+      'remarks': remarks,
+    };
+  }
+}
+
 class Booking {
   final String bookingId;
   final String vendorId;
@@ -10,6 +58,7 @@ class Booking {
   final String status;
   final String notes;
   final String capacity;
+  final List<BookingItem> items;
 
   Booking({
     required String id,
@@ -21,6 +70,7 @@ class Booking {
     required this.status,
     this.notes = '',
     DateTime? endDate,
+    this.items = const [],
   }) : bookingId = id,
        generators = [generatorId],
        startDate = date,
@@ -40,6 +90,7 @@ class Booking {
     required this.status,
     required this.notes,
     required this.capacity,
+    this.items = const [],
   });
 
   Booking copyWith({
@@ -53,6 +104,7 @@ class Booking {
     DateTime? endDate,
     String? status,
     String? notes,
+    List<BookingItem>? items,
   }) {
     return Booking.withGenerators(
       bookingId: id ?? bookingId,
@@ -64,6 +116,7 @@ class Booking {
       status: status ?? this.status,
       notes: notes ?? this.notes,
       capacity: capacity ?? this.capacity,
+      items: items ?? this.items,
     );
   }
 
@@ -71,6 +124,7 @@ class Booking {
     // First, try to parse from new 'items' array format
     List<String> generators = [];
     double totalCapacity = 0.0;
+    List<BookingItem> itemsList = [];
     
     final items = map['items'];
     if (items is List && items.isNotEmpty) {
@@ -84,6 +138,7 @@ class Booking {
           if (capacity is num) {
             totalCapacity += capacity.toDouble();
           }
+          itemsList.add(BookingItem.fromMap(item));
         }
       }
     }
@@ -134,6 +189,7 @@ class Booking {
       status: (map['status'] ?? 'pending').toString(),
       notes: (map['notes'] ?? '').toString(),
       capacity: capacityStr,
+      items: itemsList,
     );
   }
 
@@ -148,6 +204,7 @@ class Booking {
       'status': status,
       'notes': notes,
       'capacity': capacity,
+      'items': items.map((i) => i.toMap()).toList(),
     };
   }
 
@@ -190,5 +247,38 @@ class Booking {
 
   String formatBookingDate() {
     return DateFormat('yyyy-MM-dd').format(startDate);
+  }
+
+  Map<String, List<BookingItem>> groupItemsByDate() {
+    if (items.isEmpty) {
+      final dateKey = DateFormat('yyyy-MM-dd').format(startDate);
+      final List<BookingItem> syntheticItems = generators.map((genId) {
+        final match = RegExp(r'(\d+)kva', caseSensitive: false).firstMatch(genId);
+        int? cap;
+        if (match != null) {
+          cap = int.tryParse(match.group(1)!);
+        }
+        final isEmergency = genId.toUpperCase().contains('EMERGENCY') || genId.toUpperCase().contains('HA');
+        return BookingItem(
+          generatorId: genId,
+          capacityKva: cap,
+          startDt: dateKey,
+          itemStatus: status,
+          isEmergency: isEmergency,
+          remarks: notes,
+        );
+      }).toList();
+      return {dateKey: syntheticItems};
+    }
+
+    final grouped = <String, List<BookingItem>>{};
+    for (final item in items) {
+      if (item.startDt.isEmpty) continue;
+      final dateKey = item.startDt.split(' ')[0];
+      grouped.putIfAbsent(dateKey, () => []).add(item);
+    }
+    return Map.fromEntries(
+      grouped.entries.toList()..sort((a, b) => a.key.compareTo(b.key))
+    );
   }
 }

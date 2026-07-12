@@ -42,6 +42,33 @@ class VendorBookingGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     if (bookings.isEmpty) return const SizedBox.shrink();
 
+    final List<Booking> dateGroupBookings = [];
+    for (final booking in bookings) {
+      final grouped = booking.groupItemsByDate();
+      for (final entry in grouped.entries) {
+        final dateKey = entry.key;
+        final dateItems = entry.value;
+        final date = DateTime.tryParse(dateKey) ?? booking.startDate;
+
+        final dateGenerators = dateItems.map((item) => item.generatorId).toList();
+        final double dateCapacityKva = dateItems.fold(0.0, (sum, item) => sum + (item.capacityKva ?? 0.0));
+        final isWhole = dateCapacityKva.truncateToDouble() == dateCapacityKva;
+        final dateCapacityStr = '${dateCapacityKva.toStringAsFixed(isWhole ? 0 : 1)} kVA';
+
+        final distinctStatuses = dateItems.map((item) => item.itemStatus.trim()).where((s) => s.isNotEmpty).toSet();
+        final dateStatus = distinctStatuses.length == 1 ? distinctStatuses.first : booking.status;
+
+        dateGroupBookings.add(booking.copyWith(
+          generators: dateGenerators,
+          capacity: dateCapacityStr,
+          date: date,
+          endDate: date,
+          status: dateStatus,
+          items: dateItems,
+        ));
+      }
+    }
+
     return DarkHeaderCard(
       title: vendor.name,
       action: Text(
@@ -53,15 +80,15 @@ class VendorBookingGroup extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: List.generate(bookings.length, (index) {
-          final booking = bookings[index];
-          final isLast = index == bookings.length - 1;
+        children: List.generate(dateGroupBookings.length, (index) {
+          final booking = dateGroupBookings[index];
+          final isLast = index == dateGroupBookings.length - 1;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BookingListItem(
-                key: ValueKey('${booking.id}_$slidableResetCounter'),
+                key: ValueKey('${booking.id}_${booking.startDate.millisecondsSinceEpoch}_$slidableResetCounter'),
                 booking: booking,
                 onTap: onBookingTap != null ? () => onBookingTap!(booking) : null,
                 onModify: onModify != null ? () => onModify!(booking) : null,
