@@ -5,8 +5,6 @@ import '../../../shared/models/booking.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/swipe_action_card.dart';
 
-import '../../../core/navigation/hero_tags.dart';
-
 /// A list item showing booking schedule details (date, status, generator ID, capacity).
 class BookingListItem extends StatelessWidget {
   /// The booking data for this item.
@@ -35,12 +33,13 @@ class BookingListItem extends StatelessWidget {
     final statusType = _getStatusBadgeType(booking.status);
     final dateString = booking.formatBookingDate();
     final generatorItems = booking.parseGeneratorItems();
+    final isConfirmed = booking.status.toLowerCase() == 'confirmed';
 
     final cardContent = GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Hero(
-        tag: HeroTags.bookingCard(booking.id),
+        tag: 'booking-card-${booking.id}-${booking.startDate.millisecondsSinceEpoch}',
         child: Material(
           color: Colors.transparent,
           child: Padding(
@@ -58,29 +57,37 @@ class BookingListItem extends StatelessWidget {
                     StatusBadge(
                       label: booking.status.toUpperCase(),
                       type: statusType,
+                      iconOnly: isConfirmed,
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                ...generatorItems.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: RichText(
-                    text: TextSpan(
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
-                      children: [
-                        TextSpan(
-                          text: item['id'],
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        const TextSpan(text: ' '),
-                        TextSpan(
-                          text: '(${item['capacity']})',
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                        ),
-                      ],
+                ...generatorItems.map((item) {
+                  final genId = item['id'] ?? '';
+                  final isEmergency = genId.toUpperCase().contains('HA');
+                  final itemColor = isEmergency ? AppColors.danger : AppColors.primary;
+                  final capacityColor = isEmergency ? AppColors.danger : AppColors.textSecondary;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: RichText(
+                      text: TextSpan(
+                        style: AppTypography.bodyMedium.copyWith(color: itemColor),
+                        children: [
+                          TextSpan(
+                            text: genId,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                          const TextSpan(text: ' '),
+                          TextSpan(
+                            text: '(${item['capacity']})',
+                            style: AppTypography.bodyMedium.copyWith(color: capacityColor),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                )),
+                  );
+                }),
               ],
             ),
           ),
@@ -89,7 +96,7 @@ class BookingListItem extends StatelessWidget {
     );
 
     return SwipeActionCard(
-      itemId: booking.id,
+      itemId: '${booking.id}_${booking.startDate.millisecondsSinceEpoch}',
       onModify: onModify,
       onDelete: onDelete,
       deleteLabel: 'Cancel',

@@ -40,36 +40,39 @@ class StatsGrid extends StatelessWidget {
     final vendorRetailer = vendorsByCategory?['retailer'] ?? 0;
     final vendorRental = vendorsByCategory?['rental'] ?? 0;
 
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            label: 'Bookings',
-            value: '$totalBookings',
-            subtext: '$totalBookings confirmed',
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _buildStatCard(
+              label: 'Bookings',
+              value: '$totalBookings',
+              subtext: '$totalBookings confirmed',
+            ),
           ),
-        ),
-        const SizedBox(width: AppDimensions.spacingXs),
-        Expanded(
-          child: _buildStatCard(
-            label: 'Gensets',
-            value: '$totalGensets',
-            subtext: generatorsByCategory != null
-                ? '$totalGensets active\n($genRetailer + $genPermanent + $genEmergency)'
-                : '$totalGensets active',
+          const SizedBox(width: AppDimensions.spacingXs),
+          Expanded(
+            child: _buildStatCard(
+              label: 'Gensets',
+              value: '$totalGensets',
+              subtext: generatorsByCategory != null
+                  ? '$totalGensets active\n($genRetailer + $genPermanent + $genEmergency)'
+                  : '$totalGensets active',
+            ),
           ),
-        ),
-        const SizedBox(width: AppDimensions.spacingXs),
-        Expanded(
-          child: _buildStatCard(
-            label: 'Vendors',
-            value: '$totalVendors',
-            subtext: vendorsByCategory != null
-                ? '$totalVendors partners\n($vendorRetailer + $vendorRental)'
-                : '$totalVendors partners',
+          const SizedBox(width: AppDimensions.spacingXs),
+          Expanded(
+            child: _buildStatCard(
+              label: 'Vendors',
+              value: '$totalVendors',
+              subtext: vendorsByCategory != null
+                  ? '$totalVendors partners\n($vendorRetailer + $vendorRental)'
+                  : '$totalVendors partners',
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

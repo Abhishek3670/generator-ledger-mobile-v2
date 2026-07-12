@@ -35,11 +35,15 @@ class StatusBadge extends StatelessWidget {
   /// The type of status, determining color palette and leading icon.
   final StatusBadgeType type;
 
+  /// Whether to display only the icon without text.
+  final bool iconOnly;
+
   /// Creates a [StatusBadge].
   const StatusBadge({
     super.key,
     required this.label,
     required this.type,
+    this.iconOnly = false,
   });
 
   @override
@@ -70,8 +74,8 @@ class StatusBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
+      padding: EdgeInsets.symmetric(
+        horizontal: iconOnly ? 6.0 : AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
@@ -82,15 +86,17 @@ class StatusBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: textColor),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppTypography.labelCaps.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
+          if (!iconOnly) ...[
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: AppTypography.labelCaps.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

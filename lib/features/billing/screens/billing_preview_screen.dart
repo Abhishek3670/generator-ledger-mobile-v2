@@ -444,41 +444,55 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  OutlinedButton(
-                                    onPressed: () {
-                                      // Mock print action
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Print initiated'),
+                                  Tooltip(
+                                    message: 'Print Invoice',
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        // Mock print action
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Print initiated'),
+                                          ),
+                                        );
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(
+                                          color: AppColors.border,
                                         ),
-                                      );
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(
-                                        color: AppColors.border,
+                                        shape: const StadiumBorder(),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
                                       ),
-                                      shape: const StadiumBorder(),
-                                    ),
-                                    child: Text(
-                                      'PRINT',
-                                      style: AppTypography.labelCaps.copyWith(
+                                      child: const Icon(
+                                        Icons.print,
+                                        size: 18,
                                         color: AppColors.textSecondary,
+                                        semanticLabel: 'Print',
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  ElevatedButton(
-                                    onPressed: _onLoadButtonPressed,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      shape: const StadiumBorder(),
-                                    ),
-                                    child: Text(
-                                      'LOAD',
-                                      style: AppTypography.labelCaps.copyWith(
+                                  Tooltip(
+                                    message: 'Load Invoice',
+                                    child: ElevatedButton(
+                                      onPressed: _onLoadButtonPressed,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        shape: const StadiumBorder(),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.download,
+                                        size: 18,
                                         color: Colors.white,
+                                        semanticLabel: 'Load',
                                       ),
                                     ),
                                   ),

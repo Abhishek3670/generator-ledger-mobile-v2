@@ -38,9 +38,36 @@ class VendorBookingGroup extends StatelessWidget {
     this.slidableResetCounter = 0,
   });
 
+  List<DateTime> _getDatesInRange(DateTime start, DateTime end) {
+    final dates = <DateTime>[];
+    var current = DateTime(start.year, start.month, start.day);
+    final last = DateTime(end.year, end.month, end.day);
+    while (current.isBefore(last) || current.isAtSameMomentAs(last)) {
+      dates.add(current);
+      current = DateTime(current.year, current.month, current.day + 1);
+    }
+    return dates;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (bookings.isEmpty) return const SizedBox.shrink();
+
+    // Flatten multi-day bookings into individual daily bookings
+    final List<Booking> flattenedBookings = [];
+    for (final booking in bookings) {
+      final dates = _getDatesInRange(booking.startDate, booking.endDate);
+      if (dates.isEmpty) {
+        flattenedBookings.add(booking);
+      } else {
+        for (final date in dates) {
+          flattenedBookings.add(booking.copyWith(
+            date: date,
+            endDate: date,
+          ));
+        }
+      }
+    }
 
     return DarkHeaderCard(
       title: vendor.name,
@@ -53,15 +80,15 @@ class VendorBookingGroup extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: List.generate(bookings.length, (index) {
-          final booking = bookings[index];
-          final isLast = index == bookings.length - 1;
+        children: List.generate(flattenedBookings.length, (index) {
+          final booking = flattenedBookings[index];
+          final isLast = index == flattenedBookings.length - 1;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BookingListItem(
-                key: ValueKey('${booking.id}_$slidableResetCounter'),
+                key: ValueKey('${booking.id}_${booking.startDate.millisecondsSinceEpoch}_$slidableResetCounter'),
                 booking: booking,
                 onTap: onBookingTap != null ? () => onBookingTap!(booking) : null,
                 onModify: onModify != null ? () => onModify!(booking) : null,
