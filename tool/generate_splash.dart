@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:image/image.dart' as img;
 
 void main() {
-  final logoFile = File('logo.png');
+  final logoFile = File('assets/icons/app_icon.png');
   final logoBytes = logoFile.readAsBytesSync();
   final logo = img.decodeImage(logoBytes)!;
 
@@ -24,8 +24,8 @@ void main() {
   final offsetY = (splashSize ~/ 2) - (scaledLogo.height * opticalCenterRatioY).round() + 12;
   img.compositeImage(splash, scaledLogo, dstX: offsetX, dstY: offsetY);
 
-  File('splash_logo.png').writeAsBytesSync(img.encodePng(splash));
-  print('Created splash_logo.png (1920x1920, icon 500px on navy)');
+  File('assets/images/splash_logo.png').writeAsBytesSync(img.encodePng(splash));
+  print('Created assets/images/splash_logo.png');
 
   // 2. Android 12 icon: icon at 650px on 1152 navy canvas
   final iconSize = 1152;
@@ -41,6 +41,6 @@ void main() {
   final iconOffsetY = (iconSize ~/ 2) - (scaledIcon.height * iconOpticalY).round() + 12;
   img.compositeImage(iconCanvas, scaledIcon, dstX: iconOffsetX, dstY: iconOffsetY);
 
-  File('splash_icon_only.png').writeAsBytesSync(img.encodePng(iconCanvas));
-  print('Created splash_icon_only.png (1152x1152, icon 650px on navy)');
+  File('assets/images/splash_icon_only.png').writeAsBytesSync(img.encodePng(iconCanvas));
+  print('Created assets/images/splash_icon_only.png');
 }
