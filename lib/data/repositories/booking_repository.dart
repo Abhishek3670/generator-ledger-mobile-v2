@@ -82,11 +82,15 @@ class BookingRepository {
   }
 
   Future<Booking> createBooking(Booking booking) async {
-    return _apiClient.post<Booking>(
+    // Backend returns {success, booking_id, message, is_merged, total_items}
+    // not a full booking object. We return the original booking with the server-assigned ID.
+    final response = await _apiClient.post<Map<String, dynamic>>(
       bookingsPath,
       data: booking.toMap(),
-      fromJson: (json) => _parseBooking(json),
+      fromJson: (json) => json as Map<String, dynamic>,
     );
+    final serverId = response['booking_id']?.toString() ?? booking.id;
+    return booking.copyWith(id: serverId);
   }
 
   Future<Booking> updateBooking(String id, Booking booking) async {
