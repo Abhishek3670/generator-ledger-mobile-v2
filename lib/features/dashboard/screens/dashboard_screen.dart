@@ -38,7 +38,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     
     final summary = ref.watch(dashboardSummaryProvider);
     final allBookingsMap = allVendorBookingsState.valueOrNull ?? {};
-    final bookings = allBookingsMap.values.expand((list) => list).toList();
+    final seen = <String>{};
+    final bookings = allBookingsMap.values
+        .expand((list) => list)
+        .where((b) => seen.add(b.id))
+        .toList();
 
     if (bookingState.isLoading || allVendorBookingsState.isLoading || generatorState.isLoading || vendorState.isLoading) {
       return const Scaffold(

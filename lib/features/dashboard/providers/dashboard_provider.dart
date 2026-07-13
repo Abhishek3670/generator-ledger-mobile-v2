@@ -22,7 +22,11 @@ class DashboardSummary {
 
 final dashboardSummaryProvider = Provider<DashboardSummary>((ref) {
   final allVendorBookings = ref.watch(allVendorBookingsProvider).valueOrNull ?? {};
-  final totalBookingsCount = allVendorBookings.values.expand((list) => list).length;
+  final seen = <String>{};
+  final totalBookingsCount = allVendorBookings.values
+      .expand((list) => list)
+      .where((b) => seen.add(b.id))
+      .length;
   final generators = ref.watch(generatorProvider).valueOrNull ?? [];
   final vendors = ref.watch(vendorProvider).valueOrNull ?? [];
 
