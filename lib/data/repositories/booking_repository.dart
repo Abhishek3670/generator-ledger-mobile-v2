@@ -1,5 +1,6 @@
 import '../../core/services/api_client.dart';
 import '../../shared/models/booking.dart';
+import '../../shared/models/calendar_event.dart';
 
 class BookingRepository {
   BookingRepository({ApiClient? apiClient})
@@ -41,6 +42,43 @@ class BookingRepository {
       '/api/vendors/bookings/all',
       fromJson: (json) => _parseAllVendorBookingsResponse(json),
     );
+  }
+
+  Future<List<CalendarEvent>> getCalendarEvents() async {
+    return _apiClient.get<List<CalendarEvent>>(
+      '/api/calendar/events',
+      fromJson: (json) => (json as List)
+          .map((e) => CalendarEvent.fromMap(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Future<List<Booking>> getCalendarDayBookings(String date) async {
+    return _apiClient.get<List<Booking>>(
+      '/api/calendar/day',
+      queryParameters: {'date': date},
+      fromJson: (json) => _parseCalendarDayResponse(json),
+    );
+  }
+
+  List<Booking> _parseCalendarDayResponse(dynamic json) {
+    final rawList = json as List<dynamic>? ?? [];
+    final List<Booking> result = [];
+    
+    for (final vendorData in rawList) {
+      final vendor = vendorData as Map<String, dynamic>;
+      final vendorId = vendor['vendor_id']?.toString() ?? '';
+      final vendorName = vendor['vendor_name']?.toString() ?? '';
+      final bookingsRaw = vendor['bookings'] as List<dynamic>? ?? [];
+      
+      for (final item in bookingsRaw) {
+        final itemMap = Map<String, dynamic>.from(item as Map);
+        itemMap.putIfAbsent('vendor_id', () => vendorId);
+        itemMap.putIfAbsent('vendor_name', () => vendorName);
+        result.add(Booking.fromMap(itemMap));
+      }
+    }
+    return result;
   }
 
   Map<String, List<Booking>> _parseAllVendorBookingsResponse(dynamic json) {

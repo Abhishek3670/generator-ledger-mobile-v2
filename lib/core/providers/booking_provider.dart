@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/booking_repository.dart';
 import '../../shared/models/booking.dart';
+import '../../shared/models/calendar_event.dart';
 
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
   return BookingRepository();
@@ -23,6 +24,16 @@ final allVendorBookingsProvider =
     ) {
       return AllVendorBookingsNotifier(ref.watch(bookingRepositoryProvider));
     });
+
+final calendarEventsProvider = FutureProvider<List<CalendarEvent>>((ref) async {
+  final repo = ref.watch(bookingRepositoryProvider);
+  return repo.getCalendarEvents();
+});
+
+final calendarDayBookingsProvider = FutureProvider.family<List<Booking>, String>((ref, date) async {
+  final repo = ref.watch(bookingRepositoryProvider);
+  return repo.getCalendarDayBookings(date);
+});
 
 class AllVendorBookingsNotifier extends StateNotifier<AsyncValue<Map<String, List<Booking>>>> {
   AllVendorBookingsNotifier(this._repository) : super(const AsyncValue.loading()) {
@@ -92,6 +103,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     try {
       await _repository.createBooking(booking);
       _ref.invalidate(allVendorBookingsProvider);
+      _ref.invalidate(calendarEventsProvider);
+      _ref.invalidate(calendarDayBookingsProvider);
       await loadBookings();
     } catch (error, stackTrace) {
       _cachedBookings = previous;
@@ -111,6 +124,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     try {
       await _repository.updateBooking(booking.id, booking);
       _ref.invalidate(allVendorBookingsProvider);
+      _ref.invalidate(calendarEventsProvider);
+      _ref.invalidate(calendarDayBookingsProvider);
       await loadBookings();
     } catch (error, stackTrace) {
       _cachedBookings = previous;
@@ -142,6 +157,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
           _lastDeletedBooking = null;
           _lastDeletedIndex = null;
           _ref.invalidate(allVendorBookingsProvider);
+          _ref.invalidate(calendarEventsProvider);
+          _ref.invalidate(calendarDayBookingsProvider);
         } catch (error, stackTrace) {
           if (_lastDeletedBooking != null && _lastDeletedIndex != null) {
             _cachedBookings = List<Booking>.from(_cachedBookings)
@@ -166,6 +183,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _lastDeletedBooking = null;
       _lastDeletedIndex = null;
       _ref.invalidate(allVendorBookingsProvider);
+      _ref.invalidate(calendarEventsProvider);
+      _ref.invalidate(calendarDayBookingsProvider);
     }
   }
 }

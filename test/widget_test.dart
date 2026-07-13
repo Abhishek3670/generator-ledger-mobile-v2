@@ -19,6 +19,7 @@ import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/data/repositories/billing_repository.dart';
 import 'package:ledger/shared/models/booking.dart';
 import 'package:ledger/shared/models/billing.dart';
+import 'package:ledger/shared/models/calendar_event.dart';
 import 'package:ledger/shared/widgets/side_navigation_drawer.dart';
 
 void main() {
@@ -114,6 +115,33 @@ class _FakeBookingRepository extends BookingRepository {
     String? status,
   }) async {
     return List.of(mockBookings);
+  }
+
+  @override
+  Future<Map<String, List<Booking>>> getAllVendorBookings() async {
+    final result = <String, List<Booking>>{};
+    for (final booking in mockBookings) {
+      result.putIfAbsent(booking.vendorId, () => []).add(booking);
+    }
+    return result;
+  }
+
+  @override
+  Future<List<CalendarEvent>> getCalendarEvents() async {
+    return [
+      CalendarEvent(date: '2026-04-19', count: 1, title: '1 booking(s)'),
+      CalendarEvent(date: '2026-04-20', count: 1, title: '1 booking(s)'),
+      CalendarEvent(date: '2026-04-21', count: 1, title: '1 booking(s)'),
+      CalendarEvent(date: '2026-05-01', count: 1, title: '1 booking(s)'),
+    ];
+  }
+
+  @override
+  Future<List<Booking>> getCalendarDayBookings(String date) async {
+    return mockBookings.where((b) {
+      final bDate = b.startDate.toIso8601String().split('T')[0];
+      return bDate == date;
+    }).toList();
   }
 }
 

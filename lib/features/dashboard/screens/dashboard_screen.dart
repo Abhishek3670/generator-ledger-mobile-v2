@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
@@ -36,15 +37,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final vendorState = ref.watch(vendorProvider);
     final connectivity = ref.watch(connectivityProvider);
     
+    final calendarEventsState = ref.watch(calendarEventsProvider);
+    final selectedDateStr = DateFormat('yyyy-MM-dd').format(_selectedDay);
+    final calendarDayBookingsState = ref.watch(calendarDayBookingsProvider(selectedDateStr));
+    
     final summary = ref.watch(dashboardSummaryProvider);
-    final allBookingsMap = allVendorBookingsState.valueOrNull ?? {};
-    final seen = <String>{};
-    final bookings = allBookingsMap.values
-        .expand((list) => list)
-        .where((b) => seen.add(b.id))
-        .toList();
 
-    if (bookingState.isLoading || allVendorBookingsState.isLoading || generatorState.isLoading || vendorState.isLoading) {
+    if (bookingState.isLoading ||
+        allVendorBookingsState.isLoading ||
+        generatorState.isLoading ||
+        vendorState.isLoading ||
+        calendarEventsState.isLoading ||
+        calendarDayBookingsState.isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
@@ -113,12 +117,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       );
     }
+    if (calendarEventsState.hasError) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: ErrorScreen(
+          message: 'Error loading calendar events: ${calendarEventsState.error}',
+          onRetry: () => ref.invalidate(calendarEventsProvider),
+        ),
+      );
+    }
+    if (calendarDayBookingsState.hasError) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: ErrorScreen(
+          message: 'Error loading day bookings: ${calendarDayBookingsState.error}',
+          onRetry: () => ref.invalidate(calendarDayBookingsProvider(selectedDateStr)),
+        ),
+      );
+    }
 
     return Container(
       color: AppColors.background,
       child: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
+            ref.invalidate(calendarEventsProvider);
+            ref.invalidate(calendarDayBookingsProvider(selectedDateStr));
             await Future.wait([
               ref.read(bookingProvider.notifier).loadBookings(),
               ref.read(allVendorBookingsProvider.notifier).loadBookings(),
@@ -172,7 +196,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 CalendarView(
                   selectedDay: _selectedDay,
                   focusedDay: _focusedDay,
-                  bookings: bookings.where((b) => b.status.toLowerCase() == 'confirmed').toList(),
+                  events: calendarEventsState.valueOrNull ?? [],
                   onDaySelected: (selectedDay) {
                     setState(() {
                       _selectedDay = selectedDay;
@@ -185,7 +209,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 // 3. Daily Bookings schedule list
                 DailyBookingsList(
                   selectedDay: _selectedDay,
-                  bookings: bookings,
+                  bookings: calendarDayBookingsState.valueOrNull ?? [],
                   onViewAllPressed: () {
                     context.go('/bookings');
                   },

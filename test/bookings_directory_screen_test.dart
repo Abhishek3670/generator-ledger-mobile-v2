@@ -7,6 +7,7 @@ import 'package:ledger/data/mock/mock_bookings.dart';
 import 'package:ledger/data/mock/mock_vendors.dart';
 import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/shared/models/booking.dart';
+import 'package:ledger/shared/models/calendar_event.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/screens/bookings_directory_screen.dart';
 import 'package:ledger/features/bookings/widgets/vendor_booking_group.dart';
@@ -118,5 +119,23 @@ class _FakeBookingRepository extends BookingRepository {
       result.putIfAbsent(booking.vendorId, () => []).add(booking);
     }
     return result;
+  }
+
+  @override
+  Future<List<CalendarEvent>> getCalendarEvents() async {
+    return [
+      CalendarEvent(date: '2026-04-19', count: 1, title: '1 booking(s)'),
+      CalendarEvent(date: '2026-04-20', count: 1, title: '1 booking(s)'),
+      CalendarEvent(date: '2026-04-21', count: 1, title: '1 booking(s)'),
+      CalendarEvent(date: '2026-05-01', count: 1, title: '1 booking(s)'),
+    ];
+  }
+
+  @override
+  Future<List<Booking>> getCalendarDayBookings(String date) async {
+    return mockBookings.where((b) {
+      final bDate = b.startDate.toIso8601String().split('T')[0];
+      return bDate == date;
+    }).toList();
   }
 }
