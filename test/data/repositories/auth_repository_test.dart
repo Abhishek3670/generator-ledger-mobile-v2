@@ -42,7 +42,7 @@ void main() {
 
       await repository.logout();
 
-      expect(apiClient.lastDeletePath, AuthRepository.logoutPath);
+      expect(apiClient.lastPostPath, AuthRepository.logoutPath);
       expect(await tokenStorage.getToken(), isNull);
     });
 

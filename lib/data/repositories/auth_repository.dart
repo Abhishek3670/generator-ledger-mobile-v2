@@ -9,7 +9,7 @@ class AuthRepository {
       _tokenStorage = tokenStorage ?? TokenStorage();
 
   static const String loginPath = '/login';
-  static const String logoutPath = '/logout';
+  static const String logoutPath = '/api/logout';
   static const String verifyPath = '/auth/verify';
 
   final ApiClient _apiClient;
@@ -28,7 +28,7 @@ class AuthRepository {
 
   Future<void> logout() async {
     try {
-      await _apiClient.delete<void>(logoutPath, fromJson: (_) {});
+      await _apiClient.post<void>(logoutPath, fromJson: (_) {});
     } finally {
       await _tokenStorage.deleteToken();
     }
