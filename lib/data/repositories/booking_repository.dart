@@ -57,12 +57,13 @@ class BookingRepository {
     return _apiClient.get<List<Booking>>(
       '/api/calendar/day',
       queryParameters: {'date': date},
-      fromJson: (json) => _parseCalendarDayResponse(json),
+      fromJson: (json) => _parseCalendarDayResponse(json, date),
     );
   }
 
-  List<Booking> _parseCalendarDayResponse(dynamic json) {
-    final rawList = json as List<dynamic>? ?? [];
+  List<Booking> _parseCalendarDayResponse(dynamic json, String date) {
+    final rawMap = json as Map<String, dynamic>;
+    final rawList = rawMap['vendors'] as List<dynamic>? ?? [];
     final List<Booking> result = [];
     
     for (final vendorData in rawList) {
@@ -75,6 +76,8 @@ class BookingRepository {
         final itemMap = Map<String, dynamic>.from(item as Map);
         itemMap.putIfAbsent('vendor_id', () => vendorId);
         itemMap.putIfAbsent('vendor_name', () => vendorName);
+        itemMap.putIfAbsent('start_date', () => date);
+        itemMap.putIfAbsent('end_date', () => date);
         result.add(Booking.fromMap(itemMap));
       }
     }
