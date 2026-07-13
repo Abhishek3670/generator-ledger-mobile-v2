@@ -137,6 +137,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API request authentication with Bearer tokens
 - Input validation on all forms
 
+## [1.0.2] - 2026-07-13
+
+### Added
+- **Booking Detail View Modal** — tap a booking to see read-only details (vendor, status, dates, assigned generators), Edit button opens edit modal (WO-098)
+- **Custom app icon** — Genset amber generator logo on navy adaptive background
+- **Native splash screen** — centered logo with optical centering on navy background
+- **App renamed** from "ledger" to "Genset"
+
+### Fixed
+- **Critical: Connection pool exhaustion** — replaced 30+ per-vendor API calls with single batch endpoint `/api/vendors/bookings/all`
+- **Critical: Calendar wrong data** — now uses dedicated `/api/calendar/events` and `/api/calendar/day` endpoints (matches web exactly)
+- **Booking creation** — `toMap()` now sends proper `items[]` array matching backend's `CreateBookingRequest` schema
+- **Booking creation response** — handles `{success, booking_id}` response instead of trying to parse as full Booking
+- **Calendar day status** — injected 'confirmed' status for calendar-day bookings (endpoint only returns confirmed but had no status field)
+- **Calendar overcount** — deduplicated bookings by ID before counting
+- **Logout** — corrected endpoint from `DELETE /logout` to `POST /api/logout`
+- **Release build networking** — added INTERNET permission and cleartext traffic flag for HTTP API access
+- **Discard draft** — now clears pre-selected vendor from SharedPreferences
+
+### Changed
+- **Assets organized** into proper `assets/icons/` and `assets/images/` structure
+- **Removed unnecessary files** from repo (.docs/, planning docs, UI verification reports)
+
+### Technical
+- 143 automated tests passing
+- Flutter analyze: 0 issues
+- App icon generation via `flutter_launcher_icons`
+- Splash screen via `flutter_native_splash`
+- Optical centering with visual weight point compensation
+
 ## [1.0.1] - 2026-07-12
 
 ### M13 Post-Launch Remediation (Batch 1 + Batch 2)
@@ -182,6 +212,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **1.0.2** (2026-07-13) - Booking detail modal, calendar API fix, app branding, critical bugfixes
 - **1.0.1** (2026-07-12) - Post-launch remediation (9 fixes across 2 batches)
 - **1.0.0** (2026-07-07) - Initial production release ("Genesis")
 - **1.0.0-rc.1** (2026-07-07) - Release candidate 1
@@ -196,5 +227,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.0.2]: https://github.com/Abhishek3670/generator-ledger-mobile-v2/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Abhishek3670/generator-ledger-mobile-v2/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Abhishek3670/generator-ledger-mobile-v2/releases/tag/v1.0.0
