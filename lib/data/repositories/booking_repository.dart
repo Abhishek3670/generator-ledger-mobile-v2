@@ -78,6 +78,7 @@ class BookingRepository {
         itemMap.putIfAbsent('vendor_name', () => vendorName);
         itemMap.putIfAbsent('start_date', () => date);
         itemMap.putIfAbsent('end_date', () => date);
+        itemMap.putIfAbsent('status', () => 'confirmed');
         result.add(Booking.fromMap(itemMap));
       }
     }
