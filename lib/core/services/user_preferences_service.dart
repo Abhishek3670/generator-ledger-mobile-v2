@@ -30,6 +30,10 @@ class UserPreferencesService {
     return _prefs.getString(_lastVendorKey);
   }
 
+  Future<void> clearLastVendor() async {
+    await _prefs.remove(_lastVendorKey);
+  }
+
   Future<void> saveLastSelectedCapacities(List<String> capacities) async {
     await _prefs.setStringList(_lastCapacityKey, capacities);
   }

@@ -311,6 +311,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             onPressed: () async {
               Navigator.of(context).pop(true);
               await _draftService.clearDraft('add_booking');
+              await ref.read(userPreferencesServiceProvider).clearLastVendor();
             },
             child: const Text('Discard'),
           ),

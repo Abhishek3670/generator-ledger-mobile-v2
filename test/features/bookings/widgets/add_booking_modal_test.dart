@@ -124,6 +124,47 @@ void main() {
       expect(find.text('Capacity (kVA)'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'AddBookingModal clears last vendor preference on draft discard',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({
+        'last_selected_vendor': 'vendor_1',
+      });
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+            vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
+            generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final closeButtonFinder = find.byIcon(Icons.close);
+      expect(closeButtonFinder, findsOneWidget);
+      await tester.tap(closeButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discard Draft?'), findsOneWidget);
+
+      final discardButtonFinder = find.text('Discard');
+      expect(discardButtonFinder, findsOneWidget);
+      await tester.tap(discardButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(prefs.containsKey('last_selected_vendor'), isFalse);
+    },
+  );
 }
 
 void _dummyClose() {}
