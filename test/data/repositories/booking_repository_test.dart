@@ -71,8 +71,13 @@ void main() {
       );
 
       expect(apiClient.lastPostPath, BookingRepository.bookingsPath);
-      expect(apiClient.lastPostData, containsPair('vendor_id', 'VEN002'));
-      expect(apiClient.lastPostData, containsPair('generator_ids', ['GEN-2']));
+      final postData = apiClient.lastPostData as Map<String, dynamic>;
+      expect(postData['vendor_id'], 'VEN002');
+      final items = postData['items'] as List;
+      expect(items.length, 1);
+      final firstItem = items.first as Map<String, dynamic>;
+      expect(firstItem['generator_id'], 'GEN-2');
+      expect(firstItem['date'], '2026-05-01');
     });
 
     test('updateBooking uses PATCH and deleteBooking uses DELETE', () async {

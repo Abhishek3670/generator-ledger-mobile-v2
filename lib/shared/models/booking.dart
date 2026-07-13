@@ -194,17 +194,28 @@ class Booking {
   }
 
   Map<String, dynamic> toMap() {
+    // Build items array for the API.
+    // When creating a booking (items is empty), construct from generators + date.
+    List<Map<String, dynamic>> apiItems;
+    if (items.isNotEmpty) {
+      apiItems = items.map((i) => i.toMap()).toList();
+    } else {
+      // Construct items from generators list (used when creating bookings)
+      final capacityNum = int.tryParse(capacity.replaceAll(RegExp(r'[^0-9]'), ''));
+      apiItems = generators
+          .where((g) => g.isNotEmpty && g != 'N/A')
+          .map((genId) => {
+                'generator_id': genId,
+                if (capacityNum != null) 'capacity_kva': capacityNum,
+                'date': startDate.toIso8601String().split('T')[0],
+                'remarks': notes,
+              })
+          .toList();
+    }
+
     return {
-      'booking_id': bookingId,
       'vendor_id': vendorId,
-      'vendor_name': vendorName,
-      'generator_ids': generators,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate.toIso8601String(),
-      'status': status,
-      'notes': notes,
-      'capacity': capacity,
-      'items': items.map((i) => i.toMap()).toList(),
+      'items': apiItems,
     };
   }
 
