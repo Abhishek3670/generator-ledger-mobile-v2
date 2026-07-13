@@ -21,7 +21,8 @@ class DashboardSummary {
 }
 
 final dashboardSummaryProvider = Provider<DashboardSummary>((ref) {
-  final bookings = ref.watch(bookingProvider).valueOrNull ?? [];
+  final allVendorBookings = ref.watch(allVendorBookingsProvider).valueOrNull ?? {};
+  final totalBookingsCount = allVendorBookings.values.expand((list) => list).length;
   final generators = ref.watch(generatorProvider).valueOrNull ?? [];
   final vendors = ref.watch(vendorProvider).valueOrNull ?? [];
 
@@ -45,7 +46,7 @@ final dashboardSummaryProvider = Provider<DashboardSummary>((ref) {
   }
 
   return DashboardSummary(
-    totalBookings: bookings.length,
+    totalBookings: totalBookingsCount,
     totalGenerators: generators.length,
     totalVendors: vendors.length,
     generatorsByCategory: generatorsByCategory,

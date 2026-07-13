@@ -31,14 +31,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final bookingState = ref.watch(bookingProvider);
+    final allVendorBookingsState = ref.watch(allVendorBookingsProvider);
     final generatorState = ref.watch(generatorProvider);
     final vendorState = ref.watch(vendorProvider);
     final connectivity = ref.watch(connectivityProvider);
     
     final summary = ref.watch(dashboardSummaryProvider);
-    final bookings = bookingState.valueOrNull ?? [];
+    final allBookingsMap = allVendorBookingsState.valueOrNull ?? {};
+    final bookings = allBookingsMap.values.expand((list) => list).toList();
 
-    if (bookingState.isLoading || generatorState.isLoading || vendorState.isLoading) {
+    if (bookingState.isLoading || allVendorBookingsState.isLoading || generatorState.isLoading || vendorState.isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
@@ -80,6 +82,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       );
     }
+    if (allVendorBookingsState.hasError) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: ErrorScreen(
+          message: 'Error loading vendor bookings: ${allVendorBookingsState.error}',
+          onRetry: () => ref.read(allVendorBookingsProvider.notifier).loadBookings(),
+        ),
+      );
+    }
     if (generatorState.hasError) {
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -106,6 +117,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           onRefresh: () async {
             await Future.wait([
               ref.read(bookingProvider.notifier).loadBookings(),
+              ref.read(allVendorBookingsProvider.notifier).loadBookings(),
               ref.read(generatorProvider.notifier).loadGenerators(),
               ref.read(vendorProvider.notifier).loadVendors(),
             ]);
