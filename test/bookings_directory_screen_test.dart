@@ -110,4 +110,13 @@ class _FakeBookingRepository extends BookingRepository {
   Future<List<Booking>> getVendorBookings(String vendorId) async {
     return mockBookings.where((b) => b.vendorId == vendorId).toList();
   }
+
+  @override
+  Future<Map<String, List<Booking>>> getAllVendorBookings() async {
+    final result = <String, List<Booking>>{};
+    for (final booking in mockBookings) {
+      result.putIfAbsent(booking.vendorId, () => []).add(booking);
+    }
+    return result;
+  }
 }

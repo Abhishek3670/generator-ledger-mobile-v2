@@ -34,6 +34,37 @@ class BookingRepository {
     );
   }
 
+  /// Fetches all vendor bookings in a single batch request.
+  /// Prevents connection pool exhaustion from per-vendor calls.
+  Future<Map<String, List<Booking>>> getAllVendorBookings() async {
+    return _apiClient.get<Map<String, List<Booking>>>(
+      '/api/vendors/bookings/all',
+      fromJson: (json) => _parseAllVendorBookingsResponse(json),
+    );
+  }
+
+  Map<String, List<Booking>> _parseAllVendorBookingsResponse(dynamic json) {
+    final rawMap = json as Map<String, dynamic>;
+    final vendors = rawMap['vendors'] as List<dynamic>? ?? [];
+    final result = <String, List<Booking>>{};
+
+    for (final vendorData in vendors) {
+      final vendor = vendorData as Map<String, dynamic>;
+      final vendorId = vendor['vendor_id']?.toString() ?? '';
+      final vendorName = vendor['vendor_name']?.toString() ?? '';
+      final bookingsRaw = vendor['bookings'] as List<dynamic>? ?? [];
+
+      result[vendorId] = bookingsRaw.map((item) {
+        final itemMap = Map<String, dynamic>.from(item as Map);
+        itemMap.putIfAbsent('vendor_id', () => vendorId);
+        itemMap.putIfAbsent('vendor_name', () => vendorName);
+        return Booking.fromMap(itemMap);
+      }).toList();
+    }
+
+    return result;
+  }
+
   List<Booking> _parseVendorBookingsResponse(dynamic json) {
     final rawMap = json as Map<String, dynamic>;
     final vendorId = rawMap['vendor_id']?.toString() ?? '';

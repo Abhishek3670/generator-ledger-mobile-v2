@@ -15,30 +15,34 @@ final bookingProvider =
       return BookingNotifier(ref.watch(bookingRepositoryProvider), ref);
     });
 
-final vendorBookingsProvider =
-    StateNotifierProvider.family<VendorBookingsNotifier, AsyncValue<List<Booking>>, String>((
+/// Single batch provider that fetches ALL vendor bookings in one request.
+/// Returns Map<vendorId, List<Booking>> from /api/vendors/bookings/all.
+final allVendorBookingsProvider =
+    StateNotifierProvider<AllVendorBookingsNotifier, AsyncValue<Map<String, List<Booking>>>>((
       ref,
-      vendorId,
     ) {
-      return VendorBookingsNotifier(
-        ref.watch(bookingRepositoryProvider),
-        vendorId,
-      );
+      return AllVendorBookingsNotifier(ref.watch(bookingRepositoryProvider));
     });
 
-class VendorBookingsNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
-  VendorBookingsNotifier(this._repository, this.vendorId) : super(const AsyncValue.loading()) {
+class AllVendorBookingsNotifier extends StateNotifier<AsyncValue<Map<String, List<Booking>>>> {
+  AllVendorBookingsNotifier(this._repository) : super(const AsyncValue.loading()) {
     loadBookings();
   }
 
   final BookingRepository _repository;
-  final String vendorId;
 
   Future<void> loadBookings() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return await _repository.getVendorBookings(vendorId);
+      return await _repository.getAllVendorBookings();
     });
+  }
+
+  /// Get bookings for a specific vendor from the cached batch data.
+  List<Booking> getVendorBookings(String vendorId) {
+    final data = state.valueOrNull;
+    if (data == null) return [];
+    return data[vendorId] ?? [];
   }
 }
 
@@ -85,20 +89,13 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     _cachedBookings = [booking, ..._cachedBookings];
     state = AsyncValue.data(_cachedBookings);
 
-    final vendorNotifier = _ref.read(vendorBookingsProvider(booking.vendorId).notifier);
-    final prevVendorState = vendorNotifier.state;
-    if (prevVendorState is AsyncData<List<Booking>>) {
-      vendorNotifier.state = AsyncValue.data([booking, ...prevVendorState.value]);
-    }
-
     try {
       await _repository.createBooking(booking);
-      _ref.invalidate(vendorBookingsProvider(booking.vendorId));
+      _ref.invalidate(allVendorBookingsProvider);
       await loadBookings();
     } catch (error, stackTrace) {
       _cachedBookings = previous;
       state = AsyncValue.error(error, stackTrace);
-      vendorNotifier.state = prevVendorState;
       rethrow;
     }
   }
@@ -111,23 +108,13 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     ];
     state = AsyncValue.data(_cachedBookings);
 
-    final vendorNotifier = _ref.read(vendorBookingsProvider(booking.vendorId).notifier);
-    final prevVendorState = vendorNotifier.state;
-    if (prevVendorState is AsyncData<List<Booking>>) {
-      vendorNotifier.state = AsyncValue.data([
-        for (final existing in prevVendorState.value)
-          if (existing.id == booking.id) booking else existing,
-      ]);
-    }
-
     try {
       await _repository.updateBooking(booking.id, booking);
-      _ref.invalidate(vendorBookingsProvider(booking.vendorId));
+      _ref.invalidate(allVendorBookingsProvider);
       await loadBookings();
     } catch (error, stackTrace) {
       _cachedBookings = previous;
       state = AsyncValue.error(error, stackTrace);
-      vendorNotifier.state = prevVendorState;
       rethrow;
     }
   }
@@ -148,28 +135,19 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     _cachedBookings = List<Booking>.from(_cachedBookings)..removeAt(index);
     state = AsyncValue.data(_cachedBookings);
 
-    final vendorId = _lastDeletedBooking!.vendorId;
-    final vendorNotifier = _ref.read(vendorBookingsProvider(vendorId).notifier);
-    final prevVendorState = vendorNotifier.state;
-    if (prevVendorState is AsyncData<List<Booking>>) {
-      vendorNotifier.state = AsyncValue.data(
-        prevVendorState.value.where((b) => b.id != bookingId).toList(),
-      );
-    }
-
     _deleteTimer = Timer(const Duration(seconds: 5), () async {
       if (_lastDeletedBooking != null && _lastDeletedBooking!.id == bookingId) {
         try {
           await _repository.deleteBooking(bookingId);
           _lastDeletedBooking = null;
           _lastDeletedIndex = null;
+          _ref.invalidate(allVendorBookingsProvider);
         } catch (error, stackTrace) {
           if (_lastDeletedBooking != null && _lastDeletedIndex != null) {
             _cachedBookings = List<Booking>.from(_cachedBookings)
               ..insert(_lastDeletedIndex!.clamp(0, _cachedBookings.length), _lastDeletedBooking!);
             state = AsyncValue.data(_cachedBookings);
           }
-          vendorNotifier.state = prevVendorState;
           _lastDeletedBooking = null;
           _lastDeletedIndex = null;
           state = AsyncValue.error(error, stackTrace);
@@ -185,17 +163,9 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _cachedBookings = List<Booking>.from(_cachedBookings)
         ..insert(insertIndex, _lastDeletedBooking!);
       state = AsyncValue.data(_cachedBookings);
-
-      final vendorId = _lastDeletedBooking!.vendorId;
-      final vendorNotifier = _ref.read(vendorBookingsProvider(vendorId).notifier);
-      if (vendorNotifier.state is AsyncData<List<Booking>>) {
-        vendorNotifier.state = AsyncValue.data(
-          [...vendorNotifier.state.value!, _lastDeletedBooking!],
-        );
-      }
-
       _lastDeletedBooking = null;
       _lastDeletedIndex = null;
+      _ref.invalidate(allVendorBookingsProvider);
     }
   }
 }
