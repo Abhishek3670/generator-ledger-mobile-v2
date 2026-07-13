@@ -15,6 +15,7 @@ import '../../../shared/widgets/skeleton_loading.dart';
 import '../widgets/vendor_booking_group.dart';
 import '../modals/add_booking_modal.dart';
 import '../widgets/edit_booking_modal.dart';
+import '../modals/booking_detail_modal.dart';
 import '../providers/bookings_provider.dart';
 import '../../vendors/providers/vendors_provider.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
@@ -37,6 +38,7 @@ class _BookingsDirectoryScreenState
   bool _showAddModal = false;
   bool _showCancelModal = false;
   MockBooking? _editingBooking;
+  MockBooking? _viewingBooking;
   MockBooking? _selectedBookingForCancel;
 
   int _slidableResetCounter = 0;
@@ -108,7 +110,7 @@ class _BookingsDirectoryScreenState
                 slidableResetCounter: _slidableResetCounter,
                 onBookingTap: (booking) {
                   setState(() {
-                    _editingBooking = booking;
+                    _viewingBooking = booking;
                   });
                 },
                 onModify: (booking) {
@@ -322,6 +324,20 @@ class _BookingsDirectoryScreenState
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('${newBookings.length} booking(s) added successfully')),
                   );
+                },
+              ),
+
+            // Detail Booking Modal
+            if (_viewingBooking != null)
+              BookingDetailModal(
+                booking: _viewingBooking!,
+                onClose: () => setState(() => _viewingBooking = null),
+                onEdit: () {
+                  final b = _viewingBooking;
+                  setState(() {
+                    _viewingBooking = null;
+                    _editingBooking = b;
+                  });
                 },
               ),
 
