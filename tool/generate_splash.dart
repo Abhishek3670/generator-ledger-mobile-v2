@@ -7,35 +7,41 @@ void main() {
   final logoBytes = logoFile.readAsBytesSync();
   final logo = img.decodeImage(logoBytes)!;
 
-  // The original logo has rounded corners with dark artifacts.
-  // Crop the inner content area (skip the rounded corner edges ~60px each side)
-  // and the "Genset" text at the bottom (below ~880px)
-  final cropped = img.copyCrop(logo, x: 60, y: 60, width: 960, height: 800);
+  // The logo has transparent corners. Fill ALL pixels with low alpha
+  // with the splash background color so it blends seamlessly.
+  final navyR = 15;
+  final navyG = 23;
+  final navyB = 42;
+  final navyColor = img.ColorRgba8(navyR, navyG, navyB, 255);
 
-  // 1. Create splash image - logo centered on navy canvas, larger size
+  // Create a navy background and composite the logo on top
+  final flatLogo = img.Image(width: logo.width, height: logo.height);
+  img.fill(flatLogo, color: navyColor);
+  img.compositeImage(flatLogo, logo);
+
+  // 1. Splash image: flattened logo centered at 480px on 1920 navy canvas
   final splashSize = 1920;
   final splash = img.Image(width: splashSize, height: splashSize);
-  img.fill(splash, color: img.ColorRgba8(15, 23, 42, 255)); // #0f172a
+  img.fill(splash, color: navyColor);
 
-  // Scale cropped icon to 800px wide (bigger than before)
-  final scaledLogo = img.copyResize(cropped, width: 800);
-  final offsetX = (splashSize - scaledLogo.width) ~/ 2;
-  final offsetY = (splashSize - scaledLogo.height) ~/ 2;
+  final scaledLogo = img.copyResize(flatLogo, width: 480, height: 480);
+  final offsetX = (splashSize - 480) ~/ 2;
+  final offsetY = (splashSize - 480) ~/ 2;
   img.compositeImage(splash, scaledLogo, dstX: offsetX, dstY: offsetY);
 
   File('splash_logo.png').writeAsBytesSync(img.encodePng(splash));
-  print('Created splash_logo.png (1920x1920, clean icon, no text)');
+  print('Created splash_logo.png (1920x1920, flattened logo, no artifacts)');
 
-  // 2. Android 12 icon (needs to be square, icon-only, no artifacts)
-  final iconSize = 1152; // Android 12 recommends 1152x1152
+  // 2. Android 12 icon: flattened logo at 600px on 1152 navy canvas
+  final iconSize = 1152;
   final iconCanvas = img.Image(width: iconSize, height: iconSize);
-  img.fill(iconCanvas, color: img.ColorRgba8(15, 23, 42, 255));
+  img.fill(iconCanvas, color: navyColor);
 
-  final scaledIcon = img.copyResize(cropped, width: 720);
-  final iconOffsetX = (iconSize - scaledIcon.width) ~/ 2;
-  final iconOffsetY = (iconSize - scaledIcon.height) ~/ 2;
+  final scaledIcon = img.copyResize(flatLogo, width: 600, height: 600);
+  final iconOffsetX = (iconSize - 600) ~/ 2;
+  final iconOffsetY = (iconSize - 600) ~/ 2;
   img.compositeImage(iconCanvas, scaledIcon, dstX: iconOffsetX, dstY: iconOffsetY);
 
   File('splash_icon_only.png').writeAsBytesSync(img.encodePng(iconCanvas));
-  print('Created splash_icon_only.png (1152x1152, clean icon for Android 12)');
+  print('Created splash_icon_only.png (1152x1152, flattened logo, no artifacts)');
 }
