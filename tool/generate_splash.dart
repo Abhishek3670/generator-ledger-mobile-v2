@@ -15,8 +15,12 @@ void main() {
   img.fill(splash, color: navyColor);
 
   final scaledLogo = img.copyResize(logo, width: 500);
-  final offsetX = (splashSize - scaledLogo.width) ~/ 2;
-  final offsetY = (splashSize - scaledLogo.height) ~/ 2 - 40; // nudge up for optical center
+  // Optical center: (606, 589) on 1080px source → ratio: x=0.561, y=0.546
+  // On 1920 canvas with 500px icon: offset so optical center aligns with canvas center
+  final opticalCenterRatioX = 606 / 1080;
+  final opticalCenterRatioY = 589 / 1080;
+  final offsetX = (splashSize ~/ 2) - (scaledLogo.width * opticalCenterRatioX).round();
+  final offsetY = (splashSize ~/ 2) - (scaledLogo.height * opticalCenterRatioY).round();
   img.compositeImage(splash, scaledLogo, dstX: offsetX, dstY: offsetY);
 
   File('splash_logo.png').writeAsBytesSync(img.encodePng(splash));
@@ -28,8 +32,11 @@ void main() {
   img.fill(iconCanvas, color: navyColor);
 
   final scaledIcon = img.copyResize(logo, width: 650);
-  final iconOffsetX = (iconSize - scaledIcon.width) ~/ 2;
-  final iconOffsetY = (iconSize - scaledIcon.height) ~/ 2 - 30; // nudge up for optical center
+  // Optical center: (606, 589) on 1080px source
+  final iconOpticalX = 606 / 1080;
+  final iconOpticalY = 589 / 1080;
+  final iconOffsetX = (iconSize ~/ 2) - (scaledIcon.width * iconOpticalX).round();
+  final iconOffsetY = (iconSize ~/ 2) - (scaledIcon.height * iconOpticalY).round();
   img.compositeImage(iconCanvas, scaledIcon, dstX: iconOffsetX, dstY: iconOffsetY);
 
   File('splash_icon_only.png').writeAsBytesSync(img.encodePng(iconCanvas));
