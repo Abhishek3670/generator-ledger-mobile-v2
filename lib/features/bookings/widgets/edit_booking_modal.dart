@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ledger/core/providers/generator_provider.dart';
+import 'package:ledger/core/providers/vendor_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
-import '../../../data/mock/mock_vendors.dart';
-import '../../../data/mock/mock_generators.dart';
-import '../../../shared/widgets/modal_scaffold.dart';
+import '../../../shared/models/booking.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
 
-class EditBookingModal extends StatefulWidget {
-  final MockBooking booking;
+class EditBookingModal extends ConsumerStatefulWidget {
+  final Booking booking;
   final VoidCallback onClose;
-  final Function(MockBooking) onSave;
+  final Function(Booking) onSave;
   final bool isVisible;
 
   const EditBookingModal({
@@ -23,10 +24,10 @@ class EditBookingModal extends StatefulWidget {
   });
 
   @override
-  State<EditBookingModal> createState() => _EditBookingModalState();
+  ConsumerState<EditBookingModal> createState() => _EditBookingModalState();
 }
 
-class _EditBookingModalState extends State<EditBookingModal> {
+class _EditBookingModalState extends ConsumerState<EditBookingModal> {
   final _formKey = GlobalKey<FormState>();
   String _assignmentMode = 'id';
   late String _selectedCapacity;
@@ -86,12 +87,40 @@ class _EditBookingModalState extends State<EditBookingModal> {
 
   @override
   Widget build(BuildContext context) {
-    return ModalScaffold(
-      title: 'EDIT BOOKING',
-      isVisible: widget.isVisible,
-      onClose: widget.onClose,
-      body: Form(
-        key: _formKey,
+    final vendors = ref.watch(vendorProvider).valueOrNull ?? [];
+    final generators = ref.watch(generatorProvider).valueOrNull ?? [];
+
+    // Ensure initial/selected values are in the options list to avoid DropdownButton assertion crashes
+    final vendorIds = vendors.map((v) => v.id).toSet();
+    if (_selectedVendorId != null) {
+      vendorIds.add(_selectedVendorId!);
+    }
+
+    final generatorIds = generators.map((g) => g.id).toSet();
+    if (_selectedGeneratorId != null) {
+      generatorIds.add(_selectedGeneratorId!);
+    }
+
+    final vendorDropdownItems = vendorIds.map((id) {
+      final match = vendors.where((v) => v.id == id);
+      final name = match.isNotEmpty ? match.first.name : id;
+      return DropdownMenuItem<String>(
+        value: id,
+        child: Text(name, style: AppTypography.bodyMedium),
+      );
+    }).toList();
+
+    final generatorDropdownItems = generatorIds.map((id) {
+      return DropdownMenuItem<String>(
+        value: id,
+        child: Text(id, style: AppTypography.bodyMedium),
+      );
+    }).toList();
+
+    if (!widget.isVisible) return const SizedBox.shrink();
+
+    final formContent = Form(
+      key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -99,15 +128,11 @@ class _EditBookingModalState extends State<EditBookingModal> {
             _buildFieldLabel('VENDOR'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _selectedVendorId,
               hint: Text('Select Vendor', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
               decoration: _inputDecoration(),
-              items: mockVendors.map((vendor) {
-                return DropdownMenuItem<String>(
-                  value: vendor.id,
-                  child: Text(vendor.name, style: AppTypography.bodyMedium),
-                );
-              }).toList(),
+              items: vendorDropdownItems,
               onChanged: (value) {
                 setState(() {
                   _selectedVendorId = value;
@@ -158,20 +183,18 @@ class _EditBookingModalState extends State<EditBookingModal> {
               _buildFieldLabel('GENERATOR'),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _selectedGeneratorId,
                 hint: Text('Select Generator', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
                 decoration: _inputDecoration(),
-                items: mockGenerators.map((gen) {
-                  return DropdownMenuItem<String>(
-                    value: gen.id,
-                    child: Text(gen.id, style: AppTypography.bodyMedium),
-                  );
-                }).toList(),
+                items: generatorDropdownItems,
                 onChanged: (value) {
                   setState(() {
                     _selectedGeneratorId = value;
-                    final match = mockGenerators.firstWhere((g) => g.id == value);
-                    _capacityController.text = match.capacity;
+                    final match = generators.where((g) => g.id == value);
+                    if (match.isNotEmpty) {
+                      _capacityController.text = match.first.capacity;
+                    }
                   });
                 },
                 validator: (value) => _assignmentMode == 'id' && value == null ? 'Please select a generator' : null,
@@ -273,50 +296,52 @@ class _EditBookingModalState extends State<EditBookingModal> {
             ),
           ],
         ),
-      ),
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: widget.onClose,
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                final selectedVendor = mockVendors.firstWhere((v) => v.id == _selectedVendorId);
-                String genId = _selectedGeneratorId ?? 'AUTO-ASSIGN';
-                if (_assignmentMode == 'capacity') {
-                  final match = mockGenerators.firstWhere(
-                    (g) => g.capacity.contains(_selectedCapacity),
-                    orElse: () => mockGenerators.first,
-                  );
-                  genId = match.id;
-                }
+      );
 
-                final updatedBooking = MockBooking(
-                  id: widget.booking.id,
-                  vendorId: _selectedVendorId!,
-                  vendorName: selectedVendor.name,
-                  generatorId: genId,
-                  capacity: _capacityController.text.trim(),
-                  date: _startDate,
-                  status: widget.booking.status,
-                );
-                widget.onSave(updatedBooking);
+    return DraggableFormSheet(
+      title: 'Edit Booking',
+      category: 'bookings',
+      onClose: widget.onClose,
+      footer: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState?.validate() ?? false) {
+              final matchVendor = vendors.where((v) => v.id == _selectedVendorId);
+              final vendorName = matchVendor.isNotEmpty ? matchVendor.first.name : (_selectedVendorId ?? '');
+
+              String genId = _selectedGeneratorId ?? 'AUTO-ASSIGN';
+              if (_assignmentMode == 'capacity') {
+                final matchGen = generators.where((g) => g.capacity.contains(_selectedCapacity));
+                if (matchGen.isNotEmpty) {
+                  genId = matchGen.first.id;
+                } else if (generators.isNotEmpty) {
+                  genId = generators.first.id;
+                }
               }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+
+              final updatedBooking = Booking(
+                id: widget.booking.id,
+                vendorId: _selectedVendorId!,
+                vendorName: vendorName,
+                generatorId: genId,
+                capacity: _capacityController.text.trim(),
+                date: _startDate,
+                status: widget.booking.status,
+              );
+              widget.onSave(updatedBooking);
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-        ],
+          child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+        ),
       ),
+      child: formContent,
     );
   }
 

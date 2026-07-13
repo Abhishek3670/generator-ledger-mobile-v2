@@ -23,7 +23,7 @@ void main() {
       ),
     ));
 
-    expect(find.text('EDIT VENDOR'), findsOneWidget);
+    expect(find.text('Edit Vendor'), findsOneWidget);
     expect(find.text('NAME'), findsOneWidget);
     expect(find.text('LOCATION'), findsOneWidget);
     expect(find.text('PHONE'), findsOneWidget);

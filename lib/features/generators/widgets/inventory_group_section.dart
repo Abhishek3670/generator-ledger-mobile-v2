@@ -22,8 +22,14 @@ class InventoryGroupSection extends StatelessWidget {
   /// Callback when a card is swiped to modify.
   final Function(MockGenerator)? onModify;
 
+  /// Callback when a card is swiped to delete.
+  final Function(MockGenerator)? onDelete;
+
   /// Callback when a card is tapped.
   final Function(MockGenerator)? onGeneratorTap;
+
+  /// Optional counter to force closing all slidable items.
+  final int slidableResetCounter;
 
   /// Creates an [InventoryGroupSection].
   const InventoryGroupSection({
@@ -33,7 +39,9 @@ class InventoryGroupSection extends StatelessWidget {
     required this.category,
     required this.generators,
     this.onModify,
+    this.onDelete,
     this.onGeneratorTap,
+    this.slidableResetCounter = 0,
   });
 
   @override
@@ -56,6 +64,7 @@ class InventoryGroupSection extends StatelessWidget {
     }
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
@@ -143,8 +152,10 @@ class InventoryGroupSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final generator = generators[index];
                 return GeneratorCard(
+                  key: ValueKey('${generator.id}_$slidableResetCounter'),
                   generator: generator,
                   onModify: onModify != null ? () => onModify!(generator) : null,
+                  onDelete: onDelete != null ? () => onDelete!(generator) : null,
                   onTap: onGeneratorTap != null ? () => onGeneratorTap!(generator) : null,
                 );
               },

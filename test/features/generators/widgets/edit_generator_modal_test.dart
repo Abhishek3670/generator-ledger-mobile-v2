@@ -23,7 +23,7 @@ void main() {
       ),
     ));
 
-    expect(find.text('EDIT GENERATOR'), findsOneWidget);
+    expect(find.text('Edit Generator'), findsOneWidget);
     expect(find.text('GENERATOR ID'), findsOneWidget);
     expect(find.text('CAPACITY (kVA)'), findsOneWidget);
     expect(find.text('TYPE'), findsOneWidget);

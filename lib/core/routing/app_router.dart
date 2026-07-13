@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/token_storage.dart';
+import '../services/deep_link_service.dart';
 import '../../shared/widgets/side_navigation_drawer.dart';
 import '../../shared/widgets/admin_bottom_nav_bar.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
@@ -17,32 +19,72 @@ import '../../features/admin/screens/integrations_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../navigation/page_transitions.dart';
 import 'route_names.dart';
+
 
 /// Full router configuration for the application.
 abstract final class AppRouter {
-  /// Simple mock authentication state toggle.
-  static bool isLoggedIn = true;
+  static final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+  static final _authRefresh = _AuthRefreshNotifier();
+  static TokenStorage tokenStorage = TokenStorage();
+
+  /// The [DeepLinkService] instance, initialized after the router is created.
+  /// Accessible so external code (e.g., main.dart) can call [init] on it.
+  static late final DeepLinkService deepLinkService;
+
+  /// Whether [deepLinkService] has been initialized.
+  static bool _deepLinkServiceInitialized = false;
+
+  /// Initialize the deep link service. Must be called once after app startup.
+  static Future<void> initDeepLinks() async {
+    if (_deepLinkServiceInitialized) return;
+    deepLinkService = DeepLinkService(router: router);
+    await deepLinkService.init();
+    _deepLinkServiceInitialized = true;
+  }
+
+  static void refreshAuthState() {
+    _authRefresh.refresh();
+  }
 
   /// Global router declaration using [GoRouter] and stateful nested navigation.
   static final router = GoRouter(
     initialLocation: '/dashboard',
-    redirect: (context, state) {
+    observers: [routeObserver],
+    refreshListenable: _authRefresh,
+    redirect: (context, state) async {
+      final token = await tokenStorage.getToken();
+      final isAuthenticated = token != null && token.isNotEmpty;
       final isLoggingIn = state.matchedLocation == '/login';
-      if (!isLoggedIn && !isLoggingIn) return '/login';
-      if (isLoggedIn && isLoggingIn) return '/dashboard';
+      if (!isAuthenticated && !isLoggingIn) return '/login';
+      if (isAuthenticated && isLoggingIn) {
+        // After login, check if a deep link arrived while unauthenticated.
+        if (_deepLinkServiceInitialized) {
+          final pending = deepLinkService.consumePendingDeepLink();
+          if (pending != null) return pending;
+        }
+        return '/dashboard';
+      }
       return null;
     },
     routes: [
       GoRoute(
         path: '/login',
         name: RouteNames.login,
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => SlideRightTransitionPage<void>(
+          key: state.pageKey,
+          swipeBack: false,
+          child: const LoginScreen(),
+        ),
       ),
       GoRoute(
         path: '/billing',
         name: RouteNames.billing,
-        builder: (context, state) => const BillingPreviewScreen(),
+        pageBuilder: (context, state) => SlideRightTransitionPage<void>(
+          key: state.pageKey,
+          child: const BillingPreviewScreen(),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -77,9 +119,12 @@ abstract final class AppRouter {
                   GoRoute(
                     path: ':id',
                     name: RouteNames.generatorDetail,
-                    builder: (context, state) {
+                    pageBuilder: (context, state) {
                       final id = state.pathParameters['id'] ?? '';
-                      return GeneratorDetailScreen(generatorId: id);
+                      return SlideRightTransitionPage<void>(
+                        key: state.pageKey,
+                        child: GeneratorDetailScreen(generatorId: id),
+                      );
                     },
                   ),
                 ],
@@ -135,6 +180,12 @@ abstract final class AppRouter {
   );
 }
 
+class _AuthRefreshNotifier extends ChangeNotifier {
+  void refresh() {
+    notifyListeners();
+  }
+}
+
 class _OperationalShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -142,7 +193,7 @@ class _OperationalShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(authProvider);
+    final currentUser = ref.watch(authProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -166,14 +217,21 @@ class _OperationalShell extends ConsumerWidget {
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/admin/health'),
-        onLogoutPressed: () {
-          AppRouter.isLoggedIn = false;
+        onLogoutPressed: () async {
+          await ref.read(authProvider.notifier).logout();
+          AppRouter.refreshAuthState();
+          if (!context.mounted) {
+            return;
+          }
           context.go('/login');
         },
       ),
       appBar: AppBar(
         centerTitle: true,
-        title: Text('Genset', style: AppTypography.headlineSmall.copyWith(color: AppColors.primary)),
+        title: Text(
+          'Genset',
+          style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -246,7 +304,7 @@ class _AdminShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(authProvider);
+    final currentUser = ref.watch(authProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -270,14 +328,21 @@ class _AdminShell extends ConsumerWidget {
         userName: currentUser?.username ?? 'Guest',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/dashboard'),
-        onLogoutPressed: () {
-          AppRouter.isLoggedIn = false;
+        onLogoutPressed: () async {
+          await ref.read(authProvider.notifier).logout();
+          AppRouter.refreshAuthState();
+          if (!context.mounted) {
+            return;
+          }
           context.go('/login');
         },
       ),
       appBar: AppBar(
         centerTitle: true,
-        title: Text('Genset', style: AppTypography.headlineSmall.copyWith(color: AppColors.primary)),
+        title: Text(
+          'Genset',
+          style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -338,5 +403,3 @@ class _AdminShell extends ConsumerWidget {
     }
   }
 }
-
-

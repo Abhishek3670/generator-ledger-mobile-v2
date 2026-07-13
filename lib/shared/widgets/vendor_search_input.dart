@@ -36,7 +36,10 @@ class _VendorSearchInputState extends ConsumerState<VendorSearchInput> {
   void initState() {
     super.initState();
     if (widget.initialVendorId != null) {
-      final vendors = ref.read(vendorProvider);
+      final vendors = ref.read(vendorProvider).valueOrNull ?? [];
+      if (vendors.isEmpty) {
+        return;
+      }
       final match = vendors.firstWhere(
         (v) => v.id == widget.initialVendorId,
         orElse: () => vendors.first,
@@ -69,9 +72,10 @@ class _VendorSearchInputState extends ConsumerState<VendorSearchInput> {
     }
 
     final query = text.toLowerCase();
-    final vendors = ref.read(vendorProvider);
+    final vendors = ref.read(vendorProvider).valueOrNull ?? [];
     final matches = vendors.where((v) {
-      return v.name.toLowerCase().contains(query) || v.id.toLowerCase().contains(query);
+      return v.name.toLowerCase().contains(query) ||
+          v.id.toLowerCase().contains(query);
     }).toList();
 
     setState(() {
@@ -91,6 +95,7 @@ class _VendorSearchInputState extends ConsumerState<VendorSearchInput> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(vendorProvider);
     final hasFocus = _focusNode.hasFocus;
 
     return Column(
@@ -126,11 +131,21 @@ class _VendorSearchInputState extends ConsumerState<VendorSearchInput> {
               style: AppTypography.bodyMedium,
               decoration: InputDecoration(
                 hintText: 'Search by vendor name or ID',
-                hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary, size: 20),
+                hintStyle: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: AppColors.textSecondary, size: 18),
+                        icon: const Icon(
+                          Icons.clear,
+                          color: AppColors.textSecondary,
+                          size: 18,
+                        ),
                         onPressed: () {
                           _controller.clear();
                           _onTextChanged('');
@@ -169,7 +184,12 @@ class _VendorSearchInputState extends ConsumerState<VendorSearchInput> {
                 final vendor = _suggestions[index];
                 return ListTile(
                   title: Text(vendor.name, style: AppTypography.bodyMedium),
-                  subtitle: Text('ID: ${vendor.id}', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+                  subtitle: Text(
+                    'ID: ${vendor.id}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                   dense: true,
                   onTap: () => _selectVendor(vendor),
                 );

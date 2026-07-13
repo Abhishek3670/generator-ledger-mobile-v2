@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/booking.dart';
 import '../../../shared/widgets/status_badge.dart';
 
 /// A compact row displaying booking details for the daily bookings list.
 class CompactBookingRow extends StatelessWidget {
   /// The booking data to display.
-  final MockBooking booking;
+  final Booking booking;
 
   /// Callback when the row is tapped.
   final VoidCallback? onTap;
