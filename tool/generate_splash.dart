@@ -16,7 +16,7 @@ void main() {
 
   final scaledLogo = img.copyResize(logo, width: 500);
   final offsetX = (splashSize - scaledLogo.width) ~/ 2;
-  final offsetY = (splashSize - scaledLogo.height) ~/ 2;
+  final offsetY = (splashSize - scaledLogo.height) ~/ 2 - 40; // nudge up for optical center
   img.compositeImage(splash, scaledLogo, dstX: offsetX, dstY: offsetY);
 
   File('splash_logo.png').writeAsBytesSync(img.encodePng(splash));
@@ -29,7 +29,7 @@ void main() {
 
   final scaledIcon = img.copyResize(logo, width: 650);
   final iconOffsetX = (iconSize - scaledIcon.width) ~/ 2;
-  final iconOffsetY = (iconSize - scaledIcon.height) ~/ 2;
+  final iconOffsetY = (iconSize - scaledIcon.height) ~/ 2 - 30; // nudge up for optical center
   img.compositeImage(iconCanvas, scaledIcon, dstX: iconOffsetX, dstY: iconOffsetY);
 
   File('splash_icon_only.png').writeAsBytesSync(img.encodePng(iconCanvas));
