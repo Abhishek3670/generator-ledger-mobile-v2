@@ -51,18 +51,6 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
           title: widget.booking.vendorName,
           category: 'EDIT BOOKING',
           onClose: widget.onClose,
-          footer: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              FloatingActionButton(
-                backgroundColor: AppColors.accent,
-                foregroundColor: AppColors.primary,
-                shape: const CircleBorder(),
-                onPressed: _openAddBookingModal,
-                child: const Icon(Icons.add),
-              ),
-            ],
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -150,19 +138,33 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
                   }
 
                   return Column(
-                    children: filteredBookings.map((booking) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: _GeneratorAssignmentCard(
-                          key: ValueKey(booking.id),
-                          booking: booking,
-                        ),
-                      );
-                    }).toList(),
+                    children: [
+                      ...filteredBookings.map((booking) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: _GeneratorAssignmentCard(
+                            key: ValueKey(booking.id),
+                            booking: booking,
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 72),
+                    ],
                   );
                 },
               ),
             ],
+          ),
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            shape: const CircleBorder(),
+            onPressed: _openAddBookingModal,
+            child: const Icon(Icons.add),
           ),
         ),
         if (_showAddBookingModal)
