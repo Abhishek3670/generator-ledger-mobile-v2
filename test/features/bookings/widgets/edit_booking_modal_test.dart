@@ -12,10 +12,10 @@ import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/data/repositories/generator_repository.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/widgets/edit_booking_modal.dart';
+import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
 import 'package:ledger/shared/models/booking.dart';
 import 'package:ledger/shared/models/calendar_event.dart';
-import 'package:ledger/shared/widgets/assignment_mode_toggle.dart';
-import 'package:ledger/shared/widgets/inline_calendar.dart';
+import 'package:ledger/shared/widgets/confirmation_dialog.dart';
 
 void main() {
   final testBooking = Booking(
@@ -29,18 +29,17 @@ void main() {
     notes: 'Initial notes',
   );
 
-  testWidgets('EditBookingModal renders successfully with prefilled values', (
+  testWidgets('EditBookingModal renders successfully with generator list and FAB', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: _providerOverrides(),
+        overrides: _providerOverrides(testBooking),
         child: MaterialApp(
           home: Scaffold(
             body: EditBookingModal(
               booking: testBooking,
               onClose: _dummyClose,
-              onSave: _dummySave,
             ),
           ),
         ),
@@ -48,38 +47,39 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Redesigned header labels
-    expect(find.text('Edit Booking'), findsOneWidget);
-    expect(find.text('VENDOR'), findsOneWidget);
-    expect(find.text('GENERATOR ASSIGNMENT'), findsOneWidget);
-    expect(find.text('BOOKING DATES'), findsOneWidget);
-    expect(find.text('OPTIONAL NOTES'), findsOneWidget);
+    // Verify Header Section
+    expect(find.text('EDIT BOOKING'), findsOneWidget);
+    expect(find.text('Mock Vendor 1'), findsOneWidget);
+    expect(find.text('April 19, 2026'), findsOneWidget);
 
-    // Verify vendor selection dropdown is present and disabled
-    final dropdowns = find.byType(DropdownButtonFormField<String>);
-    expect(dropdowns, findsNWidgets(2)); // VENDOR and GENERATOR dropdowns
+    // Verify Section Header and Search Input
+    expect(find.text('Edit Assigned Generators'), findsOneWidget);
+    final searchField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Search assigned assets...');
+    expect(searchField, findsOneWidget);
+    expect(find.text('Search assigned assets...'), findsOneWidget);
 
-    // Verify AssignmentModeToggle and InlineCalendar presence
-    expect(find.byType(AssignmentModeToggle), findsOneWidget);
-    expect(find.byType(InlineCalendar), findsOneWidget);
+    // Verify Generator Card displays
+    expect(find.text('G1'), findsOneWidget);
+    expect(find.text('50 kVA'), findsOneWidget);
+    expect(find.text('2026-04-19'), findsOneWidget);
+    expect(find.text('Initial notes'), findsOneWidget);
 
-    // Verify date chip showing pre-filled date
-    expect(find.byType(Chip), findsOneWidget);
-    expect(find.text(DateFormat('MMM dd, yyyy').format(testBooking.date)), findsOneWidget);
+    // Verify FAB is rendered
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byIcon(Icons.add), findsOneWidget);
   });
 
-  testWidgets('EditBookingModal toggles generator assignment mode', (
+  testWidgets('Search bar filters generator cards list by ID', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: _providerOverrides(),
+        overrides: _providerOverrides(testBooking),
         child: MaterialApp(
           home: Scaffold(
             body: EditBookingModal(
               booking: testBooking,
               onClose: _dummyClose,
-              onSave: _dummySave,
             ),
           ),
         ),
@@ -87,32 +87,38 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Mode is initially 'id' (from widget state _assignmentMode initialization)
-    expect(find.text('GENERATOR'), findsOneWidget);
+    // Initially G1 is visible
+    expect(find.text('G1'), findsOneWidget);
 
-    // Toggle mode using AssignmentModeToggle switch
-    final switchFinder = find.byType(Switch);
-    expect(switchFinder, findsOneWidget);
-    await tester.tap(switchFinder);
+    final searchField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Search assigned assets...');
+
+    // Type non-matching string into search field
+    await tester.enterText(searchField, 'GEN-XYZ');
     await tester.pumpAndSettle();
 
-    // Mode is now 'capacity' -> shows 'CAPACITY (kVA)' chips and hides 'GENERATOR' dropdown
-    expect(find.text('GENERATOR'), findsNothing);
-    expect(find.text('CAPACITY (kVA)'), findsOneWidget);
+    // G1 card should be filtered out
+    expect(find.text('G1'), findsNothing);
+    expect(find.text('No assigned assets found.'), findsOneWidget);
+
+    // Type matching G1
+    await tester.enterText(searchField, 'g1');
+    await tester.pumpAndSettle();
+
+    // G1 card should be visible again
+    expect(find.text('G1'), findsOneWidget);
   });
 
-  testWidgets('EditBookingModal allows removing and adding dates', (
+  testWidgets('Swipe-to-delete shows confirmation dialog and cancels or deletes', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: _providerOverrides(),
+        overrides: _providerOverrides(testBooking),
         child: MaterialApp(
           home: Scaffold(
             body: EditBookingModal(
               booking: testBooking,
               onClose: _dummyClose,
-              onSave: _dummySave,
             ),
           ),
         ),
@@ -120,55 +126,91 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final initialChipText = DateFormat('MMM dd, yyyy').format(testBooking.date);
-    expect(find.text(initialChipText), findsOneWidget);
+    // Swipe the card left
+    await tester.drag(find.text('G1'), const Offset(-500, 0));
+    await tester.pumpAndSettle();
 
-    // Tap on delete icon of the date chip
-    final deleteFinder = find.descendant(
-      of: find.byType(Chip),
-      matching: find.byIcon(Icons.close),
+    // Verify ConfirmationDialog is shown
+    expect(find.byType(ConfirmationDialog), findsOneWidget);
+    expect(find.text('Delete Assignment'), findsOneWidget);
+
+    // Tap Cancel
+    await tester.tap(find.text('CANCEL'));
+    await tester.pumpAndSettle();
+
+    // Card should still be present
+    expect(find.text('G1'), findsOneWidget);
+
+    // Swipe card again and tap Delete
+    await tester.drag(find.text('G1'), const Offset(-500, 0));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('DELETE'));
+    await tester.pumpAndSettle();
+
+    // Card should be deleted/removed
+    expect(find.text('G1'), findsNothing);
+  });
+
+  testWidgets('FAB (+) opens AddBookingModal', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _providerOverrides(testBooking),
+        child: MaterialApp(
+          home: Scaffold(
+            body: EditBookingModal(
+              booking: testBooking,
+              onClose: _dummyClose,
+            ),
+          ),
+        ),
+      ),
     );
-    expect(deleteFinder, findsOneWidget);
-    await tester.ensureVisible(deleteFinder);
-    await tester.tap(deleteFinder);
     await tester.pumpAndSettle();
 
-    // Chip should be removed
-    expect(find.text(initialChipText), findsNothing);
+    // Verify AddBookingModal is not shown initially
+    expect(find.byType(AddBookingModal), findsNothing);
 
-    // Save button should trigger validation error for empty dates
-    final saveButton = find.text('SAVE');
-    await tester.tap(saveButton);
+    // Tap FAB
+    await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
-    expect(find.text('Please select at least one date'), findsOneWidget);
+
+    // Verify AddBookingModal is now visible overlaying the edit view
+    expect(find.byType(AddBookingModal), findsOneWidget);
   });
 }
 
 void _dummyClose() {}
-void _dummySave(_) {}
 
-List<Override> _providerOverrides() {
+List<Override> _providerOverrides(Booking testBooking) {
   return [
-    bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+    bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository(testBooking)),
     vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
     generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
   ];
 }
 
 class _FakeBookingRepository extends BookingRepository {
+  final Booking testBooking;
+
+  _FakeBookingRepository(this.testBooking);
+
   @override
-  Future<List<MockBooking>> getBookings({
+  Future<List<Booking>> getBookings({
     DateTime? startDate,
     DateTime? endDate,
     String? vendorId,
     String? status,
   }) async {
-    return List.of(mockBookings);
+    return [testBooking, ...mockBookings];
   }
 
   @override
   Future<Map<String, List<Booking>>> getAllVendorBookings() async {
     final result = <String, List<Booking>>{};
+    result.putIfAbsent(testBooking.vendorId, () => []).add(testBooking);
     for (final booking in mockBookings) {
       result.putIfAbsent(booking.vendorId, () => []).add(booking);
     }
@@ -179,18 +221,26 @@ class _FakeBookingRepository extends BookingRepository {
   Future<List<CalendarEvent>> getCalendarEvents() async {
     return [
       CalendarEvent(date: '2026-04-19', count: 1, title: '1 booking(s)'),
-      CalendarEvent(date: '2026-04-20', count: 1, title: '1 booking(s)'),
-      CalendarEvent(date: '2026-04-21', count: 1, title: '1 booking(s)'),
-      CalendarEvent(date: '2026-05-01', count: 1, title: '1 booking(s)'),
     ];
   }
 
   @override
   Future<List<Booking>> getCalendarDayBookings(String date) async {
-    return mockBookings.where((b) {
+    final list = [testBooking, ...mockBookings];
+    return list.where((b) {
       final bDate = b.startDate.toIso8601String().split('T')[0];
       return bDate == date;
     }).toList();
+  }
+
+  @override
+  Future<void> deleteBooking(String id) async {
+    // Stub
+  }
+
+  @override
+  Future<Booking> updateBooking(String id, Booking booking) async {
+    return booking;
   }
 }
 
