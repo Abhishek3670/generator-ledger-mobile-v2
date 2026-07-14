@@ -59,11 +59,11 @@ class VendorDetailModal extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInfoDetail('VENDOR ID', vendor.id),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildInfoDetail('CATEGORY', formattedCategory),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildInfoDetail('LOCATION', displayLocation),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildPhoneDetail('PHONE NUMBER', vendor.phone),
               ],
             ),
@@ -115,14 +115,20 @@ class VendorDetailModal extends StatelessWidget {
               await launchUrl(uri);
             }
           },
-          child: Text(
-            phone,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.infoText, // Link color
-              fontWeight: FontWeight.w500,
-              decoration: TextDecoration.underline,
-              decorationColor: AppColors.infoText,
-            ),
+          child: Row(
+            children: [
+              const Icon(Icons.phone, size: 16, color: AppColors.textSecondary),
+              const SizedBox(width: 8),
+              Text(
+                phone,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.infoText,
+                  fontWeight: FontWeight.w500,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.infoText,
+                ),
+              ),
+            ],
           ),
         ),
       ],
