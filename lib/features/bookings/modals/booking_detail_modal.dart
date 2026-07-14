@@ -25,7 +25,7 @@ class BookingDetailModal extends StatelessWidget {
     if (!isVisible) return const SizedBox.shrink();
 
     return DraggableFormSheet(
-      title: 'BOOKING',
+      title: booking.vendorName,
       category: 'bookings',
       onClose: onClose,
       actions: [
@@ -42,23 +42,19 @@ class BookingDetailModal extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header info
-          Text(booking.vendorName, style: AppTypography.title),
-          const SizedBox(height: 24),
-
           // Details Grid (Status, Booked)
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border, width: 1),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: _buildDetailCol('STATUS', StatusBadge(label: booking.status, type: _getStatusType(booking.status)))),
-                Expanded(child: _buildDetailCol('BOOKED', Text(DateFormat('yyyy-MM-dd').format(booking.date), style: AppTypography.bodySmall))),
+                _buildRowDetail('STATUS', StatusBadge(label: booking.status, type: _getStatusType(booking.status))),
+                _buildRowDetail('BOOKED', Text(DateFormat('yyyy-MM-dd').format(booking.date), style: AppTypography.bodySmall)),
               ],
             ),
           ),
@@ -83,12 +79,17 @@ class BookingDetailModal extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailCol(String label, Widget content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildRowDetail(String label, Widget content) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
-        const SizedBox(height: 8),
+        Text(
+          '$label: ',
+          style: AppTypography.labelCaps.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 10,
+          ),
+        ),
         content,
       ],
     );
