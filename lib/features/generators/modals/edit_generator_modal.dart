@@ -43,8 +43,16 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
     _idController = TextEditingController(text: widget.generator.id);
     _typeController = TextEditingController(text: widget.generator.type);
     _notesController = TextEditingController(); // Notes are optional and start blank
-    _selectedCategory = widget.generator.category;
-    _selectedStatus = widget.generator.status;
+    const validStatuses = ['active', 'offline'];
+    const validCategories = ['retailer', 'permanent', 'emergency'];
+
+    _selectedStatus = validStatuses.contains(widget.generator.status.toLowerCase())
+        ? widget.generator.status.toLowerCase()
+        : 'active';
+
+    _selectedCategory = validCategories.contains(widget.generator.category.toLowerCase())
+        ? widget.generator.category.toLowerCase()
+        : null;
     
     // Normalize capacity string (e.g., '250 kVA' or '250' -> select closest or extract number)
     final numMatch = RegExp(r'\d+').firstMatch(widget.generator.capacity);
