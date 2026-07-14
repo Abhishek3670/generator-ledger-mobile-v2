@@ -68,7 +68,7 @@ class BookingListItem extends StatelessWidget {
                     (it) => it.generatorId == genId,
                     orElse: () => BookingItem(
                       generatorId: genId,
-                      startDt: '',
+                      startDt: booking.formatBookingDate(),
                       itemStatus: '',
                       isEmergency: genId.toUpperCase().contains('EMERGENCY') || genId.toUpperCase().contains('HA'),
                       remarks: '',
