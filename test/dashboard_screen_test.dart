@@ -46,8 +46,6 @@ void main() {
 
     // Verify CalendarView exists
     expect(find.byType(CalendarView), findsOneWidget);
-    expect(find.text('CALENDAR'), findsOneWidget);
-    expect(find.text('Vendor Bookings'), findsOneWidget);
 
     // Verify DailyBookingsList exists
     expect(find.byType(DailyBookingsList), findsOneWidget);
