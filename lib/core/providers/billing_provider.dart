@@ -45,7 +45,7 @@ final billingDateRangeProvider =
 
 /// Billing data provider - fetches from API with current date range
 final billingProvider =
-    FutureProvider<List<BillingSummary>>((ref) async {
+    FutureProvider<BillingResponse>((ref) async {
   final repository = ref.watch(billingRepositoryProvider);
   final dateRange = ref.watch(billingDateRangeProvider);
 

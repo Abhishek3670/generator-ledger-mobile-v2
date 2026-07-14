@@ -74,3 +74,13 @@ class BillingSummary {
     };
   }
 }
+
+class BillingResponse {
+  final List<BillingSummary> summaries;
+  final List<int> capacities;
+
+  const BillingResponse({
+    required this.summaries,
+    required this.capacities,
+  });
+}

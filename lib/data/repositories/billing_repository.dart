@@ -35,12 +35,12 @@ class BillingRepository {
   ///   "capacities": [125],
   ///   "count": 1
   /// }
-  Future<List<BillingSummary>> getBillingPreview({
+  Future<BillingResponse> getBillingPreview({
     required DateTime startDate,
     required DateTime endDate,
     String? vendorId,
   }) async {
-    return _apiClient.get<List<BillingSummary>>(
+    return _apiClient.get<BillingResponse>(
       billingLinesPath,
       queryParameters: {
         'from': startDate.toIso8601String().split('T').first,
@@ -72,9 +72,8 @@ class BillingRepository {
     );
   }
 
-  /// Parse backend response and convert to BillingSummary list
-  /// Groups rows by vendor_id
-  List<BillingSummary> _parseBillingResponse(
+  /// Parse backend response and convert to BillingResponse
+  BillingResponse _parseBillingResponse(
     dynamic json,
     String? vendorFilter,
   ) {
@@ -86,16 +85,37 @@ class BillingRepository {
           'Expected billing response with rows array'),
     };
 
-    if (rows.isEmpty) {
-      return [];
+    // Extract capacities list if present
+    List<int> capacitiesList = [];
+    if (json is Map<String, dynamic> && json['capacities'] != null) {
+      final caps = json['capacities'];
+      if (caps is List) {
+        capacitiesList = caps
+            .map((c) => c is num ? c.toInt() : int.tryParse(c.toString()))
+            .whereType<int>()
+            .toList();
+      }
     }
+
+    // Sort ascending and deduplicate capacities if parsed from response
+    capacitiesList = capacitiesList.toSet().toList()..sort();
 
     // Group rows by vendor_id
     final Map<String, List<Map<String, dynamic>>> vendorGroups = {};
+    final Set<int> derivedCapacities = {};
+
     for (final row in rows) {
       final rowMap = row as Map<String, dynamic>;
       final vendorId = rowMap['vendor_id'] as String;
       
+      // Parse capacity to derive fallback if necessary
+      final capKva = rowMap['capacity_kva'] is num
+          ? (rowMap['capacity_kva'] as num).toInt()
+          : int.tryParse(rowMap['capacity_kva']?.toString() ?? '');
+      if (capKva != null) {
+        derivedCapacities.add(capKva);
+      }
+
       // Apply vendor filter if specified
       if (vendorFilter != null && vendorId != vendorFilter) {
         continue;
@@ -105,23 +125,31 @@ class BillingRepository {
       vendorGroups[vendorId]!.add(rowMap);
     }
 
+    // If capacities field was missing or empty, fall back to derived unique capacity values from rows
+    if (capacitiesList.isEmpty) {
+      capacitiesList = derivedCapacities.toList()..sort();
+    }
+
     // Convert to BillingSummary objects
-    return vendorGroups.entries.map((entry) {
+    final summaries = vendorGroups.entries.map((entry) {
       final vendorId = entry.key;
       final rows = entry.value;
       final vendorName = rows.first['vendor_name'] as String;
 
       // Convert each row to a BillingLine
       final lines = rows.map((row) {
+        final capacityKvaVal = row['capacity_kva'] is num
+            ? (row['capacity_kva'] as num).toInt()
+            : int.tryParse(row['capacity_kva']?.toString() ?? '') ?? 0;
         return BillingLine.fromMap({
           'booking': {
             'id': row['booking_id'],
             'date': row['booked_date'],
             'generatorId': row['generator_id'],
-            'capacity': row['capacity_kva'],
+            'capacity': '$capacityKvaVal kVA',
             'status': 'confirmed',
           },
-          'pricePerCapacity': row['capacity_kva'] * 20.0, // Placeholder rate
+          'pricePerCapacity': capacityKvaVal * 20.0, // Placeholder rate
         });
       }).toList();
 
@@ -132,5 +160,10 @@ class BillingRepository {
         paidAmount: 0, // TODO: Get from backend if available
       );
     }).toList();
+
+    return BillingResponse(
+      summaries: summaries,
+      capacities: capacitiesList,
+    );
   }
 }

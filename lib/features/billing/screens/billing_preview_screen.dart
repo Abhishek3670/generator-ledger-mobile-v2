@@ -28,13 +28,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
   final TextEditingController _dateToController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
 
-  final Map<String, TextEditingController> _rateControllers = {
-    '20 kVA': TextEditingController(text: '0'),
-    '30 kVA': TextEditingController(text: '0'),
-    '45 kVA': TextEditingController(text: '0'),
-    '82 kVA': TextEditingController(text: '0'),
-    '100 kVA': TextEditingController(text: '0'),
-  };
+  final Map<String, TextEditingController> _rateControllers = {};
 
   // Keep track of paid amounts per vendor ID
   final Map<String, double> _paidAmounts = {};
@@ -161,7 +155,16 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
   }
 
   double _getRateForCapacity(String capacity) {
-    // Normalize capacity key
+    // Normalize capacity key (extract numeric part, e.g. "125 kVA" -> 125 -> "125 kVA")
+    final match = RegExp(r'(\d+)').firstMatch(capacity);
+    if (match != null) {
+      final numericPart = match.group(1);
+      final key = '$numericPart kVA';
+      final controller = _rateControllers[key];
+      if (controller != null) {
+        return double.tryParse(controller.text) ?? 0.0;
+      }
+    }
     final cleanCapacity = capacity.trim();
     final controller = _rateControllers[cleanCapacity];
     if (controller == null) return 0.0;
@@ -181,7 +184,16 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
     final connectivity = ref.watch(connectivityProvider);
     final isLoading = billingState.isLoading;
 
-    final summaries = billingState.valueOrNull ?? <BillingSummary>[];
+    final response = billingState.valueOrNull;
+    final summaries = response?.summaries ?? <BillingSummary>[];
+    final capacities = response?.capacities ?? <int>[];
+
+    // Ensure all dynamic capacities have a controller in _rateControllers.
+    // If a capacity doesn't have a controller, initialize it with '0'.
+    for (final cap in capacities) {
+      final key = '$cap kVA';
+      _rateControllers.putIfAbsent(key, () => TextEditingController(text: '0'));
+    }
 
     // Apply search filter to the summaries (vendors) loaded in date range
     final searchQuery = _searchController.text.toLowerCase().trim();
@@ -531,10 +543,12 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                               return Wrap(
                                 spacing: 12,
                                 runSpacing: 12,
-                                children: _rateControllers.entries.map((entry) {
+                                children: capacities.map((cap) {
+                                  final key = '$cap kVA';
+                                  final controller = _rateControllers[key]!;
                                   return SizedBox(
                                     width: isWide
-                                        ? (constraints.maxWidth - 48) / 5
+                                        ? (constraints.maxWidth - 24) / 3
                                         : (constraints.maxWidth - 12) / 2,
                                     child: Container(
                                       decoration: BoxDecoration(
@@ -550,7 +564,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            entry.key.toUpperCase(),
+                                            key.toUpperCase(),
                                             style: AppTypography.labelCaps
                                                 .copyWith(
                                                   color:
@@ -562,7 +576,7 @@ class _BillingPreviewScreenState extends ConsumerState<BillingPreviewScreen> {
                                           SizedBox(
                                             height: 36,
                                             child: TextField(
-                                              controller: entry.value,
+                                              controller: controller,
                                               keyboardType:
                                                   TextInputType.number,
                                               onChanged: (val) {

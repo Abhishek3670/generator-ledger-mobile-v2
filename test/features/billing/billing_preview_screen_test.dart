@@ -107,13 +107,13 @@ class _FakeBookingRepository extends BookingRepository {
 
 class _FakeBillingRepository extends BillingRepository {
   @override
-  Future<List<BillingSummary>> getBillingPreview({
+  Future<BillingResponse> getBillingPreview({
     required DateTime startDate,
     required DateTime endDate,
     String? vendorId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 100));
-    return [
+    final summaries = [
       BillingSummary(
         vendorId: 'VEN-1',
         vendorName: 'Mallu',
@@ -133,12 +133,16 @@ class _FakeBillingRepository extends BillingRepository {
         ],
       ),
     ];
+    return BillingResponse(
+      summaries: summaries,
+      capacities: [20],
+    );
   }
 }
 
 class _ErrorBillingRepository extends BillingRepository {
   @override
-  Future<List<BillingSummary>> getBillingPreview({
+  Future<BillingResponse> getBillingPreview({
     required DateTime startDate,
     required DateTime endDate,
     String? vendorId,
