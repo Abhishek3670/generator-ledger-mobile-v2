@@ -6,7 +6,7 @@ import '../../../data/mock/mock_generators.dart';
 import 'generator_card.dart';
 
 /// Group section for generator inventory types with custom headers and borders.
-class InventoryGroupSection extends StatelessWidget {
+class InventoryGroupSection extends StatefulWidget {
   /// Section title (e.g. "Retailer Genset").
   final String title;
 
@@ -45,23 +45,36 @@ class InventoryGroupSection extends StatelessWidget {
   });
 
   @override
+  State<InventoryGroupSection> createState() => _InventoryGroupSectionState();
+}
+
+class _InventoryGroupSectionState extends State<InventoryGroupSection> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     Color borderColor = AppColors.border;
     Color countBadgeColor = AppColors.textSecondary;
     Color countBadgeBg = AppColors.surfaceContainer;
     Color titleColor = AppColors.primary;
 
-    if (category == 'permanent') {
+    if (widget.category == 'permanent') {
       borderColor = AppColors.warning.withValues(alpha: 0.3);
       countBadgeColor = AppColors.warning;
       countBadgeBg = AppColors.warning.withValues(alpha: 0.1);
       titleColor = AppColors.warning;
-    } else if (category == 'emergency') {
+    } else if (widget.category == 'emergency') {
       borderColor = AppColors.danger.withValues(alpha: 0.3);
       countBadgeColor = AppColors.danger;
       countBadgeBg = AppColors.danger.withValues(alpha: 0.1);
       titleColor = AppColors.danger;
     }
+
+    const limit = 5;
+    final showShowAll = !_isExpanded && widget.generators.length > limit;
+    final visibleGenerators = showShowAll
+        ? widget.generators.take(limit).toList()
+        : widget.generators;
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -88,7 +101,7 @@ class InventoryGroupSection extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    title,
+                    widget.title,
                     style: AppTypography.headlineSmall.copyWith(
                       color: titleColor,
                       fontWeight: FontWeight.bold,
@@ -99,7 +112,7 @@ class InventoryGroupSection extends StatelessWidget {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(description),
+                          content: Text(widget.description),
                           duration: const Duration(seconds: 3),
                         ),
                       );
@@ -118,7 +131,7 @@ class InventoryGroupSection extends StatelessWidget {
                   border: Border.all(color: borderColor, width: 1),
                 ),
                 child: Text(
-                  '${generators.length}',
+                  '${widget.generators.length}',
                   style: AppTypography.labelCaps.copyWith(
                     color: countBadgeColor,
                     fontWeight: FontWeight.bold,
@@ -130,7 +143,7 @@ class InventoryGroupSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          if (generators.isEmpty)
+          if (widget.generators.isEmpty)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               child: Center(
@@ -143,23 +156,49 @@ class InventoryGroupSection extends StatelessWidget {
                 ),
               ),
             )
-          else
+          else ...[
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: generators.length,
+              itemCount: visibleGenerators.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final generator = generators[index];
+                final generator = visibleGenerators[index];
                 return GeneratorCard(
-                  key: ValueKey('${generator.id}_$slidableResetCounter'),
+                  key: ValueKey('${generator.id}_${widget.slidableResetCounter}'),
                   generator: generator,
-                  onModify: onModify != null ? () => onModify!(generator) : null,
-                  onDelete: onDelete != null ? () => onDelete!(generator) : null,
-                  onTap: onGeneratorTap != null ? () => onGeneratorTap!(generator) : null,
+                  onModify: widget.onModify != null ? () => widget.onModify!(generator) : null,
+                  onDelete: widget.onDelete != null ? () => widget.onDelete!(generator) : null,
+                  onTap: widget.onGeneratorTap != null ? () => widget.onGeneratorTap!(generator) : null,
                 );
               },
             ),
+            if (showShowAll) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isExpanded = true;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border, width: 1),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    foregroundColor: AppColors.textSecondary,
+                  ),
+                  child: Text(
+                    'Show all ${widget.generators.length} →',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
