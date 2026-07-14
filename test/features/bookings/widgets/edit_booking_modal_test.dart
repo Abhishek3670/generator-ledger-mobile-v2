@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:ledger/core/providers/booking_provider.dart';
 import 'package:ledger/core/providers/generator_provider.dart';
 import 'package:ledger/core/providers/vendor_provider.dart';

@@ -255,7 +255,7 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
           color: AppColors.danger,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: const Icon(Icons.delete, color: AppColors.surface),
       ),
       confirmDismiss: (direction) async {
         final bool? confirm = await showDialog<bool>(
@@ -277,7 +277,7 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.border, width: 1),
         ),
@@ -353,6 +353,8 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
               controller: _remarksController,
               style: AppTypography.bodyMedium,
               decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.background,
                 hintText: 'Add remarks...',
                 hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
