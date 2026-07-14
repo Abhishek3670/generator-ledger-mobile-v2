@@ -46,8 +46,10 @@ class _GeneratorsDirectoryScreenState
     return int.tryParse(numericPart) ?? 0;
   }
 
-  void _showBookingFilterOptions() {
-    if (_selectedDate == null) return;
+  void _showFilterAndSortSheet() {
+    String tempBookingStatus = _bookingStatusFilter;
+    String tempCapacitySort = _capacitySort;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -55,71 +57,162 @@ class _GeneratorsDirectoryScreenState
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'FILTER BY BOOKING STATUS',
-                  style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Filters & Sort',
+                          style: AppTypography.headlineSmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+                    const SizedBox(height: 12),
+
+                    // Booking Status Segment
+                    Text(
+                      'BOOKING STATUS',
+                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildSheetChip(
+                          label: 'All',
+                          isSelected: tempBookingStatus == 'All',
+                          isDisabled: _selectedDate == null,
+                          onTap: () {
+                            setSheetState(() {
+                              tempBookingStatus = 'All';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Booked',
+                          isSelected: tempBookingStatus == 'Booked',
+                          isDisabled: _selectedDate == null,
+                          onTap: () {
+                            setSheetState(() {
+                              tempBookingStatus = 'Booked';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Free',
+                          isSelected: tempBookingStatus == 'Free',
+                          isDisabled: _selectedDate == null,
+                          onTap: () {
+                            setSheetState(() {
+                              tempBookingStatus = 'Free';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Sort By Segment
+                    Text(
+                      'SORT BY',
+                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildSheetChip(
+                          label: 'Default',
+                          isSelected: tempCapacitySort == 'default',
+                          onTap: () {
+                            setSheetState(() {
+                              tempCapacitySort = 'default';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Cap L-H',
+                          isSelected: tempCapacitySort == 'asc',
+                          onTap: () {
+                            setSheetState(() {
+                              tempCapacitySort = 'asc';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Cap H-L',
+                          isSelected: tempCapacitySort == 'desc',
+                          onTap: () {
+                            setSheetState(() {
+                              tempCapacitySort = 'desc';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Apply Button
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _bookingStatusFilter = tempBookingStatus;
+                          _capacitySort = tempCapacitySort;
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: AppColors.primary,
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        'APPLY',
+                        style: AppTypography.labelCaps.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Divider(height: 1),
-              _buildFilterOptionTile('All'),
-              _buildFilterOptionTile('Booked'),
-              _buildFilterOptionTile('Free'),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildFilterOptionTile(String option) {
-    final isSelected = _bookingStatusFilter == option;
-    return ListTile(
-      title: Text(
-        option,
-        style: AppTypography.bodyMedium.copyWith(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? AppColors.primary : AppColors.textSecondary,
-        ),
-      ),
-      trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
-      onTap: () {
-        setState(() {
-          _bookingStatusFilter = option;
-        });
-        Navigator.pop(context);
-      },
-    );
-  }
-
-  void _toggleCapacitySort() {
-    setState(() {
-      if (_capacitySort == 'default') {
-        _capacitySort = 'asc';
-      } else if (_capacitySort == 'asc') {
-        _capacitySort = 'desc';
-      } else {
-        _capacitySort = 'default';
-      }
-    });
-  }
-
-  Widget _buildFilterChip({
+  Widget _buildSheetChip({
     required String label,
+    required bool isSelected,
     required VoidCallback onTap,
-    bool isActive = false,
     bool isDisabled = false,
-    Widget? icon,
   }) {
-    final bgColor = isActive ? AppColors.primary : Colors.white;
+    final bgColor = isSelected ? AppColors.primary : Colors.white;
     final textColor = isDisabled
         ? AppColors.textSecondary.withValues(alpha: 0.5)
-        : (isActive ? Colors.white : AppColors.textSecondary);
+        : (isSelected ? Colors.white : AppColors.textSecondary);
     final borderColor = isDisabled
         ? AppColors.border.withValues(alpha: 0.5)
         : AppColors.border;
@@ -138,22 +231,13 @@ class _GeneratorsDirectoryScreenState
             onTap: isDisabled ? null : onTap,
             borderRadius: BorderRadius.circular(9999),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) ...[
-                    icon,
-                    const SizedBox(width: 6),
-                  ],
-                  Text(
-                    label,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: textColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -437,107 +521,114 @@ class _GeneratorsDirectoryScreenState
                     const SizedBox(height: 12),
 
                     // Filter and Sort Bar
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          // Date Filter Pill
-                          Container(
-                            decoration: BoxDecoration(
-                              color: _selectedDate != null ? AppColors.primary : Colors.white,
-                              border: Border.all(
-                                color: _selectedDate != null ? AppColors.primary : AppColors.border,
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(9999),
+                    // Filter and Sort Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Date Filter Pill
+                        Container(
+                          decoration: BoxDecoration(
+                            color: _selectedDate != null ? AppColors.primary : Colors.white,
+                            border: Border.all(
+                              color: _selectedDate != null ? AppColors.primary : AppColors.border,
+                              width: 1,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                InkWell(
-                                  onTap: _selectDate,
-                                  borderRadius: _selectedDate != null
-                                      ? const BorderRadius.horizontal(left: Radius.circular(9999))
-                                      : BorderRadius.circular(9999),
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(12, 6, _selectedDate != null ? 8 : 12, 6),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.calendar_today,
-                                          size: 14,
+                            borderRadius: BorderRadius.circular(9999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              InkWell(
+                                onTap: _selectDate,
+                                borderRadius: _selectedDate != null
+                                    ? const BorderRadius.horizontal(left: Radius.circular(9999))
+                                    : BorderRadius.circular(9999),
+                                child: Padding(
+                                  padding: EdgeInsets.fromLTRB(12, 6, _selectedDate != null ? 8 : 12, 6),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        size: 14,
+                                        color: _selectedDate != null ? Colors.white : AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _selectedDate != null
+                                            ? DateFormat('dd MMM yyyy').format(_selectedDate!)
+                                            : 'All Dates',
+                                        style: AppTypography.bodySmall.copyWith(
                                           color: _selectedDate != null ? Colors.white : AppColors.textSecondary,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          _selectedDate != null
-                                              ? DateFormat('dd MMM yyyy').format(_selectedDate!)
-                                              : 'All Dates',
-                                          style: AppTypography.bodySmall.copyWith(
-                                            color: _selectedDate != null ? Colors.white : AppColors.textSecondary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                      ),
+                                      if (_selectedDate == null) ...[
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.arrow_drop_down,
+                                          size: 14,
+                                          color: AppColors.textSecondary,
                                         ),
-                                        if (_selectedDate == null) ...[
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.arrow_drop_down,
-                                            size: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ],
                                       ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (_selectedDate != null) ...[
+                                InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedDate = null;
+                                      _dateController.clear();
+                                      _bookingStatusFilter = 'All';
+                                    });
+                                    ref.read(generatorProvider.notifier).loadGenerators();
+                                  },
+                                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(9999)),
+                                  child: const Padding(
+                                    padding: EdgeInsets.fromLTRB(4, 6, 12, 6),
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 14,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
-                                if (_selectedDate != null) ...[
-                                  InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedDate = null;
-                                        _dateController.clear();
-                                        _bookingStatusFilter = 'All';
-                                      });
-                                      ref.read(generatorProvider.notifier).loadGenerators();
-                                    },
-                                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(9999)),
-                                    child: const Padding(
-                                      padding: EdgeInsets.fromLTRB(4, 6, 12, 6),
-                                      child: Icon(
-                                        Icons.close,
-                                        size: 14,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ],
+                            ],
+                          ),
+                        ),
+
+                        // Filter Icon Button
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              onPressed: _showFilterAndSortSheet,
+                              icon: const Icon(Icons.tune, color: AppColors.textSecondary, size: 20),
+                              style: IconButton.styleFrom(
+                                side: const BorderSide(color: AppColors.border, width: 1),
+                                shape: const CircleBorder(),
+                                padding: const EdgeInsets.all(8),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Booking Status Filter Chip
-                          _buildFilterChip(
-                            label: 'Booking: $_bookingStatusFilter ▾',
-                            onTap: _showBookingFilterOptions,
-                            isActive: _bookingStatusFilter != 'All',
-                            isDisabled: _selectedDate == null,
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Capacity Sort Chip
-                          _buildFilterChip(
-                            label: _capacitySort == 'asc'
-                                ? 'Sort: Cap L-H ▴'
-                                : (_capacitySort == 'desc'
-                                    ? 'Sort: Cap H-L ▾'
-                                    : 'Sort: Capacity ↕'),
-                            onTap: _toggleCapacitySort,
-                            isActive: _capacitySort != 'default',
-                          ),
-                        ],
-                      ),
+                            if (_bookingStatusFilter != 'All' || _capacitySort != 'default')
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.accent, // amber CTA dot
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
 
