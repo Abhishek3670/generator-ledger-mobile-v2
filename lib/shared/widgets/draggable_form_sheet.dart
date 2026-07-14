@@ -30,6 +30,9 @@ class DraggableFormSheet extends StatefulWidget {
   /// Returns `true` to allow dismissal, `false` to cancel it.
   final Future<bool> Function()? onDismissAttempt;
 
+  /// Optional action widget(s) displayed in the header next to the close button.
+  final List<Widget>? actions;
+
   const DraggableFormSheet({
     super.key,
     required this.title,
@@ -38,6 +41,7 @@ class DraggableFormSheet extends StatefulWidget {
     this.footer,
     required this.onClose,
     this.onDismissAttempt,
+    this.actions,
   });
 
   @override
@@ -188,11 +192,15 @@ class _DraggableFormSheetState extends State<DraggableFormSheet> {
                               ],
                             ),
                           ),
+                          if (widget.actions != null) ...[
+                            ...widget.actions!,
+                            const SizedBox(width: 12),
+                          ],
                           IconButton(
                             onPressed: () async {
                               if (!_isDismissing) {
                                 _isDismissing = true;
-                                await _handleDismissAttempt();
+                                  await _handleDismissAttempt();
                               }
                             },
                             icon: const Icon(

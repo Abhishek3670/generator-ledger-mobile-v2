@@ -28,21 +28,17 @@ class BookingDetailModal extends StatelessWidget {
       title: 'BOOKING',
       category: 'bookings',
       onClose: onClose,
-      footer: SizedBox(
-        width: double.infinity,
-        child: Center(
-          child: OutlinedButton(
-            onPressed: onEdit,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              side: const BorderSide(color: AppColors.border, width: 1),
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('Edit', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+      actions: [
+        IconButton(
+          onPressed: onEdit,
+          icon: const Icon(
+            Icons.edit_outlined,
+            color: AppColors.textSecondary,
+            size: 22,
           ),
+          tooltip: 'Edit Booking',
         ),
-      ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
