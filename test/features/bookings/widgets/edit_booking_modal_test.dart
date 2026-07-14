@@ -13,6 +13,8 @@ import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/widgets/edit_booking_modal.dart';
 import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
 import 'package:ledger/shared/models/booking.dart';
+import 'package:ledger/shared/models/vendor.dart';
+import 'package:ledger/shared/widgets/autocomplete_field.dart';
 import 'package:ledger/shared/models/calendar_event.dart';
 import 'package:ledger/shared/widgets/confirmation_dialog.dart';
 
@@ -151,7 +153,7 @@ void main() {
     expect(find.text('G1'), findsNothing);
   });
 
-  testWidgets('FAB (+) opens AddBookingModal', (
+  testWidgets('FAB (+) opens AddBookingModal with locked vendor', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -178,6 +180,12 @@ void main() {
 
     // Verify AddBookingModal is now visible overlaying the edit view
     expect(find.byType(AddBookingModal), findsOneWidget);
+
+    // Verify AutocompleteField<Vendor> has enabled set to false
+    final autocompleteFinder = find.byType(AutocompleteField<Vendor>);
+    expect(autocompleteFinder, findsOneWidget);
+    final autocomplete = tester.widget<AutocompleteField<Vendor>>(autocompleteFinder);
+    expect(autocomplete.enabled, isFalse);
   });
 }
 

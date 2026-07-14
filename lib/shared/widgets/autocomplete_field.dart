@@ -12,6 +12,7 @@ class AutocompleteField<T> extends StatefulWidget {
   final String labelText;
   final T? initialValue;
   final String? errorText;
+  final bool enabled;
 
   const AutocompleteField({
     super.key,
@@ -23,6 +24,7 @@ class AutocompleteField<T> extends StatefulWidget {
     required this.labelText,
     this.initialValue,
     this.errorText,
+    this.enabled = true,
   });
 
   @override
@@ -312,10 +314,11 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
   @override
   Widget build(BuildContext context) {
     final hasFocus = _focusNode.hasFocus;
+    final isFieldEnabled = widget.enabled;
 
     return KeyboardListener(
       focusNode: FocusNode(skipTraversal: true),
-      onKeyEvent: _handleKeyEvent,
+      onKeyEvent: isFieldEnabled ? _handleKeyEvent : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
@@ -325,7 +328,7 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
             style: AppTypography.labelCaps.copyWith(
               color: widget.errorText != null
                   ? AppColors.error
-                  : (hasFocus ? AppColors.primary : AppColors.textSecondary),
+                  : (hasFocus && isFieldEnabled ? AppColors.primary : AppColors.textSecondary),
             ),
           ),
           const SizedBox(height: 8),
@@ -335,16 +338,16 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
               duration: const Duration(milliseconds: 200),
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isFieldEnabled ? AppColors.surface : AppColors.surfaceContainer,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: widget.errorText != null
                       ? AppColors.error
-                      : (hasFocus ? AppColors.primary : AppColors.border),
-                  width: hasFocus ? 1.5 : 1.0,
+                      : (hasFocus && isFieldEnabled ? AppColors.primary : AppColors.border),
+                  width: hasFocus && isFieldEnabled ? 1.5 : 1.0,
                 ),
                 boxShadow: [
-                  if (hasFocus && widget.errorText == null)
+                  if (hasFocus && isFieldEnabled && widget.errorText == null)
                     BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.05),
                       blurRadius: 4,
@@ -357,6 +360,7 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
+                  enabled: isFieldEnabled,
                   onChanged: (val) {
                     _updateSuggestions(val);
                     if (!_isOpen) {
@@ -365,7 +369,9 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
                       _overlayEntry?.markNeedsBuild();
                     }
                   },
-                  style: AppTypography.bodyMedium,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isFieldEnabled ? AppColors.primary : AppColors.textSecondary,
+                  ),
                   decoration: InputDecoration(
                     hintText: widget.hintText,
                     hintStyle: AppTypography.bodySmall.copyWith(
@@ -376,7 +382,7 @@ class _AutocompleteFieldState<T> extends State<AutocompleteField<T>> {
                       color: AppColors.textSecondary,
                       size: 20,
                     ),
-                    suffixIcon: _controller.text.isNotEmpty
+                    suffixIcon: isFieldEnabled && _controller.text.isNotEmpty
                         ? IconButton(
                             icon: const Icon(
                               Icons.clear,

@@ -169,6 +169,7 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
         ),
         if (_showAddBookingModal)
           AddBookingModal(
+            lockedVendorId: widget.booking.vendorId,
             onClose: () {
               setState(() {
                 _showAddBookingModal = false;
