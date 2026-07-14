@@ -343,7 +343,9 @@ class _GeneratorsDirectoryScreenState
           generators: retailerGensets,
           slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
-            context.push('/generators/${gen.id}');
+            setState(() {
+              _selectedGeneratorDetail = gen;
+            });
           },
           onModify: (gen) {
             setState(() {
@@ -369,7 +371,9 @@ class _GeneratorsDirectoryScreenState
           generators: permanentGensets,
           slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
-            context.push('/generators/${gen.id}');
+            setState(() {
+              _selectedGeneratorDetail = gen;
+            });
           },
           onModify: (gen) {
             setState(() {
@@ -395,7 +399,9 @@ class _GeneratorsDirectoryScreenState
           generators: emergencyGensets,
           slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
-            context.push('/generators/${gen.id}');
+            setState(() {
+              _selectedGeneratorDetail = gen;
+            });
           },
           onModify: (gen) {
             setState(() {
