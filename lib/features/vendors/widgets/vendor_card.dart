@@ -102,7 +102,9 @@ class VendorCard extends StatelessWidget {
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        vendor.location,
+                                        (vendor.location.isEmpty || vendor.location == 'nan')
+                                            ? 'N/A'
+                                            : vendor.location,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
