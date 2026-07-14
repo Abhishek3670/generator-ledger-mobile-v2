@@ -44,9 +44,12 @@ class AllVendorBookingsNotifier extends StateNotifier<AsyncValue<Map<String, Lis
 
   Future<void> loadBookings() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       return await _repository.getAllVendorBookings();
     });
+    if (mounted) {
+      state = result;
+    }
   }
 
   /// Get bookings for a specific vendor from the cached batch data.
@@ -83,7 +86,7 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     String? status,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       final bookings = await _repository.getBookings(
         startDate: startDate,
         endDate: endDate,
@@ -93,6 +96,9 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _cachedBookings = bookings;
       return bookings;
     });
+    if (mounted) {
+      state = result;
+    }
   }
 
   Future<void> addBooking(Booking booking) async {

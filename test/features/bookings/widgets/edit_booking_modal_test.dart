@@ -187,6 +187,73 @@ void main() {
     final autocomplete = tester.widget<AutocompleteField<Vendor>>(autocompleteFinder);
     expect(autocomplete.enabled, isFalse);
   });
+
+  testWidgets('Swipe-to-delete on a multi-item booking removes only the target item', (
+    WidgetTester tester,
+  ) async {
+    final multiItemBooking = Booking.withGenerators(
+      bookingId: 'BK-2',
+      vendorId: 'V1',
+      vendorName: 'Mock Vendor 1',
+      generators: ['G1', 'G2'],
+      startDate: DateTime(2026, 4, 19),
+      endDate: DateTime(2026, 4, 19),
+      status: 'confirmed',
+      notes: 'Initial notes',
+      capacity: '80 kVA',
+      items: [
+        BookingItem(
+          generatorId: 'G1',
+          capacityKva: 30,
+          startDt: '2026-04-19',
+          itemStatus: 'confirmed',
+          isEmergency: false,
+          remarks: 'Notes G1',
+        ),
+        BookingItem(
+          generatorId: 'G2',
+          capacityKva: 50,
+          startDt: '2026-04-19',
+          itemStatus: 'confirmed',
+          isEmergency: false,
+          remarks: 'Notes G2',
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _providerOverrides(multiItemBooking),
+        child: MaterialApp(
+          home: Scaffold(
+            body: EditBookingModal(
+              booking: multiItemBooking,
+              onClose: _dummyClose,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify both items are shown separately
+    expect(find.text('G1'), findsOneWidget);
+    expect(find.text('30 kVA'), findsOneWidget);
+    expect(find.text('G2'), findsOneWidget);
+    expect(find.text('50 kVA'), findsOneWidget);
+
+    // Swipe G1 left
+    await tester.drag(find.text('G1'), const Offset(-500, 0));
+    await tester.pumpAndSettle();
+
+    // Verify ConfirmationDialog is shown and tap DELETE
+    await tester.tap(find.text('DELETE'));
+    await tester.pumpAndSettle();
+
+    // G1 card should be deleted, G2 must still be present
+    expect(find.text('G1'), findsNothing);
+    expect(find.text('G2'), findsOneWidget);
+  });
 }
 
 void _dummyClose() {}
@@ -200,9 +267,9 @@ List<Override> _providerOverrides(Booking testBooking) {
 }
 
 class _FakeBookingRepository extends BookingRepository {
-  final Booking testBooking;
+  final List<Booking> _bookings;
 
-  _FakeBookingRepository(this.testBooking);
+  _FakeBookingRepository(Booking testBooking) : _bookings = [testBooking, ...mockBookings];
 
   @override
   Future<List<Booking>> getBookings({
@@ -211,14 +278,13 @@ class _FakeBookingRepository extends BookingRepository {
     String? vendorId,
     String? status,
   }) async {
-    return [testBooking, ...mockBookings];
+    return _bookings;
   }
 
   @override
   Future<Map<String, List<Booking>>> getAllVendorBookings() async {
     final result = <String, List<Booking>>{};
-    result.putIfAbsent(testBooking.vendorId, () => []).add(testBooking);
-    for (final booking in mockBookings) {
+    for (final booking in _bookings) {
       result.putIfAbsent(booking.vendorId, () => []).add(booking);
     }
     return result;
@@ -233,8 +299,7 @@ class _FakeBookingRepository extends BookingRepository {
 
   @override
   Future<List<Booking>> getCalendarDayBookings(String date) async {
-    final list = [testBooking, ...mockBookings];
-    return list.where((b) {
+    return _bookings.where((b) {
       final bDate = b.startDate.toIso8601String().split('T')[0];
       return bDate == date;
     }).toList();
@@ -242,11 +307,15 @@ class _FakeBookingRepository extends BookingRepository {
 
   @override
   Future<void> deleteBooking(String id) async {
-    // Stub
+    _bookings.removeWhere((b) => b.id == id);
   }
 
   @override
   Future<Booking> updateBooking(String id, Booking booking) async {
+    final idx = _bookings.indexWhere((b) => b.id == id);
+    if (idx != -1) {
+      _bookings[idx] = booking;
+    }
     return booking;
   }
 }

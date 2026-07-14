@@ -120,12 +120,40 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
                   final vendorBookings = bookings
                       .where((b) => b.vendorId == widget.booking.vendorId)
                       .toList();
-                  final filteredBookings = vendorBookings.where((b) {
+
+                  // Flatten into individual BookingItem entries
+                  final allItems = <({BookingItem item, Booking parentBooking})>[];
+                  for (final booking in vendorBookings) {
+                    if (booking.items.isNotEmpty) {
+                      for (final item in booking.items) {
+                        allItems.add((item: item, parentBooking: booking));
+                      }
+                    } else {
+                      // Fallback: synthesize from booking's generators list
+                      for (final genId in booking.generators) {
+                        final capacityNum = int.tryParse(booking.capacity.replaceAll(RegExp(r'[^0-9]'), ''));
+                        allItems.add((
+                          item: BookingItem(
+                            generatorId: genId,
+                            capacityKva: capacityNum,
+                            startDt: booking.formatBookingDate(),
+                            itemStatus: booking.status,
+                            isEmergency: false,
+                            remarks: booking.notes,
+                          ),
+                          parentBooking: booking,
+                        ));
+                      }
+                    }
+                  }
+
+                  // Apply search query filter on item.generatorId
+                  final filteredItems = allItems.where((entry) {
                     if (_searchQuery.isEmpty) return true;
-                    return b.generatorId.toLowerCase().contains(_searchQuery.toLowerCase());
+                    return entry.item.generatorId.toLowerCase().contains(_searchQuery.toLowerCase());
                   }).toList();
 
-                  if (filteredBookings.isEmpty) {
+                  if (filteredItems.isEmpty) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 32),
                       child: Center(
@@ -139,12 +167,13 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
 
                   return Column(
                     children: [
-                      ...filteredBookings.map((booking) {
+                      ...filteredItems.map((entry) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12.0),
                           child: _GeneratorAssignmentCard(
-                            key: ValueKey(booking.id),
-                            booking: booking,
+                            key: ValueKey('${entry.parentBooking.id}_${entry.item.generatorId}_${entry.item.startDt}'),
+                            item: entry.item,
+                            parentBooking: entry.parentBooking,
                           ),
                         );
                       }),
@@ -191,11 +220,13 @@ class _EditBookingModalState extends ConsumerState<EditBookingModal> {
 }
 
 class _GeneratorAssignmentCard extends ConsumerStatefulWidget {
-  final Booking booking;
+  final BookingItem item;
+  final Booking parentBooking;
 
   const _GeneratorAssignmentCard({
     super.key,
-    required this.booking,
+    required this.item,
+    required this.parentBooking,
   });
 
   @override
@@ -210,7 +241,7 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
   @override
   void initState() {
     super.initState();
-    _remarksController = TextEditingController(text: widget.booking.notes);
+    _remarksController = TextEditingController(text: widget.item.remarks);
     _remarksFocusNode = FocusNode();
     _remarksFocusNode.addListener(_onFocusChange);
   }
@@ -225,11 +256,44 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
 
   void _onFocusChange() {
     if (!_remarksFocusNode.hasFocus) {
-      final currentNotes = _remarksController.text.trim();
-      if (currentNotes != widget.booking.notes) {
-        ref.read(bookingProvider.notifier).updateBooking(
-              widget.booking.copyWith(notes: currentNotes),
+      final currentRemarks = _remarksController.text.trim();
+      if (currentRemarks != widget.item.remarks) {
+        List<BookingItem> updatedItems = [];
+        if (widget.parentBooking.items.isNotEmpty) {
+          updatedItems = widget.parentBooking.items.map((i) {
+            if (i.generatorId == widget.item.generatorId && i.startDt == widget.item.startDt) {
+              return BookingItem(
+                generatorId: i.generatorId,
+                capacityKva: i.capacityKva,
+                startDt: i.startDt,
+                endDt: i.endDt,
+                itemStatus: i.itemStatus,
+                isEmergency: i.isEmergency,
+                remarks: currentRemarks,
+              );
+            }
+            return i;
+          }).toList();
+        } else {
+          updatedItems = widget.parentBooking.generators.map((genId) {
+            final isTarget = genId == widget.item.generatorId;
+            return BookingItem(
+              generatorId: genId,
+              capacityKva: widget.item.capacityKva,
+              startDt: widget.item.startDt,
+              itemStatus: widget.parentBooking.status,
+              isEmergency: false,
+              remarks: isTarget ? currentRemarks : widget.parentBooking.notes,
             );
+          }).toList();
+        }
+
+        final updatedBooking = widget.parentBooking.copyWith(
+          items: updatedItems,
+          notes: updatedItems.length == 1 ? currentRemarks : widget.parentBooking.notes,
+        );
+
+        ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
       }
     }
   }
@@ -249,7 +313,7 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: ValueKey(widget.booking.id),
+      key: ValueKey('${widget.parentBooking.id}_${widget.item.generatorId}_${widget.item.startDt}'),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -276,7 +340,31 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
         return confirm ?? false;
       },
       onDismissed: (direction) {
-        ref.read(bookingProvider.notifier).deleteBooking(widget.booking.id);
+        if (widget.parentBooking.items.isNotEmpty) {
+          if (widget.parentBooking.items.length <= 1) {
+            ref.read(bookingProvider.notifier).deleteBooking(widget.parentBooking.id);
+          } else {
+            final updatedItems = widget.parentBooking.items.where((i) {
+              return !(i.generatorId == widget.item.generatorId && i.startDt == widget.item.startDt);
+            }).toList();
+            final updatedGenerators = widget.parentBooking.generators.where((g) => g != widget.item.generatorId).toList();
+            final updatedBooking = widget.parentBooking.copyWith(
+              items: updatedItems,
+              generators: updatedGenerators,
+            );
+            ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
+          }
+        } else {
+          if (widget.parentBooking.generators.length <= 1) {
+            ref.read(bookingProvider.notifier).deleteBooking(widget.parentBooking.id);
+          } else {
+            final updatedGenerators = widget.parentBooking.generators.where((g) => g != widget.item.generatorId).toList();
+            final updatedBooking = widget.parentBooking.copyWith(
+              generators: updatedGenerators,
+            );
+            ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
+          }
+        }
       },
       child: Container(
         decoration: BoxDecoration(
@@ -294,7 +382,7 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
               children: [
                 Expanded(
                   child: Text(
-                    widget.booking.generatorId,
+                    widget.item.generatorId,
                     style: AppTypography.bodyMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
@@ -310,7 +398,7 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   child: Text(
-                    widget.booking.capacity,
+                    widget.item.capacityKva != null ? '${widget.item.capacityKva} kVA' : 'N/A',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -340,7 +428,7 @@ class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentC
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    DateFormat('yyyy-MM-dd').format(widget.booking.date),
+                    widget.item.startDt,
                     style: AppTypography.bodyMedium,
                   ),
                 ],
