@@ -38,8 +38,6 @@ class _GeneratorsDirectoryScreenState
   final _dateController = TextEditingController();
   String _searchQuery = '';
   DateTime? _selectedDate;
-  late final FocusNode _dateFocusNode;
-  bool _isDateFocused = false;
 
   bool _showAddModal = false;
   bool _showEditModal = false;
@@ -66,8 +64,6 @@ class _GeneratorsDirectoryScreenState
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _dateFocusNode = FocusNode();
-    _dateFocusNode.addListener(_onDateFocusChange);
   }
 
   @override
@@ -82,8 +78,6 @@ class _GeneratorsDirectoryScreenState
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _dateController.dispose();
-    _dateFocusNode.removeListener(_onDateFocusChange);
-    _dateFocusNode.dispose();
     super.dispose();
   }
 
@@ -92,11 +86,7 @@ class _GeneratorsDirectoryScreenState
     _closeAllSwipeRows();
   }
 
-  void _onDateFocusChange() {
-    setState(() {
-      _isDateFocused = _dateFocusNode.hasFocus;
-    });
-  }
+
 
   void _onSearchChanged() {
     setState(() {
@@ -298,107 +288,79 @@ class _GeneratorsDirectoryScreenState
                     const SectionHeader(
                       category: 'DIRECTORY',
                       title: 'Generators',
-                      description:
-                          'Track retailer, permanent, and emergency genset inventory, assignments, and availability.',
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
 
-                    // Booked Date Card
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.functionalRadius,
+                    // Compact Date Filter Pill
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: AppColors.border, width: 1),
+                          borderRadius: BorderRadius.circular(9999),
                         ),
-                        border: Border.all(color: AppColors.border, width: 1),
-                        boxShadow: const [
-                          BoxShadow(
-                            offset: Offset(0, 1),
-                            blurRadius: 2,
-                            color: AppColors.shadowSoft,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'BOOKED DATE',
-                            style: AppTypography.labelCaps.copyWith(
-                              color: AppColors.textSecondary,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: _selectDate,
+                              borderRadius: _selectedDate != null
+                                  ? const BorderRadius.horizontal(left: Radius.circular(9999))
+                                  : BorderRadius.circular(9999),
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(12, 6, _selectedDate != null ? 8 : 12, 6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.calendar_today,
+                                      size: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _selectedDate != null
+                                          ? DateFormat('dd MMM yyyy').format(_selectedDate!)
+                                          : 'All Dates',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    if (_selectedDate == null) ...[
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        Icons.arrow_drop_down,
+                                        size: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: _selectDate,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: _isDateFocused
-                                            ? AppColors.primary
-                                            : AppColors.border,
-                                        width: 1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(
-                                        AppDimensions.functionalRadius,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          _selectedDate != null
-                                              ? DateFormat(
-                                                  'dd MMMM yyyy',
-                                                ).format(_selectedDate!)
-                                              : 'All',
-                                          style: AppTypography.bodyMedium
-                                              .copyWith(
-                                                color: _selectedDate != null
-                                                    ? AppColors.primary
-                                                    : AppColors.textSecondary,
-                                              ),
-                                        ),
-                                        const Icon(
-                                          Icons.calendar_today,
-                                          size: 16,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ],
-                                    ),
+                            if (_selectedDate != null) ...[
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedDate = null;
+                                    _dateController.clear();
+                                  });
+                                },
+                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(9999)),
+                                child: const Padding(
+                                  padding: EdgeInsets.fromLTRB(4, 6, 12, 6),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ),
-                              if (_selectedDate != null) ...[
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedDate = null;
-                                      _dateController.clear();
-                                    });
-                                  },
-                                  icon: const Icon(Icons.clear, size: 16),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: AppColors.border.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    padding: const EdgeInsets.all(8),
-                                  ),
-                                ),
-                              ],
                             ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

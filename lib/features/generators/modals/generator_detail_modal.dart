@@ -53,7 +53,7 @@ class GeneratorDetailModal extends StatelessWidget {
           // Detail rows
           _buildDetailRow('CAPACITY', generator.capacity),
           const SizedBox(height: 16),
-          _buildDetailRow('TYPE', generator.type.isEmpty ? '-' : generator.type),
+          _buildDetailRow('TYPE', (generator.type.isEmpty || generator.type == '-') ? 'N/A' : generator.type),
           const SizedBox(height: 16),
           _buildDetailRow('CATEGORY', generator.category.toUpperCase()),
           if (generator.category == 'permanent' && generator.assignedVendor != null) ...[

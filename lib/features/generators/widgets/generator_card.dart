@@ -54,8 +54,7 @@ class GeneratorCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   generator.id,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+                  overflow: TextOverflow.visible,
                   style: AppTypography.headlineSmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
@@ -71,7 +70,7 @@ class GeneratorCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Cap: ${generator.capacity} | Type: ${generator.type}',
+            'Cap: ${generator.capacity} | Type: ${(generator.type.isEmpty || generator.type == "-") ? "N/A" : generator.type}',
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
