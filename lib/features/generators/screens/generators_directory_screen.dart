@@ -38,6 +38,129 @@ class _GeneratorsDirectoryScreenState
   final _dateController = TextEditingController();
   String _searchQuery = '';
   DateTime? _selectedDate;
+  String _bookingStatusFilter = 'All'; // 'All', 'Booked', 'Free'
+  String _capacitySort = 'default'; // 'default', 'asc', 'desc'
+
+  int _parseCapacity(String cap) {
+    final numericPart = cap.replaceAll(RegExp(r'[^0-9]'), '');
+    return int.tryParse(numericPart) ?? 0;
+  }
+
+  void _showBookingFilterOptions() {
+    if (_selectedDate == null) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'FILTER BY BOOKING STATUS',
+                  style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                ),
+              ),
+              const Divider(height: 1),
+              _buildFilterOptionTile('All'),
+              _buildFilterOptionTile('Booked'),
+              _buildFilterOptionTile('Free'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterOptionTile(String option) {
+    final isSelected = _bookingStatusFilter == option;
+    return ListTile(
+      title: Text(
+        option,
+        style: AppTypography.bodyMedium.copyWith(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? AppColors.primary : AppColors.textSecondary,
+        ),
+      ),
+      trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
+      onTap: () {
+        setState(() {
+          _bookingStatusFilter = option;
+        });
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  void _toggleCapacitySort() {
+    setState(() {
+      if (_capacitySort == 'default') {
+        _capacitySort = 'asc';
+      } else if (_capacitySort == 'asc') {
+        _capacitySort = 'desc';
+      } else {
+        _capacitySort = 'default';
+      }
+    });
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required VoidCallback onTap,
+    bool isActive = false,
+    bool isDisabled = false,
+    Widget? icon,
+  }) {
+    final bgColor = isActive ? AppColors.primary : Colors.white;
+    final textColor = isDisabled
+        ? AppColors.textSecondary.withValues(alpha: 0.5)
+        : (isActive ? Colors.white : AppColors.textSecondary);
+    final borderColor = isDisabled
+        ? AppColors.border.withValues(alpha: 0.5)
+        : AppColors.border;
+
+    return Opacity(
+      opacity: isDisabled ? 0.6 : 1.0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          border: Border.all(color: borderColor, width: 1),
+          borderRadius: BorderRadius.circular(9999),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isDisabled ? null : onTap,
+            borderRadius: BorderRadius.circular(9999),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    icon,
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   bool _showAddModal = false;
   bool _showEditModal = false;
@@ -106,6 +229,9 @@ class _GeneratorsDirectoryScreenState
         _selectedDate = picked;
         _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
       });
+      ref.read(generatorProvider.notifier).loadGenerators(
+        date: DateFormat('yyyy-MM-dd').format(picked),
+      );
     }
   }
 
@@ -220,12 +346,31 @@ class _GeneratorsDirectoryScreenState
       _lastIndex = currentIndex;
     } catch (_) {}
 
-    final filteredGenerators = generators.where((gen) {
+    var filteredGenerators = generators.where((gen) {
       if (_searchQuery.isEmpty) return true;
       return gen.id.toLowerCase().contains(_searchQuery) ||
           gen.capacity.toLowerCase().contains(_searchQuery) ||
           gen.type.toLowerCase().contains(_searchQuery);
     }).toList();
+
+    if (_selectedDate != null && _bookingStatusFilter != 'All') {
+      final filterLower = _bookingStatusFilter.toLowerCase();
+      filteredGenerators = filteredGenerators.where((gen) {
+        return gen.bookingStatus?.toLowerCase() == filterLower;
+      }).toList();
+    }
+
+    if (_capacitySort != 'default') {
+      filteredGenerators.sort((a, b) {
+        final capA = _parseCapacity(a.capacity);
+        final capB = _parseCapacity(b.capacity);
+        if (_capacitySort == 'asc') {
+          return capA.compareTo(capB);
+        } else {
+          return capB.compareTo(capA);
+        }
+      });
+    }
 
     final retailerGensets = filteredGenerators
         .where((g) => g.category == 'retailer')
@@ -291,76 +436,107 @@ class _GeneratorsDirectoryScreenState
                     ),
                     const SizedBox(height: 12),
 
-                    // Compact Date Filter Pill
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: AppColors.border, width: 1),
-                          borderRadius: BorderRadius.circular(9999),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            InkWell(
-                              onTap: _selectDate,
-                              borderRadius: _selectedDate != null
-                                  ? const BorderRadius.horizontal(left: Radius.circular(9999))
-                                  : BorderRadius.circular(9999),
-                              child: Padding(
-                                padding: EdgeInsets.fromLTRB(12, 6, _selectedDate != null ? 8 : 12, 6),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today,
-                                      size: 14,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      _selectedDate != null
-                                          ? DateFormat('dd MMM yyyy').format(_selectedDate!)
-                                          : 'All Dates',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    if (_selectedDate == null) ...[
-                                      const SizedBox(width: 4),
-                                      const Icon(
-                                        Icons.arrow_drop_down,
-                                        size: 14,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                    // Filter and Sort Bar
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          // Date Filter Pill
+                          Container(
+                            decoration: BoxDecoration(
+                              color: _selectedDate != null ? AppColors.primary : Colors.white,
+                              border: Border.all(
+                                color: _selectedDate != null ? AppColors.primary : AppColors.border,
+                                width: 1,
                               ),
+                              borderRadius: BorderRadius.circular(9999),
                             ),
-                            if (_selectedDate != null) ...[
-                              InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedDate = null;
-                                    _dateController.clear();
-                                  });
-                                },
-                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(9999)),
-                                child: const Padding(
-                                  padding: EdgeInsets.fromLTRB(4, 6, 12, 6),
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 14,
-                                    color: AppColors.textSecondary,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: _selectDate,
+                                  borderRadius: _selectedDate != null
+                                      ? const BorderRadius.horizontal(left: Radius.circular(9999))
+                                      : BorderRadius.circular(9999),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(12, 6, _selectedDate != null ? 8 : 12, 6),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_today,
+                                          size: 14,
+                                          color: _selectedDate != null ? Colors.white : AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _selectedDate != null
+                                              ? DateFormat('dd MMM yyyy').format(_selectedDate!)
+                                              : 'All Dates',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: _selectedDate != null ? Colors.white : AppColors.textSecondary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        if (_selectedDate == null) ...[
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.arrow_drop_down,
+                                            size: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ],
-                        ),
+                                if (_selectedDate != null) ...[
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedDate = null;
+                                        _dateController.clear();
+                                        _bookingStatusFilter = 'All';
+                                      });
+                                      ref.read(generatorProvider.notifier).loadGenerators();
+                                    },
+                                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(9999)),
+                                    child: const Padding(
+                                      padding: EdgeInsets.fromLTRB(4, 6, 12, 6),
+                                      child: Icon(
+                                        Icons.close,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+
+                          // Booking Status Filter Chip
+                          _buildFilterChip(
+                            label: 'Booking: $_bookingStatusFilter ▾',
+                            onTap: _showBookingFilterOptions,
+                            isActive: _bookingStatusFilter != 'All',
+                            isDisabled: _selectedDate == null,
+                          ),
+                          const SizedBox(width: 8),
+
+                          // Capacity Sort Chip
+                          _buildFilterChip(
+                            label: _capacitySort == 'asc'
+                                ? 'Sort: Cap L-H ▴'
+                                : (_capacitySort == 'desc'
+                                    ? 'Sort: Cap H-L ▾'
+                                    : 'Sort: Capacity ↕'),
+                            onTap: _toggleCapacitySort,
+                            isActive: _capacitySort != 'default',
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 24),

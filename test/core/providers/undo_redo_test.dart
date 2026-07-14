@@ -30,7 +30,7 @@ class MockGeneratorRepository extends GeneratorRepository {
   final List<String> deletedIds = [];
 
   @override
-  Future<List<MockGenerator>> getGenerators({String? inventoryGroup}) async => generators;
+  Future<List<MockGenerator>> getGenerators({String? inventoryGroup, String? date}) async => generators;
 
   @override
   Future<MockGenerator> deleteGenerator(String id) async {

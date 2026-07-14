@@ -226,7 +226,7 @@ class _FakeVendorRepository extends VendorRepository {
 
 class _FakeGeneratorRepository extends GeneratorRepository {
   @override
-  Future<List<MockGenerator>> getGenerators({String? inventoryGroup}) async {
+  Future<List<MockGenerator>> getGenerators({String? inventoryGroup, String? date}) async {
     return List.of(mockGenerators);
   }
 }

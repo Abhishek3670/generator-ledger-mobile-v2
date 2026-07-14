@@ -33,11 +33,12 @@ class GeneratorNotifier extends StateNotifier<AsyncValue<List<MockGenerator>>> {
     super.dispose();
   }
 
-  Future<void> loadGenerators({String? inventoryGroup}) async {
+  Future<void> loadGenerators({String? inventoryGroup, String? date}) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final generators = await _repository.getGenerators(
         inventoryGroup: inventoryGroup,
+        date: date,
       );
       _cachedGenerators = generators;
       return generators;

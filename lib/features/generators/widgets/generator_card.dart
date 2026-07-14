@@ -62,9 +62,23 @@ class GeneratorCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              StatusBadge(
-                label: generator.status.toUpperCase(),
-                type: _getStatusBadgeType(generator.status),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  StatusBadge(
+                    label: generator.status.toUpperCase(),
+                    type: _getStatusBadgeType(generator.status),
+                  ),
+                  if (generator.bookingStatus != null) ...[
+                    const SizedBox(width: 6),
+                    StatusBadge(
+                      label: generator.bookingStatus!.toUpperCase(),
+                      type: generator.bookingStatus!.toLowerCase() == 'booked'
+                          ? StatusBadgeType.pending
+                          : StatusBadgeType.confirmed,
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

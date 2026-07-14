@@ -115,7 +115,7 @@ void main() {
 
 class _FakeGeneratorRepository extends GeneratorRepository {
   @override
-  Future<List<MockGenerator>> getGenerators({String? inventoryGroup}) async {
+  Future<List<MockGenerator>> getGenerators({String? inventoryGroup, String? date}) async {
     final generators = List<MockGenerator>.of(mockGenerators);
     if (inventoryGroup == null) {
       return generators;
