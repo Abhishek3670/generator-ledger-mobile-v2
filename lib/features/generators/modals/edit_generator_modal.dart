@@ -4,7 +4,6 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_generators.dart';
 import '../../../shared/widgets/draggable_form_sheet.dart';
-import '../../../shared/widgets/capacity_chip_selector.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 
@@ -91,19 +90,31 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
             hintText: 'e.g. GEN-250KVA-XT',
             controller: _idController,
             validator: (value) => value == null || value.trim().isEmpty ? 'Please enter generator ID' : null,
+            readOnly: true,
           ),
           const SizedBox(height: 16),
 
-          // Capacity Selector
+          // Capacity (Read-Only)
           _buildFieldLabel('CAPACITY (kVA)'),
           const SizedBox(height: 8),
-          CapacityChipSelector(
-            selectedCapacity: _selectedCapacity,
-            onCapacitySelected: (cap) {
-              setState(() {
-                _selectedCapacity = cap;
-              });
-            },
+          Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainer,
+                  border: Border.all(color: AppColors.border, width: 1),
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  '$_selectedCapacity kVA',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
