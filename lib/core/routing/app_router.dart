@@ -25,6 +25,8 @@ import 'route_names.dart';
 
 /// Full router configuration for the application.
 abstract final class AppRouter {
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   static final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
   static final _authRefresh = _AuthRefreshNotifier();
   static TokenStorage tokenStorage = TokenStorage();
@@ -50,6 +52,7 @@ abstract final class AppRouter {
 
   /// Global router declaration using [GoRouter] and stateful nested navigation.
   static final router = GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/dashboard',
     observers: [routeObserver],
     refreshListenable: _authRefresh,

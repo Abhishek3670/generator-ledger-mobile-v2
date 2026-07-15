@@ -36,8 +36,11 @@ class AppTextField extends StatefulWidget {
   /// Optional change callback.
   final void Function(String)? onChanged;
 
-  /// Optional custom focus node.
+  /// Optional focus node.
   final FocusNode? focusNode;
+
+  /// Whether the field is read-only.
+  final bool readOnly;
 
   /// Creates an [AppTextField].
   const AppTextField({
@@ -53,6 +56,7 @@ class AppTextField extends StatefulWidget {
     this.suffixIcon,
     this.onChanged,
     this.focusNode,
+    this.readOnly = false,
   });
 
   @override
@@ -90,18 +94,20 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final isFieldReadOnly = widget.readOnly;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
         borderRadius: AppDimensions.functionalBorderRadius,
-        boxShadow: _isFocused
+        boxShadow: _isFocused && !isFieldReadOnly
             ? [
                 BoxShadow(
                   color: AppColors.primary.withValues(alpha: 0.08),
                   blurRadius: 8,
                   spreadRadius: 2,
                   offset: const Offset(0, 2),
-                ),
+                 ),
               ]
             : [],
       ),
@@ -113,14 +119,18 @@ class _AppTextFieldState extends State<AppTextField> {
         keyboardType: widget.keyboardType,
         obscureText: widget.obscureText,
         onChanged: widget.onChanged,
-        style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
+        readOnly: isFieldReadOnly,
+        enableInteractiveSelection: !isFieldReadOnly,
+        style: AppTypography.bodyMedium.copyWith(
+          color: isFieldReadOnly ? AppColors.textSecondary : AppColors.primary,
+        ),
         decoration: InputDecoration(
           labelText: widget.labelText,
           hintText: widget.hintText,
           prefixIcon: widget.prefixIcon,
           suffixIcon: widget.suffixIcon,
           filled: true,
-          fillColor: Colors.white,
+          fillColor: isFieldReadOnly ? AppColors.surfaceContainer : Colors.white,
           border: OutlineInputBorder(
             borderRadius: AppDimensions.functionalBorderRadius,
             borderSide: const BorderSide(color: AppColors.border, width: 1),
@@ -131,10 +141,13 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: AppDimensions.functionalBorderRadius,
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            borderSide: BorderSide(
+              color: isFieldReadOnly ? AppColors.border : AppColors.primary,
+              width: isFieldReadOnly ? 1.0 : 1.5,
+            ),
           ),
           labelStyle: AppTypography.bodyMedium.copyWith(
-            color: _isFocused ? AppColors.primary : const Color(0xFF64748B),
+            color: (_isFocused && !isFieldReadOnly) ? AppColors.primary : const Color(0xFF64748B),
           ),
         ),
       ),

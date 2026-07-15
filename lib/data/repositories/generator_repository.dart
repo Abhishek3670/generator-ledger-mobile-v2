@@ -9,9 +9,15 @@ class GeneratorRepository {
 
   final ApiClient _apiClient;
 
-  Future<List<Generator>> getGenerators({String? inventoryGroup}) async {
+  Future<List<Generator>> getGenerators({String? inventoryGroup, String? date}) async {
+    final queryParams = <String, dynamic>{};
+    if (date != null && date.isNotEmpty) {
+      queryParams['date'] = date;
+    }
+
     final generators = await _apiClient.get<List<Generator>>(
       generatorsPath,
+      queryParameters: queryParams.isEmpty ? null : queryParams,
       fromJson: (json) => _parseGeneratorList(json),
     );
 

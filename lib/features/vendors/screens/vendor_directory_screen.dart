@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/routing/app_router.dart';
 import '../../../core/utils/connectivity_service.dart';
 import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/expandable_fab_menu.dart';
@@ -12,13 +14,12 @@ import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/error_screen.dart';
 import '../../../shared/widgets/skeleton_loading.dart';
-import '../widgets/vendor_card.dart';
+import '../widgets/vendor_group_section.dart';
 import '../modals/add_vendor_modal.dart';
 import '../modals/edit_vendor_modal.dart';
+import '../modals/vendor_detail_modal.dart';
 import '../../../shared/widgets/destructive_confirmation_dialog.dart';
 import '../providers/vendors_provider.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import '../../../core/routing/app_router.dart';
 
 /// Directory screen listing Retailer and Rental vendors.
 class VendorDirectoryScreen extends ConsumerStatefulWidget {
@@ -37,6 +38,7 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen>
   bool _showEditModal = false;
   bool _showDeleteModal = false;
   String? _modalInitialCategory;
+  Vendor? _selectedVendorDetail;
   Vendor? _selectedVendorForEdit;
   Vendor? _selectedVendorForDelete;
 
@@ -108,148 +110,56 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Retailer Vendors Group Section
-        Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(
-              AppDimensions.functionalRadius,
-            ),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: const [
-              BoxShadow(
-                offset: Offset(0, 1),
-                blurRadius: 2,
-                color: AppColors.shadowSoft,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Retailer Vendor',
-                style: AppTypography.headlineSmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (retailerVendors.isEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      'No matching retailer vendors.',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                )
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: retailerVendors.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final vendor = retailerVendors[index];
-                    return VendorCard(
-                      key: ValueKey('${vendor.id}_$_slidableResetCounter'),
-                      vendor: vendor,
-                      onModify: () {
-                        setState(() {
-                          _selectedVendorForEdit = vendor;
-                          _showEditModal = true;
-                        });
-                      },
-                      onDelete: () {
-                        setState(() {
-                          _selectedVendorForDelete = vendor;
-                          _showDeleteModal = true;
-                        });
-                      },
-                    );
-                  },
-                ),
-            ],
-          ),
+        VendorGroupSection(
+          title: 'Retailer Vendor',
+          description: 'Manage retail vendor records used in bookings.',
+          category: 'retailer',
+          vendors: retailerVendors,
+          slidableResetCounter: _slidableResetCounter,
+          onVendorTap: (vendor) {
+            setState(() {
+              _selectedVendorDetail = vendor;
+            });
+          },
+          onModify: (vendor) {
+            setState(() {
+              _selectedVendorForEdit = vendor;
+              _showEditModal = true;
+            });
+          },
+          onDelete: (vendor) {
+            setState(() {
+              _selectedVendorForDelete = vendor;
+              _showDeleteModal = true;
+            });
+          },
         ),
         const SizedBox(height: 24),
 
         // Rental Vendors Group Section
-        Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(
-              AppDimensions.functionalRadius,
-            ),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: const [
-              BoxShadow(
-                offset: Offset(0, 1),
-                blurRadius: 2,
-                color: AppColors.shadowSoft,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Rental Vendors',
-                style: AppTypography.headlineSmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (rentalVendors.isEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      'No matching rental vendors.',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                )
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: rentalVendors.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final vendor = rentalVendors[index];
-                    return VendorCard(
-                      key: ValueKey('${vendor.id}_$_slidableResetCounter'),
-                      vendor: vendor,
-                      onModify: () {
-                        setState(() {
-                          _selectedVendorForEdit = vendor;
-                          _showEditModal = true;
-                        });
-                      },
-                      onDelete: () {
-                        setState(() {
-                          _selectedVendorForDelete = vendor;
-                          _showDeleteModal = true;
-                        });
-                      },
-                    );
-                  },
-                ),
-            ],
-          ),
+        VendorGroupSection(
+          title: 'Rental Vendor',
+          description: 'Manage rental vendor records for halls and hotels.',
+          category: 'rental',
+          vendors: rentalVendors,
+          slidableResetCounter: _slidableResetCounter,
+          onVendorTap: (vendor) {
+            setState(() {
+              _selectedVendorDetail = vendor;
+            });
+          },
+          onModify: (vendor) {
+            setState(() {
+              _selectedVendorForEdit = vendor;
+              _showEditModal = true;
+            });
+          },
+          onDelete: (vendor) {
+            setState(() {
+              _selectedVendorForDelete = vendor;
+              _showDeleteModal = true;
+            });
+          },
         ),
       ],
     );
@@ -321,8 +231,6 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen>
                     const SectionHeader(
                       category: 'DIRECTORY',
                       title: 'Vendors',
-                      description:
-                          'Manage retail vendor records used in bookings and rental vendor records for halls and hotels.',
                     ),
                     const SizedBox(height: 24),
 
@@ -404,6 +312,21 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen>
                       ),
                     ),
                   );
+                },
+              ),
+
+            // Vendor Detail Modal
+            if (_selectedVendorDetail != null)
+              VendorDetailModal(
+                vendor: _selectedVendorDetail!,
+                onClose: () => setState(() => _selectedVendorDetail = null),
+                onEdit: () {
+                  final vendor = _selectedVendorDetail!;
+                  setState(() {
+                    _selectedVendorDetail = null;
+                    _selectedVendorForEdit = vendor;
+                    _showEditModal = true;
+                  });
                 },
               ),
 

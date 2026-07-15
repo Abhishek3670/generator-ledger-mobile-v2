@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:ledger/core/providers/generator_provider.dart';
-import 'package:ledger/core/providers/vendor_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
 import '../../../shared/widgets/draggable_form_sheet.dart';
+import '../../../shared/widgets/confirmation_dialog.dart';
+import '../../../core/providers/booking_provider.dart';
+import '../../../core/services/user_preferences_service.dart';
+import '../modals/add_booking_modal.dart';
 
 class EditBookingModal extends ConsumerStatefulWidget {
   final Booking booking;
   final VoidCallback onClose;
-  final Function(Booking) onSave;
+  final Function(Booking)? onSave;
   final bool isVisible;
 
   const EditBookingModal({
     super.key,
     required this.booking,
     required this.onClose,
-    required this.onSave,
+    this.onSave,
     this.isVisible = true,
   });
 
@@ -28,345 +29,438 @@ class EditBookingModal extends ConsumerStatefulWidget {
 }
 
 class _EditBookingModalState extends ConsumerState<EditBookingModal> {
-  final _formKey = GlobalKey<FormState>();
-  String _assignmentMode = 'id';
-  late String _selectedCapacity;
-  late DateTime _startDate;
-  late DateTime _endDate;
-  String? _selectedVendorId;
-  String? _selectedGeneratorId;
-  late final TextEditingController _capacityController;
-  final _notesController = TextEditingController();
+  String _searchQuery = '';
+  bool _showAddBookingModal = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedVendorId = widget.booking.vendorId;
-    _selectedGeneratorId = widget.booking.generatorId;
-    _capacityController = TextEditingController(text: widget.booking.capacity);
-    _startDate = widget.booking.date;
-    _endDate = widget.booking.date.add(const Duration(days: 2)); // Default fallback range
-
-    final numMatch = RegExp(r'\d+').firstMatch(widget.booking.capacity);
-    _selectedCapacity = numMatch != null ? numMatch.group(0)! : '50';
-  }
-
-  @override
-  void dispose() {
-    _capacityController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDateRange(BuildContext context) async {
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2025),
-      lastDate: DateTime(2030),
-      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              onSurface: AppColors.primary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-    }
+  void _openAddBookingModal() async {
+    await ref.read(userPreferencesServiceProvider).saveLastVendor(widget.booking.vendorId);
+    setState(() {
+      _showAddBookingModal = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final vendors = ref.watch(vendorProvider).valueOrNull ?? [];
-    final generators = ref.watch(generatorProvider).valueOrNull ?? [];
-
-    // Ensure initial/selected values are in the options list to avoid DropdownButton assertion crashes
-    final vendorIds = vendors.map((v) => v.id).toSet();
-    if (_selectedVendorId != null) {
-      vendorIds.add(_selectedVendorId!);
-    }
-
-    final generatorIds = generators.map((g) => g.id).toSet();
-    if (_selectedGeneratorId != null) {
-      generatorIds.add(_selectedGeneratorId!);
-    }
-
-    final vendorDropdownItems = vendorIds.map((id) {
-      final match = vendors.where((v) => v.id == id);
-      final name = match.isNotEmpty ? match.first.name : id;
-      return DropdownMenuItem<String>(
-        value: id,
-        child: Text(name, style: AppTypography.bodyMedium),
-      );
-    }).toList();
-
-    final generatorDropdownItems = generatorIds.map((id) {
-      return DropdownMenuItem<String>(
-        value: id,
-        child: Text(id, style: AppTypography.bodyMedium),
-      );
-    }).toList();
-
     if (!widget.isVisible) return const SizedBox.shrink();
 
-    final formContent = Form(
-      key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Vendor Dropdown
-            _buildFieldLabel('VENDOR'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              isExpanded: true,
-              initialValue: _selectedVendorId,
-              hint: Text('Select Vendor', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
-              decoration: _inputDecoration(),
-              items: vendorDropdownItems,
-              onChanged: (value) {
-                setState(() {
-                  _selectedVendorId = value;
-                });
-              },
-              validator: (value) => value == null ? 'Please select a vendor' : null,
-            ),
-            const SizedBox(height: 16),
+    final bookingsAsync = ref.watch(bookingProvider);
 
-            // Assignment Mode Toggle
-            _buildFieldLabel('GENERATOR ASSIGNMENT'),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => _assignmentMode = 'id'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _assignmentMode == 'id' ? AppColors.primary : AppColors.surfaceContainer,
-                      foregroundColor: _assignmentMode == 'id' ? Colors.white : AppColors.textSecondary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    child: Text('Generator ID', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold)),
-                  ),
+    return Stack(
+      children: [
+        DraggableFormSheet(
+          title: widget.booking.vendorName,
+          category: 'EDIT BOOKING',
+          onClose: widget.onClose,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Booking Date Header
+              Text(
+                DateFormat('MMMM dd, yyyy').format(widget.booking.date),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => _assignmentMode = 'capacity'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _assignmentMode == 'capacity' ? AppColors.primary : AppColors.surfaceContainer,
-                      foregroundColor: _assignmentMode == 'capacity' ? Colors.white : AppColors.textSecondary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    child: Text('Capacity', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            if (_assignmentMode == 'id') ...[
-              // Generator Dropdown
-              _buildFieldLabel('GENERATOR'),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                isExpanded: true,
-                initialValue: _selectedGeneratorId,
-                hint: Text('Select Generator', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
-                decoration: _inputDecoration(),
-                items: generatorDropdownItems,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedGeneratorId = value;
-                    final match = generators.where((g) => g.id == value);
-                    if (match.isNotEmpty) {
-                      _capacityController.text = match.first.capacity;
-                    }
-                  });
-                },
-                validator: (value) => _assignmentMode == 'id' && value == null ? 'Please select a generator' : null,
               ),
               const SizedBox(height: 16),
 
-              // Capacity Field
-              _buildFieldLabel('CAPACITY'),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _capacityController,
-                readOnly: true,
-                style: AppTypography.bodyMedium,
-                decoration: _inputDecoration(),
+              // Section Title
+              Text(
+                'Edit Assigned Generators',
+                style: AppTypography.title.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ] else ...[
-              // Capacity Radio Chips
-              _buildFieldLabel('CAPACITY (kVA)'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: const ['25', '50', '100', '250'].map((cap) {
-                  final isSelected = _selectedCapacity == cap;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCapacity = cap;
-                        _capacityController.text = '$cap kVA';
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : Colors.white,
-                        border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: 1),
-                        borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
-                      ),
-                      child: Text(
-                        cap,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: isSelected ? Colors.white : AppColors.textSecondary,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              const SizedBox(height: 12),
+
+              // Search Input
+              TextField(
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search assigned assets...',
+                  hintStyle: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1),
+                  ),
+                ),
+                style: AppTypography.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+
+              // Cards List
+              bookingsAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                error: (err, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Text('Error loading assets: $err'),
+                  ),
+                ),
+                data: (bookings) {
+                  final vendorBookings = bookings
+                      .where((b) => b.vendorId == widget.booking.vendorId)
+                      .toList();
+
+                  // Flatten into individual BookingItem entries
+                  final allItems = <({BookingItem item, Booking parentBooking})>[];
+                  for (final booking in vendorBookings) {
+                    if (booking.items.isNotEmpty) {
+                      for (final item in booking.items) {
+                        allItems.add((item: item, parentBooking: booking));
+                      }
+                    } else {
+                      // Fallback: synthesize from booking's generators list
+                      for (final genId in booking.generators) {
+                        final capacityNum = int.tryParse(booking.capacity.replaceAll(RegExp(r'[^0-9]'), ''));
+                        allItems.add((
+                          item: BookingItem(
+                            generatorId: genId,
+                            capacityKva: capacityNum,
+                            startDt: booking.formatBookingDate(),
+                            itemStatus: booking.status,
+                            isEmergency: false,
+                            remarks: booking.notes,
+                          ),
+                          parentBooking: booking,
+                        ));
+                      }
+                    }
+                  }
+
+                  // Apply search query filter on item.generatorId
+                  final filteredItems = allItems.where((entry) {
+                    if (_searchQuery.isEmpty) return true;
+                    return entry.item.generatorId.toLowerCase().contains(_searchQuery.toLowerCase());
+                  }).toList();
+
+                  if (filteredItems.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Center(
+                        child: Text(
+                          'No assigned assets found.',
+                          style: TextStyle(color: AppColors.textSecondary),
                         ),
                       ),
-                    ),
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      ...filteredItems.map((entry) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: _GeneratorAssignmentCard(
+                            key: ValueKey('${entry.parentBooking.id}_${entry.item.generatorId}_${entry.item.startDt}'),
+                            item: entry.item,
+                            parentBooking: entry.parentBooking,
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 72),
+                    ],
                   );
-                }).toList(),
+                },
               ),
             ],
-            const SizedBox(height: 16),
-
-            // Date Range Picker
-            _buildFieldLabel('BOOKING DATES'),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => _selectDateRange(context),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today, color: AppColors.textSecondary, size: 18),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${DateFormat('MMM dd').format(_startDate)} - ${DateFormat('MMM dd, yyyy').format(_endDate)}',
-                            style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${_endDate.difference(_startDate).inDays + 1} days',
-                            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Notes
-            _buildFieldLabel('OPTIONAL NOTES'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _notesController,
-              maxLines: 3,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Add any notes...'),
-            ),
-          ],
+          ),
         ),
-      );
-
-    return DraggableFormSheet(
-      title: 'Edit Booking',
-      category: 'bookings',
-      onClose: widget.onClose,
-      footer: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              final matchVendor = vendors.where((v) => v.id == _selectedVendorId);
-              final vendorName = matchVendor.isNotEmpty ? matchVendor.first.name : (_selectedVendorId ?? '');
-
-              String genId = _selectedGeneratorId ?? 'AUTO-ASSIGN';
-              if (_assignmentMode == 'capacity') {
-                final matchGen = generators.where((g) => g.capacity.contains(_selectedCapacity));
-                if (matchGen.isNotEmpty) {
-                  genId = matchGen.first.id;
-                } else if (generators.isNotEmpty) {
-                  genId = generators.first.id;
-                }
-              }
-
-              final updatedBooking = Booking(
-                id: widget.booking.id,
-                vendorId: _selectedVendorId!,
-                vendorName: vendorName,
-                generatorId: genId,
-                capacity: _capacityController.text.trim(),
-                date: _startDate,
-                status: widget.booking.status,
-              );
-              widget.onSave(updatedBooking);
-            }
-          },
-          style: ElevatedButton.styleFrom(
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton(
             backgroundColor: AppColors.accent,
             foregroundColor: AppColors.primary,
-            shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: const CircleBorder(),
+            onPressed: _openAddBookingModal,
+            child: const Icon(Icons.add),
           ),
-          child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
         ),
-      ),
-      child: formContent,
+        if (_showAddBookingModal)
+          AddBookingModal(
+            lockedVendorId: widget.booking.vendorId,
+            onClose: () {
+              setState(() {
+                _showAddBookingModal = false;
+              });
+            },
+            onSave: (newBookings) async {
+              setState(() {
+                _showAddBookingModal = false;
+              });
+              for (final b in newBookings) {
+                await ref.read(bookingProvider.notifier).addBooking(b);
+              }
+            },
+            isVisible: true,
+          ),
+      ],
     );
+  }
+}
+
+class _GeneratorAssignmentCard extends ConsumerStatefulWidget {
+  final BookingItem item;
+  final Booking parentBooking;
+
+  const _GeneratorAssignmentCard({
+    super.key,
+    required this.item,
+    required this.parentBooking,
+  });
+
+  @override
+  ConsumerState<_GeneratorAssignmentCard> createState() =>
+      __GeneratorAssignmentCardState();
+}
+
+class __GeneratorAssignmentCardState extends ConsumerState<_GeneratorAssignmentCard> {
+  late final TextEditingController _remarksController;
+  late final FocusNode _remarksFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _remarksController = TextEditingController(text: widget.item.remarks);
+    _remarksFocusNode = FocusNode();
+    _remarksFocusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _remarksFocusNode.removeListener(_onFocusChange);
+    _remarksFocusNode.dispose();
+    _remarksController.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (!_remarksFocusNode.hasFocus) {
+      final currentRemarks = _remarksController.text.trim();
+      if (currentRemarks != widget.item.remarks) {
+        List<BookingItem> updatedItems = [];
+        if (widget.parentBooking.items.isNotEmpty) {
+          updatedItems = widget.parentBooking.items.map((i) {
+            if (i.generatorId == widget.item.generatorId && i.startDt == widget.item.startDt) {
+              return BookingItem(
+                generatorId: i.generatorId,
+                capacityKva: i.capacityKva,
+                startDt: i.startDt,
+                endDt: i.endDt,
+                itemStatus: i.itemStatus,
+                isEmergency: i.isEmergency,
+                remarks: currentRemarks,
+              );
+            }
+            return i;
+          }).toList();
+        } else {
+          updatedItems = widget.parentBooking.generators.map((genId) {
+            final isTarget = genId == widget.item.generatorId;
+            return BookingItem(
+              generatorId: genId,
+              capacityKva: widget.item.capacityKva,
+              startDt: widget.item.startDt,
+              itemStatus: widget.parentBooking.status,
+              isEmergency: false,
+              remarks: isTarget ? currentRemarks : widget.parentBooking.notes,
+            );
+          }).toList();
+        }
+
+        final updatedBooking = widget.parentBooking.copyWith(
+          items: updatedItems,
+          notes: updatedItems.length == 1 ? currentRemarks : widget.parentBooking.notes,
+        );
+
+        ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
+      }
+    }
   }
 
   Widget _buildFieldLabel(String label) {
     return Text(
       label,
-      style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+      style: AppTypography.labelCaps.copyWith(
+        color: AppColors.textSecondary,
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
-  InputDecoration _inputDecoration({String? hintText}) {
-    return InputDecoration(
-      hintText: hintText,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
-        borderSide: const BorderSide(color: AppColors.border, width: 1),
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: ValueKey('${widget.parentBooking.id}_${widget.item.generatorId}_${widget.item.startDt}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: AppColors.danger,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.delete, color: AppColors.surface),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
-        borderSide: const BorderSide(color: AppColors.border, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      confirmDismiss: (direction) async {
+        final bool? confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => ConfirmationDialog(
+            title: 'Delete Assignment',
+            message: 'Are you sure you want to remove this generator assignment?',
+            confirmText: 'DELETE',
+            cancelText: 'CANCEL',
+            isDestructive: true,
+            onConfirm: () => Navigator.of(context).pop(true),
+            onCancel: () => Navigator.of(context).pop(false),
+          ),
+        );
+        return confirm ?? false;
+      },
+      onDismissed: (direction) {
+        if (widget.parentBooking.items.isNotEmpty) {
+          if (widget.parentBooking.items.length <= 1) {
+            ref.read(bookingProvider.notifier).deleteBooking(widget.parentBooking.id);
+          } else {
+            final updatedItems = widget.parentBooking.items.where((i) {
+              return !(i.generatorId == widget.item.generatorId && i.startDt == widget.item.startDt);
+            }).toList();
+            final updatedGenerators = widget.parentBooking.generators.where((g) => g != widget.item.generatorId).toList();
+            final updatedBooking = widget.parentBooking.copyWith(
+              items: updatedItems,
+              generators: updatedGenerators,
+            );
+            ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
+          }
+        } else {
+          if (widget.parentBooking.generators.length <= 1) {
+            ref.read(bookingProvider.notifier).deleteBooking(widget.parentBooking.id);
+          } else {
+            final updatedGenerators = widget.parentBooking.generators.where((g) => g != widget.item.generatorId).toList();
+            final updatedBooking = widget.parentBooking.copyWith(
+              generators: updatedGenerators,
+            );
+            ref.read(bookingProvider.notifier).updateBooking(updatedBooking);
+          }
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Generator ID + Capacity badge row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.item.generatorId,
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainer,
+                    borderRadius: BorderRadius.circular(9999),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: Text(
+                    widget.item.capacityKva != null ? '${widget.item.capacityKva} kVA' : 'N/A',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Deployment Date field
+            _buildFieldLabel('DEPLOYMENT DATE'),
+            const SizedBox(height: 6),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.item.startDt,
+                    style: AppTypography.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Remarks field
+            _buildFieldLabel('REMARKS'),
+            const SizedBox(height: 6),
+            TextFormField(
+              focusNode: _remarksFocusNode,
+              controller: _remarksController,
+              style: AppTypography.bodyMedium,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.background,
+                hintText: 'Add remarks...',
+                hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

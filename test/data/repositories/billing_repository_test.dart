@@ -60,10 +60,11 @@ void main() {
         endDate: DateTime(2026, 2, 28),
       );
 
-      expect(result, hasLength(1)); // One vendor
-      expect(result.first.vendorId, 'VEN005');
-      expect(result.first.vendorName, 'Mallu');
-      expect(result.first.lines, hasLength(2)); // Two bookings
+      expect(result.summaries, hasLength(1)); // One vendor
+      expect(result.summaries.first.vendorId, 'VEN005');
+      expect(result.summaries.first.vendorName, 'Mallu');
+      expect(result.summaries.first.lines, hasLength(2)); // Two bookings
+      expect(result.capacities, equals([125, 250]));
     });
 
     test('getBillingPreview handles multiple vendors', () async {
@@ -98,8 +99,9 @@ void main() {
         endDate: DateTime(2026, 1, 31),
       );
 
-      expect(result, hasLength(2)); // Two vendors
-      expect(result.map((s) => s.vendorId), containsAll(['VEN001', 'VEN002']));
+      expect(result.summaries, hasLength(2)); // Two vendors
+      expect(result.summaries.map((s) => s.vendorId), containsAll(['VEN001', 'VEN002']));
+      expect(result.capacities, equals([125, 250]));
     });
 
     test('getBillingPreview filters by vendor ID', () async {
@@ -135,8 +137,8 @@ void main() {
         vendorId: 'VEN001', // Filter to only VEN001
       );
 
-      expect(result, hasLength(1)); // Only one vendor
-      expect(result.first.vendorId, 'VEN001');
+      expect(result.summaries, hasLength(1)); // Only one vendor
+      expect(result.summaries.first.vendorId, 'VEN001');
     });
 
     test('getBillingPreview returns empty list for no rows', () async {
@@ -155,7 +157,8 @@ void main() {
         endDate: DateTime(2026, 1, 31),
       );
 
-      expect(result, isEmpty);
+      expect(result.summaries, isEmpty);
+      expect(result.capacities, isEmpty);
     });
 
     test('recordPayment sends correct data', () async {

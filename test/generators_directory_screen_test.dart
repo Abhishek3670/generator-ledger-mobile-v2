@@ -31,9 +31,8 @@ void main() {
       expect(find.text('DIRECTORY'), findsOneWidget);
       expect(find.text('Generators'), findsOneWidget);
 
-      // Verify Booked Date Card
-      expect(find.text('BOOKED DATE'), findsOneWidget);
-      expect(find.text('All'), findsOneWidget);
+      // Verify Compact Date Filter Pill
+      expect(find.text('All Dates'), findsOneWidget);
 
       // Verify Inventory sections
       expect(find.byType(InventoryGroupSection), findsNWidgets(3));
@@ -116,7 +115,7 @@ void main() {
 
 class _FakeGeneratorRepository extends GeneratorRepository {
   @override
-  Future<List<MockGenerator>> getGenerators({String? inventoryGroup}) async {
+  Future<List<MockGenerator>> getGenerators({String? inventoryGroup, String? date}) async {
     final generators = List<MockGenerator>.of(mockGenerators);
     if (inventoryGroup == null) {
       return generators;

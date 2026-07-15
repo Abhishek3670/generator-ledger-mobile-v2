@@ -2,54 +2,37 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_generators.dart';
+import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/app_toast.dart';
-import 'generator_card.dart';
+import 'vendor_card.dart';
 
-/// Group section for generator inventory types with custom headers and borders.
-class InventoryGroupSection extends StatefulWidget {
-  /// Section title (e.g. "Retailer Genset").
+class VendorGroupSection extends StatefulWidget {
   final String title;
-
-  /// Explanatory info snippet.
   final String description;
-
-  /// Inventory group category ('retailer', 'permanent', 'emergency').
   final String category;
-
-  /// List of mock generators in this group.
-  final List<MockGenerator> generators;
-
-  /// Callback when a card is swiped to modify.
-  final Function(MockGenerator)? onModify;
-
-  /// Callback when a card is swiped to delete.
-  final Function(MockGenerator)? onDelete;
-
-  /// Callback when a card is tapped.
-  final Function(MockGenerator)? onGeneratorTap;
-
-  /// Optional counter to force closing all slidable items.
+  final List<Vendor> vendors;
+  final Function(Vendor)? onModify;
+  final Function(Vendor)? onDelete;
+  final Function(Vendor)? onVendorTap;
   final int slidableResetCounter;
 
-  /// Creates an [InventoryGroupSection].
-  const InventoryGroupSection({
+  const VendorGroupSection({
     super.key,
     required this.title,
     required this.description,
     required this.category,
-    required this.generators,
+    required this.vendors,
     this.onModify,
     this.onDelete,
-    this.onGeneratorTap,
+    this.onVendorTap,
     this.slidableResetCounter = 0,
   });
 
   @override
-  State<InventoryGroupSection> createState() => _InventoryGroupSectionState();
+  State<VendorGroupSection> createState() => _VendorGroupSectionState();
 }
 
-class _InventoryGroupSectionState extends State<InventoryGroupSection> {
+class _VendorGroupSectionState extends State<VendorGroupSection> {
   bool _isExpanded = false;
 
   @override
@@ -59,23 +42,18 @@ class _InventoryGroupSectionState extends State<InventoryGroupSection> {
     Color countBadgeBg = AppColors.surfaceContainer;
     Color titleColor = AppColors.primary;
 
-    if (widget.category == 'permanent') {
+    if (widget.category == 'rental') {
       borderColor = AppColors.warning.withValues(alpha: 0.3);
       countBadgeColor = AppColors.warning;
       countBadgeBg = AppColors.warning.withValues(alpha: 0.1);
       titleColor = AppColors.warning;
-    } else if (widget.category == 'emergency') {
-      borderColor = AppColors.danger.withValues(alpha: 0.3);
-      countBadgeColor = AppColors.danger;
-      countBadgeBg = AppColors.danger.withValues(alpha: 0.1);
-      titleColor = AppColors.danger;
     }
 
     const limit = 5;
-    final showShowAll = !_isExpanded && widget.generators.length > limit;
-    final visibleGenerators = showShowAll
-        ? widget.generators.take(limit).toList()
-        : widget.generators;
+    final showShowAll = !_isExpanded && widget.vendors.length > limit;
+    final visibleVendors = showShowAll
+        ? widget.vendors.take(limit).toList()
+        : widget.vendors;
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -131,7 +109,7 @@ class _InventoryGroupSectionState extends State<InventoryGroupSection> {
                   border: Border.all(color: borderColor, width: 1),
                 ),
                 child: Text(
-                  '${widget.generators.length}',
+                  '${widget.vendors.length}',
                   style: AppTypography.labelCaps.copyWith(
                     color: countBadgeColor,
                     fontWeight: FontWeight.bold,
@@ -143,15 +121,14 @@ class _InventoryGroupSectionState extends State<InventoryGroupSection> {
           ),
           const SizedBox(height: 16),
 
-          if (widget.generators.isEmpty)
+          if (widget.vendors.isEmpty)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               child: Center(
                 child: Text(
-                  'No records found.',
+                  'No matching ${widget.title.toLowerCase()}s.',
                   style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
-                    fontStyle: FontStyle.italic,
                   ),
                 ),
               ),
@@ -160,38 +137,40 @@ class _InventoryGroupSectionState extends State<InventoryGroupSection> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: visibleGenerators.length,
+              itemCount: visibleVendors.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final generator = visibleGenerators[index];
-                return GeneratorCard(
-                  key: ValueKey('${generator.id}_${widget.slidableResetCounter}'),
-                  generator: generator,
-                  onModify: widget.onModify != null ? () => widget.onModify!(generator) : null,
-                  onDelete: widget.onDelete != null ? () => widget.onDelete!(generator) : null,
-                  onTap: widget.onGeneratorTap != null ? () => widget.onGeneratorTap!(generator) : null,
+                final vendor = visibleVendors[index];
+                return GestureDetector(
+                  onTap: () => widget.onVendorTap?.call(vendor),
+                  child: VendorCard(
+                    key: ValueKey('${vendor.id}_${widget.slidableResetCounter}'),
+                    vendor: vendor,
+                    onModify: widget.onModify != null ? () => widget.onModify!(vendor) : null,
+                    onDelete: widget.onDelete != null ? () => widget.onDelete!(vendor) : null,
+                  ),
                 );
               },
             ),
             if (showShowAll) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Center(
-                child: OutlinedButton(
+                child: TextButton(
                   onPressed: () {
                     setState(() {
                       _isExpanded = true;
                     });
                   },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.border, width: 1),
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  style: TextButton.styleFrom(
                     foregroundColor: AppColors.textSecondary,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: const StadiumBorder(
+                      side: BorderSide(color: AppColors.border, width: 1),
+                    ),
                   ),
                   child: Text(
-                    'Show all ${widget.generators.length} →',
+                    'Show all ${widget.vendors.length} →',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

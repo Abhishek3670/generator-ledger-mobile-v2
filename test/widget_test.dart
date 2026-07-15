@@ -103,7 +103,7 @@ class _FakeVendorRepository extends VendorRepository {
 
 class _FakeGeneratorRepository extends GeneratorRepository {
   @override
-  Future<List<MockGenerator>> getGenerators({String? inventoryGroup}) async => List.of(mockGenerators);
+  Future<List<MockGenerator>> getGenerators({String? inventoryGroup, String? date}) async => List.of(mockGenerators);
 }
 
 class _FakeBookingRepository extends BookingRepository {
@@ -147,11 +147,11 @@ class _FakeBookingRepository extends BookingRepository {
 
 class _FakeBillingRepository extends BillingRepository {
   @override
-  Future<List<BillingSummary>> getBillingPreview({
+  Future<BillingResponse> getBillingPreview({
     required DateTime startDate,
     required DateTime endDate,
     String? vendorId,
   }) async {
-    return [];
+    return const BillingResponse(summaries: [], capacities: []);
   }
 }

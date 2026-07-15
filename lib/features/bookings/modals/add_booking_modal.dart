@@ -36,12 +36,16 @@ class AddBookingModal extends ConsumerStatefulWidget {
   /// Controls the visibility of this overlay.
   final bool isVisible;
 
+  /// Locks the booking to a specific vendor, disabling dropdown edits.
+  final String? lockedVendorId;
+
   /// Creates an [AddBookingModal].
   const AddBookingModal({
     super.key,
     required this.onClose,
     required this.onSave,
     this.isVisible = true,
+    this.lockedVendorId,
   });
 
   @override
@@ -128,7 +132,9 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       _startDate = defaults.startDate;
       _endDate = defaults.endDate;
       _selectedDates = [defaults.startDate];
-      if (defaults.lastVendorId != null) {
+      if (widget.lockedVendorId != null) {
+        _selectedVendorId = widget.lockedVendorId;
+      } else if (defaults.lastVendorId != null) {
         _selectedVendorId = defaults.lastVendorId;
       }
       if (defaults.lastCapacities != null && defaults.lastCapacities!.isNotEmpty) {
@@ -148,7 +154,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       if (_selectedDates.isEmpty && _startDate != null) {
         _selectedDates = [_startDate!];
       }
-      _selectedVendorId = draft['selectedVendorId'];
+      _selectedVendorId = widget.lockedVendorId ?? draft['selectedVendorId'];
       _selectedGeneratorId = draft['selectedGeneratorId'];
       _notesController.text = draft['notes'] ?? '';
     });
@@ -381,6 +387,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             hintText: 'Search by vendor name or ID',
             labelText: 'Vendor *',
             errorText: _vendorError,
+            enabled: widget.lockedVendorId == null,
           ),
           const SizedBox(height: 20),
 

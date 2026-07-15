@@ -121,7 +121,15 @@ class Booking {
   }
 
   factory Booking.fromMap(Map<String, dynamic> map) {
-    // First, try to parse from new 'items' array format
+    // Parse parent dates first to use as fallbacks for items
+    final startDate = _parseDate(
+      map['start_date'] ?? map['startDate'] ?? map['date'] ?? map['created_at'],
+    );
+    final endDate = _parseDate(
+      map['end_date'] ?? map['endDate'] ?? map['date'] ?? map['created_at'],
+      fallback: startDate,
+    );
+
     List<String> generators = [];
     double totalCapacity = 0.0;
     List<BookingItem> itemsList = [];
@@ -138,7 +146,20 @@ class Booking {
           if (capacity is num) {
             totalCapacity += capacity.toDouble();
           }
-          itemsList.add(BookingItem.fromMap(item));
+          final parsedItem = BookingItem.fromMap(item);
+          final finalStartDt = (parsedItem.startDt.isEmpty || parsedItem.startDt == 'null')
+              ? DateFormat('yyyy-MM-dd').format(startDate)
+              : parsedItem.startDt;
+          
+          itemsList.add(BookingItem(
+            generatorId: parsedItem.generatorId,
+            capacityKva: parsedItem.capacityKva,
+            startDt: finalStartDt,
+            endDt: parsedItem.endDt,
+            itemStatus: parsedItem.itemStatus,
+            isEmergency: parsedItem.isEmergency,
+            remarks: parsedItem.remarks,
+          ));
         }
       }
     }
@@ -155,15 +176,6 @@ class Booking {
         ],
       }..removeWhere((value) => value.isEmpty);
     }
-
-    // Handle both created_at and date fields for start date
-    final startDate = _parseDate(
-      map['start_date'] ?? map['startDate'] ?? map['date'] ?? map['created_at'],
-    );
-    final endDate = _parseDate(
-      map['end_date'] ?? map['endDate'] ?? map['date'] ?? map['created_at'],
-      fallback: startDate,
-    );
 
     // Handle vendor name - if missing, show vendor ID
     final vendorId = (map['vendor_id'] ?? map['vendorId'] ?? '').toString();

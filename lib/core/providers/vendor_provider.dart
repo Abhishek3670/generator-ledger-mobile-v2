@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
 import '../../data/repositories/vendor_repository.dart';
 import '../../shared/models/vendor.dart';
 
 final vendorRepositoryProvider = Provider<VendorRepository>((ref) {
-  return VendorRepository();
+  return VendorRepository(apiClient: ref.watch(apiClientProvider));
 });
 
 final vendorProvider =

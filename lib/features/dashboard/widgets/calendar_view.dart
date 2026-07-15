@@ -93,52 +93,7 @@ class _CalendarViewState extends State<CalendarView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Card Title/Header Row
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'CALENDAR',
-                        style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Vendor Bookings',
-                        style: AppTypography.headlineMedium.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 20,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Confirmed bookings by date.',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                // Helper copy on wider screens (we can conditionally show it)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (MediaQuery.of(context).size.width > 360) {
-                      return Text(
-                        'Click a date to view details.',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-          ),
-          const Divider(color: AppColors.border, height: 1),
+
 
           // 2. Controls Row
           Padding(

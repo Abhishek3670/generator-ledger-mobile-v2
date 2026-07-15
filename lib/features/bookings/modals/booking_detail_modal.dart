@@ -25,58 +25,36 @@ class BookingDetailModal extends StatelessWidget {
     if (!isVisible) return const SizedBox.shrink();
 
     return DraggableFormSheet(
-      title: 'BOOKING',
+      title: booking.vendorName,
       category: 'bookings',
       onClose: onClose,
-      footer: SizedBox(
-        width: double.infinity,
-        child: Center(
-          child: OutlinedButton(
-            onPressed: onEdit,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              side: const BorderSide(color: AppColors.border, width: 1),
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('Edit', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+      actions: [
+        IconButton(
+          onPressed: onEdit,
+          icon: const Icon(
+            Icons.edit_outlined,
+            color: AppColors.textSecondary,
+            size: 22,
           ),
+          tooltip: 'Edit Booking',
         ),
-      ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header info
-          Text(booking.vendorName, style: AppTypography.title),
-          const SizedBox(height: 4),
-          Text(booking.id, style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
-          const SizedBox(height: 24),
-
-          // Details Grid (Status, Created, Vendor ID, Booked)
+          // Details Grid (Status, Booked)
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border, width: 1),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _buildDetailCol('STATUS', StatusBadge(label: booking.status, type: _getStatusType(booking.status)))),
-                    Expanded(child: _buildDetailCol('CREATED', Text(DateFormat('yyyy-MM-dd\nHH:mm').format(DateTime.now()), style: AppTypography.bodySmall))),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _buildDetailCol('VENDOR ID', Text(booking.vendorId, style: AppTypography.bodySmall))),
-                    Expanded(child: _buildDetailCol('BOOKED', Text(DateFormat('yyyy-MM-dd').format(booking.date), style: AppTypography.bodySmall))),
-                  ],
-                ),
+                _buildRowDetail('STATUS', StatusBadge(label: booking.status, type: _getStatusType(booking.status))),
+                _buildRowDetail('BOOKED', Text(DateFormat('yyyy-MM-dd').format(booking.date), style: AppTypography.bodySmall)),
               ],
             ),
           ),
@@ -101,12 +79,17 @@ class BookingDetailModal extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailCol(String label, Widget content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildRowDetail(String label, Widget content) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
-        const SizedBox(height: 8),
+        Text(
+          '$label: ',
+          style: AppTypography.labelCaps.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 10,
+          ),
+        ),
         content,
       ],
     );
@@ -136,6 +119,7 @@ class BookingDetailModal extends StatelessWidget {
             children: [
               SizedBox(width: 100, child: Text('DATE', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 200, child: Text('GENERATORS', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
+              SizedBox(width: 100, child: Text('CAPACITY', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 100, child: Text('STATUS', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 100, child: Text('REM', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
             ],
@@ -145,12 +129,14 @@ class BookingDetailModal extends StatelessWidget {
         ...grouped.entries.expand((entry) {
           final date = entry.key;
           return entry.value.map((item) {
+            final capacityStr = item.capacityKva != null ? '${item.capacityKva} kVA' : '—';
             return Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
                   SizedBox(width: 100, child: Text(date, style: AppTypography.bodySmall)),
                   SizedBox(width: 200, child: Text(item.generatorId, style: AppTypography.bodySmall.copyWith(color: item.isEmergency ? AppColors.danger : null), overflow: TextOverflow.ellipsis)),
+                  SizedBox(width: 100, child: Text(capacityStr, style: AppTypography.bodySmall)),
                   SizedBox(width: 100, child: Align(alignment: Alignment.centerLeft, child: StatusBadge(label: item.itemStatus, type: _getStatusType(item.itemStatus)))),
                   SizedBox(width: 100, child: Text(item.remarks.isEmpty ? '-' : item.remarks, style: AppTypography.bodySmall, overflow: TextOverflow.ellipsis)),
                 ],

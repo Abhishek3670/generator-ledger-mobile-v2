@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../shared/models/user.dart';
 import '../../shared/models/permission.dart';
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return UserRepository();
+  return UserRepository(apiClient: ref.watch(apiClientProvider));
 });
 
 final userProvider =

@@ -5,6 +5,7 @@ class Generator {
   final String inventoryGroup;
   final String status;
   final String? assignedVendor;
+  final String? bookingStatus;
 
   const Generator({
     required String id,
@@ -13,6 +14,7 @@ class Generator {
     required String category,
     required this.status,
     this.assignedVendor,
+    this.bookingStatus,
   }) : generatorId = id,
        inventoryGroup = category;
 
@@ -26,6 +28,7 @@ class Generator {
     String? category,
     String? status,
     String? assignedVendor,
+    String? bookingStatus,
   }) {
     return Generator(
       id: id ?? generatorId,
@@ -34,6 +37,7 @@ class Generator {
       category: category ?? inventoryGroup,
       status: status ?? this.status,
       assignedVendor: assignedVendor ?? this.assignedVendor,
+      bookingStatus: bookingStatus ?? this.bookingStatus,
     );
   }
 
@@ -50,6 +54,7 @@ class Generator {
         'assigned_vendor_name',
         'rental_vendor_name',
       ]),
+      bookingStatus: _nullableString(map, ['booking_status', 'bookingStatus']),
     );
   }
 
@@ -61,6 +66,7 @@ class Generator {
       'inventory_group': inventoryGroup,
       'operational_status': status,
       if (assignedVendor != null) 'assigned_vendor': assignedVendor,
+      if (bookingStatus != null) 'booking_status': bookingStatus,
     };
   }
 

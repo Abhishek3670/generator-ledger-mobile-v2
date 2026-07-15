@@ -38,8 +38,213 @@ class _GeneratorsDirectoryScreenState
   final _dateController = TextEditingController();
   String _searchQuery = '';
   DateTime? _selectedDate;
-  late final FocusNode _dateFocusNode;
-  bool _isDateFocused = false;
+  String _bookingStatusFilter = 'All'; // 'All', 'Booked', 'Free'
+  String _capacitySort = 'default'; // 'default', 'asc', 'desc'
+
+  int _parseCapacity(String cap) {
+    final numericPart = cap.replaceAll(RegExp(r'[^0-9]'), '');
+    return int.tryParse(numericPart) ?? 0;
+  }
+
+  void _showFilterAndSortSheet() {
+    String tempBookingStatus = _bookingStatusFilter;
+    String tempCapacitySort = _capacitySort;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Filters & Sort',
+                          style: AppTypography.headlineSmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+                    const SizedBox(height: 12),
+
+                    // Booking Status Segment
+                    Text(
+                      'BOOKING STATUS',
+                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildSheetChip(
+                          label: 'All',
+                          isSelected: tempBookingStatus == 'All',
+                          isDisabled: _selectedDate == null,
+                          onTap: () {
+                            setSheetState(() {
+                              tempBookingStatus = 'All';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Booked',
+                          isSelected: tempBookingStatus == 'Booked',
+                          isDisabled: _selectedDate == null,
+                          onTap: () {
+                            setSheetState(() {
+                              tempBookingStatus = 'Booked';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Free',
+                          isSelected: tempBookingStatus == 'Free',
+                          isDisabled: _selectedDate == null,
+                          onTap: () {
+                            setSheetState(() {
+                              tempBookingStatus = 'Free';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Sort By Segment
+                    Text(
+                      'SORT BY',
+                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildSheetChip(
+                          label: 'Default',
+                          isSelected: tempCapacitySort == 'default',
+                          onTap: () {
+                            setSheetState(() {
+                              tempCapacitySort = 'default';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Cap L-H',
+                          isSelected: tempCapacitySort == 'asc',
+                          onTap: () {
+                            setSheetState(() {
+                              tempCapacitySort = 'asc';
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSheetChip(
+                          label: 'Cap H-L',
+                          isSelected: tempCapacitySort == 'desc',
+                          onTap: () {
+                            setSheetState(() {
+                              tempCapacitySort = 'desc';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Apply Button
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _bookingStatusFilter = tempBookingStatus;
+                          _capacitySort = tempCapacitySort;
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: AppColors.primary,
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        'APPLY',
+                        style: AppTypography.labelCaps.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSheetChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    bool isDisabled = false,
+  }) {
+    final bgColor = isSelected ? AppColors.primary : Colors.white;
+    final textColor = isDisabled
+        ? AppColors.textSecondary.withValues(alpha: 0.5)
+        : (isSelected ? Colors.white : AppColors.textSecondary);
+    final borderColor = isDisabled
+        ? AppColors.border.withValues(alpha: 0.5)
+        : AppColors.border;
+
+    return Opacity(
+      opacity: isDisabled ? 0.6 : 1.0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          border: Border.all(color: borderColor, width: 1),
+          borderRadius: BorderRadius.circular(9999),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isDisabled ? null : onTap,
+            borderRadius: BorderRadius.circular(9999),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   bool _showAddModal = false;
   bool _showEditModal = false;
@@ -66,8 +271,6 @@ class _GeneratorsDirectoryScreenState
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _dateFocusNode = FocusNode();
-    _dateFocusNode.addListener(_onDateFocusChange);
   }
 
   @override
@@ -82,8 +285,6 @@ class _GeneratorsDirectoryScreenState
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _dateController.dispose();
-    _dateFocusNode.removeListener(_onDateFocusChange);
-    _dateFocusNode.dispose();
     super.dispose();
   }
 
@@ -92,11 +293,7 @@ class _GeneratorsDirectoryScreenState
     _closeAllSwipeRows();
   }
 
-  void _onDateFocusChange() {
-    setState(() {
-      _isDateFocused = _dateFocusNode.hasFocus;
-    });
-  }
+
 
   void _onSearchChanged() {
     setState(() {
@@ -116,6 +313,9 @@ class _GeneratorsDirectoryScreenState
         _selectedDate = picked;
         _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
       });
+      ref.read(generatorProvider.notifier).loadGenerators(
+        date: DateFormat('yyyy-MM-dd').format(picked),
+      );
     }
   }
 
@@ -143,7 +343,9 @@ class _GeneratorsDirectoryScreenState
           generators: retailerGensets,
           slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
-            context.push('/generators/${gen.id}');
+            setState(() {
+              _selectedGeneratorDetail = gen;
+            });
           },
           onModify: (gen) {
             setState(() {
@@ -169,7 +371,9 @@ class _GeneratorsDirectoryScreenState
           generators: permanentGensets,
           slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
-            context.push('/generators/${gen.id}');
+            setState(() {
+              _selectedGeneratorDetail = gen;
+            });
           },
           onModify: (gen) {
             setState(() {
@@ -195,7 +399,9 @@ class _GeneratorsDirectoryScreenState
           generators: emergencyGensets,
           slidableResetCounter: _slidableResetCounter,
           onGeneratorTap: (gen) {
-            context.push('/generators/${gen.id}');
+            setState(() {
+              _selectedGeneratorDetail = gen;
+            });
           },
           onModify: (gen) {
             setState(() {
@@ -230,12 +436,31 @@ class _GeneratorsDirectoryScreenState
       _lastIndex = currentIndex;
     } catch (_) {}
 
-    final filteredGenerators = generators.where((gen) {
+    var filteredGenerators = generators.where((gen) {
       if (_searchQuery.isEmpty) return true;
       return gen.id.toLowerCase().contains(_searchQuery) ||
           gen.capacity.toLowerCase().contains(_searchQuery) ||
           gen.type.toLowerCase().contains(_searchQuery);
     }).toList();
+
+    if (_selectedDate != null && _bookingStatusFilter != 'All') {
+      final filterLower = _bookingStatusFilter.toLowerCase();
+      filteredGenerators = filteredGenerators.where((gen) {
+        return gen.bookingStatus?.toLowerCase() == filterLower;
+      }).toList();
+    }
+
+    if (_capacitySort != 'default') {
+      filteredGenerators.sort((a, b) {
+        final capA = _parseCapacity(a.capacity);
+        final capB = _parseCapacity(b.capacity);
+        if (_capacitySort == 'asc') {
+          return capA.compareTo(capB);
+        } else {
+          return capB.compareTo(capA);
+        }
+      });
+    }
 
     final retailerGensets = filteredGenerators
         .where((g) => g.category == 'retailer')
@@ -298,108 +523,118 @@ class _GeneratorsDirectoryScreenState
                     const SectionHeader(
                       category: 'DIRECTORY',
                       title: 'Generators',
-                      description:
-                          'Track retailer, permanent, and emergency genset inventory, assignments, and availability.',
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
 
-                    // Booked Date Card
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.functionalRadius,
-                        ),
-                        border: Border.all(color: AppColors.border, width: 1),
-                        boxShadow: const [
-                          BoxShadow(
-                            offset: Offset(0, 1),
-                            blurRadius: 2,
-                            color: AppColors.shadowSoft,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'BOOKED DATE',
-                            style: AppTypography.labelCaps.copyWith(
-                              color: AppColors.textSecondary,
+                    // Filter and Sort Bar
+                    // Filter and Sort Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Date Filter Pill
+                        Container(
+                          decoration: BoxDecoration(
+                            color: _selectedDate != null ? AppColors.primary : Colors.white,
+                            border: Border.all(
+                              color: _selectedDate != null ? AppColors.primary : AppColors.border,
+                              width: 1,
                             ),
+                            borderRadius: BorderRadius.circular(9999),
                           ),
-                          const SizedBox(height: 8),
-                          Row(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: _selectDate,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: _isDateFocused
-                                            ? AppColors.primary
-                                            : AppColors.border,
-                                        width: 1,
+                              InkWell(
+                                onTap: _selectDate,
+                                borderRadius: _selectedDate != null
+                                    ? const BorderRadius.horizontal(left: Radius.circular(9999))
+                                    : BorderRadius.circular(9999),
+                                child: Padding(
+                                  padding: EdgeInsets.fromLTRB(12, 6, _selectedDate != null ? 8 : 12, 6),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        size: 14,
+                                        color: _selectedDate != null ? Colors.white : AppColors.textSecondary,
                                       ),
-                                      borderRadius: BorderRadius.circular(
-                                        AppDimensions.functionalRadius,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          _selectedDate != null
-                                              ? DateFormat(
-                                                  'dd MMMM yyyy',
-                                                ).format(_selectedDate!)
-                                              : 'All',
-                                          style: AppTypography.bodyMedium
-                                              .copyWith(
-                                                color: _selectedDate != null
-                                                    ? AppColors.primary
-                                                    : AppColors.textSecondary,
-                                              ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _selectedDate != null
+                                            ? DateFormat('dd MMM yyyy').format(_selectedDate!)
+                                            : 'All Dates',
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: _selectedDate != null ? Colors.white : AppColors.textSecondary,
+                                          fontWeight: FontWeight.w600,
                                         ),
+                                      ),
+                                      if (_selectedDate == null) ...[
+                                        const SizedBox(width: 4),
                                         const Icon(
-                                          Icons.calendar_today,
-                                          size: 16,
+                                          Icons.arrow_drop_down,
+                                          size: 14,
                                           color: AppColors.textSecondary,
                                         ),
                                       ],
-                                    ),
+                                    ],
                                   ),
                                 ),
                               ),
                               if (_selectedDate != null) ...[
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  onPressed: () {
+                                InkWell(
+                                  onTap: () {
                                     setState(() {
                                       _selectedDate = null;
                                       _dateController.clear();
+                                      _bookingStatusFilter = 'All';
                                     });
+                                    ref.read(generatorProvider.notifier).loadGenerators();
                                   },
-                                  icon: const Icon(Icons.clear, size: 16),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: AppColors.border.withValues(
-                                      alpha: 0.3,
+                                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(9999)),
+                                  child: const Padding(
+                                    padding: EdgeInsets.fromLTRB(4, 6, 12, 6),
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 14,
+                                      color: Colors.white,
                                     ),
-                                    padding: const EdgeInsets.all(8),
                                   ),
                                 ),
                               ],
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+
+                        // Filter Icon Button
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              onPressed: _showFilterAndSortSheet,
+                              icon: const Icon(Icons.tune, color: AppColors.textSecondary, size: 20),
+                              style: IconButton.styleFrom(
+                                side: const BorderSide(color: AppColors.border, width: 1),
+                                shape: const CircleBorder(),
+                                padding: const EdgeInsets.all(8),
+                              ),
+                            ),
+                            if (_bookingStatusFilter != 'All' || _capacitySort != 'default')
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.accent, // amber CTA dot
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
 

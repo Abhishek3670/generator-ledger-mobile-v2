@@ -54,8 +54,7 @@ class GeneratorCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   generator.id,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+                  overflow: TextOverflow.visible,
                   style: AppTypography.headlineSmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
@@ -63,15 +62,29 @@ class GeneratorCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              StatusBadge(
-                label: generator.status.toUpperCase(),
-                type: _getStatusBadgeType(generator.status),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  StatusBadge(
+                    label: generator.status.toUpperCase(),
+                    type: _getStatusBadgeType(generator.status),
+                  ),
+                  if (generator.bookingStatus != null) ...[
+                    const SizedBox(width: 6),
+                    StatusBadge(
+                      label: generator.bookingStatus!.toUpperCase(),
+                      type: generator.bookingStatus!.toLowerCase() == 'booked'
+                          ? StatusBadgeType.pending
+                          : StatusBadgeType.confirmed,
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Cap: ${generator.capacity} | Type: ${generator.type}',
+            'Cap: ${generator.capacity} | Type: ${(generator.type.isEmpty || generator.type == "-") ? "N/A" : generator.type}',
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),

@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
 import '../../data/repositories/system_health_repository.dart';
 import '../../shared/models/system_health.dart';
 
 final systemHealthRepositoryProvider = Provider<SystemHealthRepository>((ref) {
-  return SystemHealthRepository();
+  return SystemHealthRepository(apiClient: ref.watch(apiClientProvider));
 });
 
 final systemHealthProvider =
