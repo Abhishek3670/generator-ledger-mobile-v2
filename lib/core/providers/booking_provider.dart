@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
 import '../../data/repositories/booking_repository.dart';
 import '../../shared/models/booking.dart';
 import '../../shared/models/calendar_event.dart';
 
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
-  return BookingRepository();
+  return BookingRepository(apiClient: ref.watch(apiClientProvider));
 });
 
 final bookingProvider =

@@ -5,6 +5,41 @@ All notable changes to the generator-ledger-mobile-v2 project will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-07-16
+
+### Added
+- **Custom Top Toast Notifications** — Slides from top, 4 variants (success, warning, error, info), replaces all Material snackbars
+- **Billing: Dynamic Capacity Tiers** — Pricing grid now auto-populated from API response (WO-100)
+- **Billing: Grouped Vendor Cards** — Mobile-friendly card layout replaces desktop table
+- **Billing: Compact Date Range Picker** — Single field "DD-MM-YYYY / DD-MM-YYYY" with range picker
+- **Billing: Screenshot Prevention** — FLAG_SECURE on Android, detection on iOS (billing screen only)
+- **Generators: Booking Status Badges** — "Booked" / "Free" per generator when date filter active
+- **Generators: Filter Bottom Sheet** — Single filter icon opens sheet with Booking Status + Sort options
+- **Generators: "Show More" Pattern** — 5 items per category, expandable
+- **Generators: Detail Modal** — Tap row opens read-only modal with pencil to edit
+- **Vendors: Detail Modal** — Tap row opens read-only modal with pencil to edit
+- **Vendors: "Show More" Pattern** — 5 items per category, expandable
+- **401 Auto-Redirect** — Token expired automatically navigates to login with toast notification
+
+### Changed
+- **Edit Booking Modal** — Full redesign: generator list editor with swipe-to-delete, FAB adds new (WO-099)
+- **AddBookingModal** — Accepts `lockedVendorId` to disable vendor dropdown when opened from Edit modal
+- **Booking Detail Modal** — Simplified info card, vendor as heading, pencil icon edit, capacity column added
+- **Dashboard** — Removed redundant calendar section header
+- **Generators Directory** — Removed description text, compact date filter pill, Type "N/A" fallback
+- **Generators: Edit Modal** — Generator ID and Capacity now read-only; dropdown crash fixed (case mismatch)
+- **Vendors Directory** — Removed description text, "nan" → "N/A", both Retailer + Rental sections
+- **Vendor Detail Modal** — Phone icon prefix, tighter spacing
+- **Billing** — Removed Load/Print buttons, auto-loads on date selection, no default dates
+- **Billing** — "X lines" → "X Bookings", dark card header, PAID input overflow fixed
+- **Billing** — Removed duplicate vendor search field
+- **Billing** — "INCLUDE GRAND TOTAL" checkbox moved to right side
+
+### Fixed
+- Edit Generator dropdown assertion crash (status/category case mismatch)
+- Billing PAID input "0" overflowing container
+- Vendor location showing "nan" for null values
+
 ## [1.0.0] - 2026-07-07
 
 ### Added

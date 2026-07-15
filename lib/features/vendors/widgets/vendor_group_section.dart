@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/vendor.dart';
+import '../../../shared/widgets/app_toast.dart';
 import 'vendor_card.dart';
 
 class VendorGroupSection extends StatefulWidget {
@@ -88,11 +89,10 @@ class _VendorGroupSectionState extends State<VendorGroupSection> {
                   const SizedBox(width: 8),
                   IconButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(widget.description),
-                          duration: const Duration(seconds: 3),
-                        ),
+                      AppToast.show(
+                        context,
+                        message: widget.description,
+                        type: ToastType.info,
                       );
                     },
                     icon: Icon(Icons.info_outline, color: titleColor, size: 18),

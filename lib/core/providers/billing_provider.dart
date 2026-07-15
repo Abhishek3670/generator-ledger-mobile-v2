@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
 import 'package:ledger/data/repositories/billing_repository.dart';
 import '../../shared/models/billing.dart';
 
 /// Repository provider for billing operations
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {
-  return BillingRepository();
+  return BillingRepository(apiClient: ref.watch(apiClientProvider));
 });
 
 /// Date range filter state for billing screen
@@ -35,19 +36,19 @@ class BillingDateRange {
 
 /// Date range state provider
 final billingDateRangeProvider =
-    StateProvider<BillingDateRange>((ref) {
-  final now = DateTime.now();
-  return BillingDateRange(
-    startDate: DateTime(now.year, now.month, 1),
-    endDate: DateTime(now.year, now.month + 1, 0),
-  );
+    StateProvider<BillingDateRange?>((ref) {
+  return null;
 });
 
 /// Billing data provider - fetches from API with current date range
 final billingProvider =
-    FutureProvider<BillingResponse>((ref) async {
+    FutureProvider<BillingResponse?>((ref) async {
   final repository = ref.watch(billingRepositoryProvider);
   final dateRange = ref.watch(billingDateRangeProvider);
+
+  if (dateRange == null) {
+    return null;
+  }
 
   return repository.getBillingPreview(
     startDate: dateRange.startDate,

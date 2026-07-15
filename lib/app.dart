@@ -13,6 +13,7 @@ class LedgerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme(),
       routerConfig: AppRouter.router,
+      scaffoldMessengerKey: AppRouter.scaffoldMessengerKey,
     );
   }
 }

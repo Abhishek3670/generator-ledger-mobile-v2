@@ -22,6 +22,16 @@ class ApiClient {
   final TokenStorage _tokenStorage;
   final VoidCallback? _onUnauthorized;
 
+  static final List<VoidCallback> _unauthorizedListeners = [];
+
+  static void addUnauthorizedListener(VoidCallback listener) {
+    _unauthorizedListeners.add(listener);
+  }
+
+  static void removeUnauthorizedListener(VoidCallback listener) {
+    _unauthorizedListeners.remove(listener);
+  }
+
   static BaseOptions _baseOptions() {
     return BaseOptions(
       baseUrl: ApiConfig.baseUrl,
@@ -45,6 +55,9 @@ class ApiClient {
           if (error.response?.statusCode == 401) {
             await _tokenStorage.deleteToken();
             _onUnauthorized?.call();
+            for (final listener in List<VoidCallback>.from(_unauthorizedListeners)) {
+              listener();
+            }
           }
           handler.next(error);
         },

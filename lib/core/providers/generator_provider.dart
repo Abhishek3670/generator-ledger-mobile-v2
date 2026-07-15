@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
 import '../../data/mock/mock_generators.dart';
 import '../../data/repositories/generator_repository.dart';
 
 final generatorRepositoryProvider = Provider<GeneratorRepository>((ref) {
-  return GeneratorRepository();
+  return GeneratorRepository(apiClient: ref.watch(apiClientProvider));
 });
 
 final generatorProvider =

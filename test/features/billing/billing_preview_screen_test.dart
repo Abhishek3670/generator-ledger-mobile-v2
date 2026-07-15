@@ -15,13 +15,17 @@ import 'package:ledger/features/billing/screens/billing_preview_screen.dart';
 import 'package:ledger/shared/widgets/skeleton_loading.dart';
 
 void main() {
-  testWidgets('BillingPreviewScreen renders sticky header and bottom grand total', (tester) async {
-    await tester.pumpWidget(ProviderScope(
+  testWidgets('BillingPreviewScreen renders sticky header and bottom grand total after date range selected', (tester) async {
+    final container = ProviderContainer(
       overrides: [
         bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
         billingRepositoryProvider.overrideWithValue(_FakeBillingRepository()),
         connectivityProvider.overrideWith((ref) => Stream.value(ConnectivityResult.wifi)),
       ],
+    );
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
       child: const MaterialApp(
         home: Scaffold(body: BillingPreviewScreen()),
       ),
@@ -35,30 +39,73 @@ void main() {
     expect(find.text('BILLING'), findsOneWidget);
     expect(find.text('Billing Preview'), findsOneWidget);
 
-    // Grand total starts out showing when the page loads with mock vendor data
+    // Verify prompt state is shown initially when date range is null
+    expect(find.text('Select a date range to load billing data'), findsOneWidget);
+    expect(find.text('GRAND TOTAL'), findsNothing);
+
+    // Update provider to simulate selecting dates
+    container.read(billingDateRangeProvider.notifier).state = BillingDateRange(
+      startDate: DateTime.utc(2026, 4, 1),
+      endDate: DateTime.utc(2026, 4, 30),
+    );
+
+    // Wait for the UI to update and load mock data
+    await tester.pump(); // trigger rebuild for provider change
     await tester.pumpAndSettle();
 
     // Verify grand total exists at the bottom
     expect(find.text('GRAND TOTAL'), findsOneWidget);
+
+    // Verify redesigned mobile vendor card elements:
+    // 1. Vendor name & ID in card header (no table header)
+    expect(find.text('Mallu (VEN-1)'), findsOneWidget);
+    expect(find.text('1 Booking'), findsOneWidget);
+
+    // 2. Short date format + Generator ID in line item
+    expect(find.text('Apr 15 · GEN-1'), findsOneWidget);
+
+    // 3. Capacity badge
+    expect(find.text('20 kVA'), findsOneWidget);
+
+    // 4. Footer elements
+    expect(find.text('SUBTOTAL'), findsOneWidget);
+    expect(find.text('PAID'), findsOneWidget);
+    expect(find.text('FINAL TOTAL'), findsOneWidget);
   });
 
   testWidgets('BillingPreviewScreen renders loading and error states', (tester) async {
     final errorRepository = _ErrorBillingRepository();
-    await tester.pumpWidget(ProviderScope(
+    final container = ProviderContainer(
       overrides: [
         bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
         billingRepositoryProvider.overrideWithValue(errorRepository),
         connectivityProvider.overrideWith((ref) => Stream.value(ConnectivityResult.wifi)),
       ],
+    );
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
       child: const MaterialApp(
         home: Scaffold(body: BillingPreviewScreen()),
       ),
     ));
 
-    // Should show skeleton card loader initially
+    // Verify prompt state is shown initially when date range is null
+    expect(find.text('Select a date range to load billing data'), findsOneWidget);
+
+    // Update provider to simulate selecting dates and trigger load
+    container.read(billingDateRangeProvider.notifier).state = BillingDateRange(
+      startDate: DateTime.utc(2026, 4, 1),
+      endDate: DateTime.utc(2026, 4, 30),
+    );
+
+    // Pump to start loading and verify skeleton card loader is shown
+    await tester.pump();
     expect(find.byType(SkeletonCard), findsAtLeastNWidgets(1));
 
+    // Pump for repository future delay
     await tester.pump(const Duration(milliseconds: 150));
+    await tester.pumpAndSettle();
 
     // Should show error state message and Retry button
     expect(find.text('Failed to load billing data'), findsOneWidget);
