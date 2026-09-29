@@ -42,12 +42,35 @@ class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
     if (widget.initialReminderOffset != null) {
       _reminderOffset = widget.initialReminderOffset;
     } else {
-      try {
-        final reminderService = ref.read(bookingReminderServiceProvider);
-        _reminderOffset = reminderService.getReminder(widget.booking.id);
-      } catch (_) {
-        _reminderOffset = null;
-      }
+      _loadReminderStatus();
+    }
+  }
+
+  @override
+  void didUpdateWidget(BookingDetailModal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialReminderOffset != oldWidget.initialReminderOffset) {
+      setState(() {
+        _reminderOffset = widget.initialReminderOffset;
+      });
+    } else if (widget.booking.id != oldWidget.booking.id) {
+      setState(() {
+        _loadReminderStatus();
+      });
+    }
+  }
+
+  void _loadReminderStatus() {
+    try {
+      final reminderService = ref.read(bookingReminderServiceProvider);
+      final globalSettings = ref.read(globalReminderSettingsProvider);
+      _reminderOffset = reminderService.getReminder(
+        widget.booking.id,
+        widget.booking,
+        globalSettings,
+      );
+    } catch (_) {
+      _reminderOffset = null;
     }
   }
 
@@ -66,6 +89,9 @@ class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
     if (!widget.isVisible) return const SizedBox.shrink();
 
     final hasReminder = _reminderOffset != null && _reminderOffset != ReminderOffset.none;
+    final tooltipText = hasReminder
+        ? 'Reminder: ${_reminderOffset!.displayLabel}'
+        : 'Set Reminder';
 
     return Stack(
       children: [
@@ -82,7 +108,7 @@ class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
                 color: hasReminder ? AppColors.accent : AppColors.textSecondary,
                 size: 22,
               ),
-              tooltip: hasReminder ? 'Change Reminder' : 'Set Reminder',
+              tooltip: tooltipText,
             ),
             IconButton(
               onPressed: widget.onEdit,
@@ -141,7 +167,7 @@ class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
         onClose: () => setState(() => _showReminderPicker = false),
         onReminderSaved: (offset) {
           setState(() {
-            _reminderOffset = offset == ReminderOffset.none ? null : offset;
+            _reminderOffset = offset == ReminderOffset.none ? ReminderOffset.none : offset;
             _showReminderPicker = false;
           });
         },

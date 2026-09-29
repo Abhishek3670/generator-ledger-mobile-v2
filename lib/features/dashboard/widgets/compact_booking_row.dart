@@ -4,7 +4,6 @@ import '../../../core/providers/notification_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
-import '../../../shared/models/reminder_offset.dart';
 import '../../../shared/widgets/status_badge.dart';
 
 /// A compact row displaying booking details for the daily bookings list.
@@ -34,8 +33,8 @@ class CompactBookingRow extends ConsumerWidget {
     } else {
       try {
         final reminderService = ref.watch(bookingReminderServiceProvider);
-        final offset = reminderService.getReminder(booking.bookingId);
-        activeReminder = offset != null && offset != ReminderOffset.none;
+        final globalSettings = ref.watch(globalReminderSettingsProvider);
+        activeReminder = reminderService.hasRemindersForBooking(booking, globalSettings);
       } catch (_) {
         activeReminder = false;
       }

@@ -385,4 +385,155 @@ void main() {
       expect(notificationService.scheduledCalls.length, 2);
     });
   });
+
+  group('WO-106: Permissions & Global Reminder Status Tests', () {
+    late FakeNotificationService notificationService;
+    late SharedPreferences prefs;
+    late BookingReminderService reminderService;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+      notificationService = FakeNotificationService();
+      reminderService = BookingReminderService(notificationService, prefs);
+    });
+
+    test('hasRemindersForBooking returns true if global reminders are enabled and booking is upcoming', () {
+      final upcomingBooking = Booking(
+        id: 'BK-UPCOMING-1',
+        vendorId: 'V-1',
+        vendorName: 'Apex',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: DateTime.now().add(const Duration(days: 3)),
+        status: 'confirmed',
+      );
+
+      expect(reminderService.hasRemindersForBooking(upcomingBooking), isTrue);
+    });
+
+    test('hasRemindersForBooking returns false if global reminders are enabled but booking is in the past', () {
+      final pastBooking = Booking(
+        id: 'BK-PAST-1',
+        vendorId: 'V-1',
+        vendorName: 'Apex',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: DateTime.now().subtract(const Duration(days: 1)),
+        status: 'completed',
+      );
+
+      expect(reminderService.hasRemindersForBooking(pastBooking), isFalse);
+    });
+
+    test('hasRemindersForBooking returns false if global reminders are disabled', () async {
+      await reminderService.saveGlobalSettings(const GlobalReminderSettings(
+        enabled: false,
+        selectedOffsets: {ReminderOffset.oneDay},
+      ));
+
+      final upcomingBooking = Booking(
+        id: 'BK-UPCOMING-2',
+        vendorId: 'V-1',
+        vendorName: 'Apex',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: DateTime.now().add(const Duration(days: 3)),
+        status: 'confirmed',
+      );
+
+      expect(reminderService.hasRemindersForBooking(upcomingBooking), isFalse);
+    });
+
+    test('getReminder with Booking returns active ReminderOffset when global reminders are active', () {
+      final upcomingBooking = Booking(
+        id: 'BK-QUERY-1',
+        vendorId: 'V-1',
+        vendorName: 'Apex',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: DateTime.now().add(const Duration(days: 2)),
+        status: 'confirmed',
+      );
+
+      expect(reminderService.getReminder(upcomingBooking.id, upcomingBooking), ReminderOffset.oneDay);
+    });
+
+    test('getReminder with Booking returns null for past bookings without custom reminder', () {
+      final pastBooking = Booking(
+        id: 'BK-QUERY-PAST',
+        vendorId: 'V-1',
+        vendorName: 'Apex',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: DateTime.now().subtract(const Duration(days: 1)),
+        status: 'completed',
+      );
+
+      expect(reminderService.getReminder(pastBooking.id, pastBooking), isNull);
+    });
+
+    test('getReminder with Booking returns null when global reminders are disabled', () async {
+      await reminderService.saveGlobalSettings(const GlobalReminderSettings(
+        enabled: false,
+        selectedOffsets: {ReminderOffset.oneDay},
+      ));
+
+      final upcomingBooking = Booking(
+        id: 'BK-QUERY-DISABLED',
+        vendorId: 'V-1',
+        vendorName: 'Apex',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: DateTime.now().add(const Duration(days: 2)),
+        status: 'confirmed',
+      );
+
+      expect(reminderService.getReminder(upcomingBooking.id, upcomingBooking), isNull);
+    });
+
+    test('scheduleRemindersForBooking records metadata so getReminder by bookingId alone returns active offset', () async {
+      // Booking starting tomorrow morning: 1 day before trigger might already be in past,
+      // but booking itself is upcoming
+      final closeUpcomingBooking = Booking(
+        id: 'BK-CLOSE-1',
+        vendorId: 'V-99',
+        vendorName: 'Quick Genset',
+        generatorId: 'GEN-99',
+        capacity: '25 kVA',
+        date: DateTime.now().add(const Duration(hours: 6)),
+        status: 'confirmed',
+      );
+
+      await reminderService.scheduleRemindersForBooking(closeUpcomingBooking);
+
+      // getReminder by bookingId alone (without passing booking object) reads back metadata
+      expect(reminderService.getReminder('BK-CLOSE-1'), ReminderOffset.oneDay);
+    });
+
+    test('getReminder returns explicit legacy offset if set, ignoring global defaults', () async {
+      const bookingId = 'BK-OVERRIDE';
+      final futureDate = DateTime.now().add(const Duration(days: 4));
+
+      await reminderService.setReminder(
+        bookingId,
+        futureDate,
+        ReminderOffset.threeHours,
+      );
+
+      final booking = Booking(
+        id: bookingId,
+        vendorId: 'V-1',
+        vendorName: 'Apex',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: futureDate,
+        status: 'confirmed',
+      );
+
+      // Even though global default is oneDay, explicit per-booking offset is threeHours
+      expect(reminderService.getReminder(bookingId, booking), ReminderOffset.threeHours);
+      expect(reminderService.getReminder(bookingId), ReminderOffset.threeHours);
+    });
+  });
 }

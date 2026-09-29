@@ -73,6 +73,25 @@ class BookingReminderService {
         : 'Vendor';
     final formattedDate = DateFormat('MMM dd, yyyy').format(booking.startDate);
 
+    // Record active reminder metadata only if not already customized
+    if (!_prefs.containsKey(_key(booking.id))) {
+      final primaryOffset = (booking.reminderOffset != null &&
+              booking.reminderOffset != ReminderOffset.none)
+          ? booking.reminderOffset!
+          : (activeSettings.selectedOffsets.contains(ReminderOffset.oneDay)
+              ? ReminderOffset.oneDay
+              : activeSettings.selectedOffsets
+                      .where((o) => o != ReminderOffset.none)
+                      .firstOrNull ??
+                  ReminderOffset.oneDay);
+      final payload = jsonEncode({
+        'offset': primaryOffset.name,
+        'vendorName': displayName,
+        'startDate': booking.startDate.toIso8601String(),
+      });
+      await _prefs.setString(_key(booking.id), payload);
+    }
+
     int count = 0;
     for (final offset in activeSettings.selectedOffsets) {
       if (offset == ReminderOffset.none) continue;
@@ -210,21 +229,75 @@ class BookingReminderService {
     await _prefs.remove(_key(bookingId));
   }
 
-  /// Retrieves the current [ReminderOffset] for [bookingId] from SharedPreferences.
-  ReminderOffset? getReminder(String bookingId) {
-    final raw = _prefs.getString(_key(bookingId));
-    if (raw == null || raw.isEmpty) return null;
+  /// Checks whether reminders are active for [booking].
+  /// Returns `true` if global reminders are enabled and the booking is upcoming
+  /// (i.e. [Booking.startDate] is after now), or if an active reminder is configured.
+  bool hasRemindersForBooking(
+    Booking booking, [
+    GlobalReminderSettings? settings,
+  ]) {
+    final raw = _prefs.getString(_key(booking.id));
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final offset = raw.startsWith('{')
+            ? ReminderOffset.fromString(
+                (jsonDecode(raw) as Map<String, dynamic>)['offset'] as String?)
+            : ReminderOffset.fromString(raw);
+        if (offset != ReminderOffset.none) return true;
+      } catch (_) {}
+    }
 
-    try {
-      if (raw.startsWith('{')) {
-        final decoded = jsonDecode(raw) as Map<String, dynamic>;
-        final offsetStr = decoded['offset'] as String?;
-        return ReminderOffset.fromString(offsetStr);
-      }
-      return ReminderOffset.fromString(raw);
-    } catch (_) {
+    final activeSettings = settings ?? getGlobalSettings();
+    if (!activeSettings.enabled || activeSettings.selectedOffsets.isEmpty) {
+      return false;
+    }
+
+    return booking.startDate.isAfter(DateTime.now());
+  }
+
+  /// Retrieves the current [ReminderOffset] for [bookingId] from SharedPreferences.
+  /// If a legacy per-booking offset exists in SharedPreferences, it is returned.
+  /// If [booking] is provided and global reminders are active, returns the primary
+  /// active offset (e.g. `oneDay`), or null if global reminders are disabled or if
+  /// [booking] is in the past.
+  ReminderOffset? getReminder(
+    String bookingId, [
+    Booking? booking,
+    GlobalReminderSettings? settings,
+  ]) {
+    final raw = _prefs.getString(_key(bookingId));
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        if (raw.startsWith('{')) {
+          final decoded = jsonDecode(raw) as Map<String, dynamic>;
+          final offsetStr = decoded['offset'] as String?;
+          final offset = ReminderOffset.fromString(offsetStr);
+          if (offset != ReminderOffset.none) return offset;
+        } else {
+          final offset = ReminderOffset.fromString(raw);
+          if (offset != ReminderOffset.none) return offset;
+        }
+      } catch (_) {}
+    }
+
+    final activeSettings = settings ?? getGlobalSettings();
+    if (!activeSettings.enabled || activeSettings.selectedOffsets.isEmpty) {
       return null;
     }
+
+    if (booking != null) {
+      if (!hasRemindersForBooking(booking, activeSettings)) {
+        return null;
+      }
+      if (activeSettings.selectedOffsets.contains(ReminderOffset.oneDay)) {
+        return ReminderOffset.oneDay;
+      }
+      return activeSettings.selectedOffsets
+          .where((o) => o != ReminderOffset.none)
+          .firstOrNull;
+    }
+
+    return null;
   }
 
   /// Retrieves raw reminder metadata map (offset, vendorName, startDate) if present.

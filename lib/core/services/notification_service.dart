@@ -101,19 +101,46 @@ class NotificationService {
       macOS: darwinDetails,
     );
 
+    tz.TZDateTime scheduledTz;
+    try {
+      scheduledTz = tz.TZDateTime.from(scheduledDate, tz.local);
+    } catch (_) {
+      _ensureTimeZones();
+      try {
+        scheduledTz = tz.TZDateTime.from(scheduledDate, tz.local);
+      } catch (_) {
+        scheduledTz = tz.TZDateTime.from(scheduledDate, tz.getLocation('UTC'));
+      }
+    }
+
     try {
       await _plugin.zonedSchedule(
         id,
         title,
         body,
-        tz.TZDateTime.from(scheduledDate, tz.local),
+        scheduledTz,
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: payload,
       );
       return true;
     } catch (_) {
-      return false;
+      // Graceful fallback: If exact alarm scheduling fails (e.g. SecurityException on Android 13/14+),
+      // retry with inexact scheduling so reminders are never lost.
+      try {
+        await _plugin.zonedSchedule(
+          id,
+          title,
+          body,
+          scheduledTz,
+          notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          payload: payload,
+        );
+        return true;
+      } catch (_) {
+        return false;
+      }
     }
   }
 
@@ -133,9 +160,15 @@ class NotificationService {
 
   void _ensureTimeZones() {
     try {
+      tz.initializeTimeZones();
+    } catch (_) {}
+
+    try {
       tz.local;
     } catch (_) {
-      tz.initializeTimeZones();
+      try {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      } catch (_) {}
     }
   }
 }

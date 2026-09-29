@@ -158,10 +158,10 @@ void main() {
       expect(icon.color, equals(AppColors.accent));
 
       final iconButton = tester.widget<IconButton>(reminderButton);
-      expect(iconButton.tooltip, equals('Change Reminder'));
+      expect(iconButton.tooltip, equals('Reminder: 1 hour before'));
     });
 
-    testWidgets('tapping bell icon opens ReminderPickerSheet', (
+    testWidgets('shows notifications_active amber icon and active global tooltip when initialReminderOffset is null', (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(800, 1200);
@@ -177,7 +177,42 @@ void main() {
                 booking: testBooking,
                 onClose: () {},
                 onEdit: () {},
-                initialReminderOffset: ReminderOffset.none,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final reminderButton = find.byKey(const Key('booking-detail-reminder-button'));
+      expect(reminderButton, findsOneWidget);
+
+      final icon = tester.widget<Icon>(
+        find.descendant(of: reminderButton, matching: find.byType(Icon)),
+      );
+      expect(icon.icon, equals(Icons.notifications_active));
+      expect(icon.color, equals(AppColors.accent));
+
+      final iconButton = tester.widget<IconButton>(reminderButton);
+      expect(iconButton.tooltip, equals('Reminder: 1 day before'));
+    });
+
+    testWidgets('tapping bell icon opens ReminderPickerSheet with active offset pre-selected', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: getOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: BookingDetailModal(
+                booking: testBooking,
+                onClose: () {},
+                onEdit: () {},
               ),
             ),
           ),
@@ -192,6 +227,8 @@ void main() {
 
       expect(find.byType(ReminderPickerSheet), findsOneWidget);
       expect(find.text('Set Reminder'), findsOneWidget);
+      final picker = tester.widget<ReminderPickerSheet>(find.byType(ReminderPickerSheet));
+      expect(picker.initialOffset, equals(ReminderOffset.oneDay));
     });
   });
 
@@ -270,6 +307,62 @@ void main() {
       expect(icon.size, equals(14));
       expect(icon.color, equals(AppColors.accent));
     });
+
+    testWidgets('shows small accent bell indicator for upcoming booking when hasReminder is null (global defaults)', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: getOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: BookingListItem(
+                booking: testBooking,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final bellFinder = find.byIcon(Icons.notifications_active);
+      expect(bellFinder, findsOneWidget);
+
+      final icon = tester.widget<Icon>(bellFinder);
+      expect(icon.size, equals(14));
+      expect(icon.color, equals(AppColors.accent));
+    });
+
+    testWidgets('does not show bell indicator for past booking when hasReminder is null', (
+      WidgetTester tester,
+    ) async {
+      final pastBooking = Booking(
+        id: 'BK-PAST-1',
+        vendorId: 'V-001',
+        vendorName: 'Apex Generators',
+        generatorId: 'GEN-500',
+        capacity: '500 kVA',
+        date: DateTime.now().subtract(const Duration(days: 3)),
+        status: 'confirmed',
+        notes: 'Past job',
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: getOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: BookingListItem(
+                booking: pastBooking,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.notifications_active), findsNothing);
+    });
   });
 
   group('CompactBookingRow Reminder Indicator', () {
@@ -318,6 +411,62 @@ void main() {
       final icon = tester.widget<Icon>(bellFinder);
       expect(icon.size, equals(13));
       expect(icon.color, equals(AppColors.accent));
+    });
+
+    testWidgets('shows subtle accent bell indicator for upcoming booking when hasReminder is null (global defaults)', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: getOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: CompactBookingRow(
+                booking: testBooking,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final bellFinder = find.byIcon(Icons.notifications_active);
+      expect(bellFinder, findsOneWidget);
+
+      final icon = tester.widget<Icon>(bellFinder);
+      expect(icon.size, equals(13));
+      expect(icon.color, equals(AppColors.accent));
+    });
+
+    testWidgets('does not show bell indicator for past booking when hasReminder is null', (
+      WidgetTester tester,
+    ) async {
+      final pastBooking = Booking(
+        id: 'BK-PAST-2',
+        vendorId: 'V-001',
+        vendorName: 'Apex Generators',
+        generatorId: 'GEN-500',
+        capacity: '500 kVA',
+        date: DateTime.now().subtract(const Duration(days: 3)),
+        status: 'confirmed',
+        notes: 'Past job',
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: getOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: CompactBookingRow(
+                booking: pastBooking,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.notifications_active), findsNothing);
     });
   });
 }
