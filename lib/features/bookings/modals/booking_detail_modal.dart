@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/providers/notification_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
+import '../../../shared/models/reminder_offset.dart';
 import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../shared/widgets/status_badge.dart';
+import '../widgets/reminder_picker_sheet.dart';
 
-class BookingDetailModal extends StatelessWidget {
+class BookingDetailModal extends ConsumerStatefulWidget {
   final Booking booking;
   final VoidCallback onClose;
   final VoidCallback onEdit;
   final bool isVisible;
+  final ReminderOffset? initialReminderOffset;
+  final VoidCallback? onReminderTap;
 
   const BookingDetailModal({
     super.key,
@@ -18,27 +24,76 @@ class BookingDetailModal extends StatelessWidget {
     required this.onClose,
     required this.onEdit,
     this.isVisible = true,
+    this.initialReminderOffset,
+    this.onReminderTap,
   });
 
   @override
-  Widget build(BuildContext context) {
-    if (!isVisible) return const SizedBox.shrink();
+  ConsumerState<BookingDetailModal> createState() => _BookingDetailModalState();
+}
 
-    return DraggableFormSheet(
-      title: booking.vendorName,
-      category: 'bookings',
-      onClose: onClose,
-      actions: [
-        IconButton(
-          onPressed: onEdit,
-          icon: const Icon(
-            Icons.edit_outlined,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
-          tooltip: 'Edit Booking',
-        ),
-      ],
+class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
+  ReminderOffset? _reminderOffset;
+  bool _showReminderPicker = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialReminderOffset != null) {
+      _reminderOffset = widget.initialReminderOffset;
+    } else {
+      try {
+        final reminderService = ref.read(bookingReminderServiceProvider);
+        _reminderOffset = reminderService.getReminder(widget.booking.id);
+      } catch (_) {
+        _reminderOffset = null;
+      }
+    }
+  }
+
+  void _openReminderPicker() {
+    if (widget.onReminderTap != null) {
+      widget.onReminderTap!();
+      return;
+    }
+    setState(() {
+      _showReminderPicker = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isVisible) return const SizedBox.shrink();
+
+    final hasReminder = _reminderOffset != null && _reminderOffset != ReminderOffset.none;
+
+    return Stack(
+      children: [
+        DraggableFormSheet(
+          title: widget.booking.vendorName,
+          category: 'bookings',
+          onClose: widget.onClose,
+          actions: [
+            IconButton(
+              key: const Key('booking-detail-reminder-button'),
+              onPressed: _openReminderPicker,
+              icon: Icon(
+                hasReminder ? Icons.notifications_active : Icons.notification_add_outlined,
+                color: hasReminder ? AppColors.accent : AppColors.textSecondary,
+                size: 22,
+              ),
+              tooltip: hasReminder ? 'Change Reminder' : 'Set Reminder',
+            ),
+            IconButton(
+              onPressed: widget.onEdit,
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: AppColors.textSecondary,
+                size: 22,
+              ),
+              tooltip: 'Edit Booking',
+            ),
+          ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -53,8 +108,8 @@ class BookingDetailModal extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildRowDetail('STATUS', StatusBadge(label: booking.status, type: _getStatusType(booking.status))),
-                _buildRowDetail('BOOKED', Text(DateFormat('yyyy-MM-dd').format(booking.date), style: AppTypography.bodySmall)),
+                _buildRowDetail('STATUS', StatusBadge(label: widget.booking.status, type: _getStatusType(widget.booking.status))),
+                _buildRowDetail('BOOKED', Text(DateFormat('yyyy-MM-dd').format(widget.booking.date), style: AppTypography.bodySmall)),
               ],
             ),
           ),
@@ -76,7 +131,23 @@ class BookingDetailModal extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+    if (_showReminderPicker)
+      ReminderPickerSheet(
+        bookingId: widget.booking.id,
+        bookingDate: widget.booking.date,
+        vendorName: widget.booking.vendorName,
+        initialOffset: _reminderOffset ?? ReminderOffset.none,
+        onClose: () => setState(() => _showReminderPicker = false),
+        onReminderSaved: (offset) {
+          setState(() {
+            _reminderOffset = offset == ReminderOffset.none ? null : offset;
+            _showReminderPicker = false;
+          });
+        },
+      ),
+  ],
+);
   }
 
   Widget _buildRowDetail(String label, Widget content) {
@@ -107,7 +178,7 @@ class BookingDetailModal extends StatelessWidget {
   }
 
   Widget _buildGeneratorsTable() {
-    final grouped = booking.groupItemsByDate();
+    final grouped = widget.booking.groupItemsByDate();
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +191,7 @@ class BookingDetailModal extends StatelessWidget {
               SizedBox(width: 100, child: Text('DATE', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 200, child: Text('GENERATORS', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 100, child: Text('CAPACITY', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
-              SizedBox(width: 100, child: Text('STATUS', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
+              SizedBox(width: 140, child: Text('STATUS', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 100, child: Text('REM', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
             ],
           ),
@@ -137,7 +208,7 @@ class BookingDetailModal extends StatelessWidget {
                   SizedBox(width: 100, child: Text(date, style: AppTypography.bodySmall)),
                   SizedBox(width: 200, child: Text(item.generatorId, style: AppTypography.bodySmall.copyWith(color: item.isEmergency ? AppColors.danger : null), overflow: TextOverflow.ellipsis)),
                   SizedBox(width: 100, child: Text(capacityStr, style: AppTypography.bodySmall)),
-                  SizedBox(width: 100, child: Align(alignment: Alignment.centerLeft, child: StatusBadge(label: item.itemStatus, type: _getStatusType(item.itemStatus)))),
+                  SizedBox(width: 140, child: Align(alignment: Alignment.centerLeft, child: StatusBadge(label: item.itemStatus, type: _getStatusType(item.itemStatus)))),
                   SizedBox(width: 100, child: Text(item.remarks.isEmpty ? '-' : item.remarks, style: AppTypography.bodySmall, overflow: TextOverflow.ellipsis)),
                 ],
               ),

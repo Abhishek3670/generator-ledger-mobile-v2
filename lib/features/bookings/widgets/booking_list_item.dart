@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/notification_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/booking.dart';
+import '../../../shared/models/reminder_offset.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/swipe_action_card.dart';
 
 /// A list item showing booking schedule details (date, status, generator ID, capacity).
-class BookingListItem extends StatelessWidget {
+class BookingListItem extends ConsumerWidget {
   /// The booking data for this item.
   final Booking booking;
 
@@ -19,6 +22,9 @@ class BookingListItem extends StatelessWidget {
   /// Optional callback when swipe-to-cancel is triggered.
   final VoidCallback? onDelete;
 
+  /// Optional override for whether a reminder is active.
+  final bool? hasReminder;
+
   /// Creates a [BookingListItem].
   const BookingListItem({
     super.key,
@@ -26,14 +32,28 @@ class BookingListItem extends StatelessWidget {
     this.onTap,
     this.onModify,
     this.onDelete,
+    this.hasReminder,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final statusType = _getStatusBadgeType(booking.status);
     final dateString = booking.formatBookingDate();
     final generatorItems = booking.parseGeneratorItems();
     final isConfirmed = booking.status.toLowerCase() == 'confirmed';
+
+    bool activeReminder = false;
+    if (hasReminder != null) {
+      activeReminder = hasReminder!;
+    } else {
+      try {
+        final reminderService = ref.watch(bookingReminderServiceProvider);
+        final offset = reminderService.getReminder(booking.id);
+        activeReminder = offset != null && offset != ReminderOffset.none;
+      } catch (_) {
+        activeReminder = false;
+      }
+    }
 
     final cardContent = GestureDetector(
       onTap: onTap,
@@ -50,9 +70,22 @@ class BookingListItem extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      dateString,
-                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          dateString,
+                          style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                        ),
+                        if (activeReminder) ...[
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.notifications_active,
+                            size: 14,
+                            color: AppColors.accent,
+                          ),
+                        ],
+                      ],
                     ),
                     StatusBadge(
                       label: isConfirmed ? '' : booking.status.toUpperCase(),

@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'reminder_offset.dart';
 
 class BookingItem {
   final String generatorId;
@@ -59,6 +60,7 @@ class Booking {
   final String notes;
   final String capacity;
   final List<BookingItem> items;
+  final ReminderOffset? reminderOffset;
 
   Booking({
     required String id,
@@ -71,6 +73,7 @@ class Booking {
     this.notes = '',
     DateTime? endDate,
     this.items = const [],
+    this.reminderOffset,
   }) : bookingId = id,
        generators = [generatorId],
        startDate = date,
@@ -91,6 +94,7 @@ class Booking {
     required this.notes,
     required this.capacity,
     this.items = const [],
+    this.reminderOffset,
   });
 
   Booking copyWith({
@@ -105,6 +109,7 @@ class Booking {
     String? status,
     String? notes,
     List<BookingItem>? items,
+    ReminderOffset? reminderOffset,
   }) {
     return Booking.withGenerators(
       bookingId: id ?? bookingId,
@@ -117,6 +122,7 @@ class Booking {
       notes: notes ?? this.notes,
       capacity: capacity ?? this.capacity,
       items: items ?? this.items,
+      reminderOffset: reminderOffset ?? this.reminderOffset,
     );
   }
 
@@ -190,6 +196,11 @@ class Booking {
       capacityStr = _capacityFromMap(map);
     }
 
+    final reminderOffsetRaw = map['reminder_offset'] ?? map['reminderOffset'];
+    final reminderOffset = reminderOffsetRaw is String
+        ? ReminderOffset.fromString(reminderOffsetRaw)
+        : (reminderOffsetRaw is ReminderOffset ? reminderOffsetRaw : null);
+
     return Booking.withGenerators(
       bookingId: (map['booking_id'] ?? map['bookingId'] ?? map['id'] ?? '')
           .toString(),
@@ -202,6 +213,7 @@ class Booking {
       notes: (map['notes'] ?? '').toString(),
       capacity: capacityStr,
       items: itemsList,
+      reminderOffset: reminderOffset,
     );
   }
 

@@ -15,11 +15,14 @@ import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../core/providers/booking_provider.dart';
 import '../../../core/providers/generator_provider.dart';
+import '../../../core/providers/notification_provider.dart';
 import '../../../core/providers/vendor_provider.dart';
 
 import '../../../core/services/user_preferences_service.dart';
 import '../../../core/services/form_defaults_service.dart';
 import '../../../core/services/draft_service.dart';
+import '../../../shared/models/reminder_offset.dart';
+import '../../../shared/widgets/app_toast.dart';
 
 /// A modal window used to create a new booking.
 ///
@@ -60,6 +63,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   List<DateTime> _selectedDates = [];
   String? _selectedVendorId;
   String? _selectedGeneratorId;
+  ReminderOffset _selectedReminder = ReminderOffset.none;
   final _notesController = TextEditingController();
 
   // Focus nodes for interactive field styling
@@ -156,6 +160,9 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       }
       _selectedVendorId = widget.lockedVendorId ?? draft['selectedVendorId'];
       _selectedGeneratorId = draft['selectedGeneratorId'];
+      if (draft['reminderOffset'] != null) {
+        _selectedReminder = ReminderOffset.fromString(draft['reminderOffset'] as String?);
+      }
       _notesController.text = draft['notes'] ?? '';
     });
     _addListeners();
@@ -183,6 +190,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       'selectedDates': _selectedDates.map((d) => d.toIso8601String()).toList(),
       'selectedVendorId': _selectedVendorId,
       'selectedGeneratorId': _selectedGeneratorId,
+      'reminderOffset': _selectedReminder.name,
       'notes': _notesController.text,
     };
     await _draftService.saveDraft('add_booking', draft);
@@ -196,7 +204,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     setState(() {
       _vendorError = _selectedVendorId == null
           ? 'Please search and select a vendor'
@@ -249,8 +257,9 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     final baseTime = DateTime.now().millisecondsSinceEpoch;
     for (int i = 0; i < _selectedDates.length; i++) {
       final date = _selectedDates[i];
-      newBookings.add(Booking(
-        id: 'BK-$baseTime-$i',
+      final bookingId = 'BK-$baseTime-$i';
+      final newBooking = Booking(
+        id: bookingId,
         vendorId: _selectedVendorId!,
         vendorName: selectedVendor.name,
         generatorId: genId,
@@ -259,7 +268,29 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         endDate: date,
         status: 'confirmed',
         notes: _notesController.text.trim(),
-      ));
+      );
+      newBookings.add(newBooking);
+
+      if (_selectedReminder != ReminderOffset.none) {
+        final scheduledDate = date.subtract(_selectedReminder.duration);
+        if (scheduledDate.isBefore(DateTime.now())) {
+          if (mounted) {
+            AppToast.show(
+              context,
+              message: 'Reminder time is in the past and could not be scheduled',
+              type: ToastType.warning,
+            );
+          }
+        } else {
+          final reminderService = ref.read(bookingReminderServiceProvider);
+          await reminderService.setReminder(
+            bookingId,
+            date,
+            _selectedReminder,
+            vendorName: selectedVendor.name,
+          );
+        }
+      }
     }
 
     final prefs = ref.read(userPreferencesServiceProvider);
@@ -508,7 +539,67 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
           ],
           const SizedBox(height: 20),
 
-          // 6. Notes
+          // 6. Reminder
+          _buildSectionHeader('REMINDER (Optional)'),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.outlineVariant,
+                width: 1,
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<ReminderOffset>(
+                key: const Key('add-booking-reminder-selector'),
+                value: _selectedReminder,
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.textSecondary,
+                ),
+                items: ReminderOffset.values.map((offset) {
+                  return DropdownMenuItem<ReminderOffset>(
+                    value: offset,
+                    child: Row(
+                      children: [
+                        Icon(
+                          offset == ReminderOffset.none
+                              ? Icons.notifications_none
+                              : Icons.notifications_active,
+                          size: 18,
+                          color: offset == ReminderOffset.none
+                              ? AppColors.textSecondary
+                              : AppColors.accent,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          offset == ReminderOffset.none ? 'None' : offset.displayLabel,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (newOffset) {
+                  if (newOffset != null) {
+                    setState(() {
+                      _selectedReminder = newOffset;
+                    });
+                    _onFormChanged();
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // 7. Notes
           _buildFieldLabel('Optional Notes'),
           const SizedBox(height: 8),
           _buildFieldWrapper(
