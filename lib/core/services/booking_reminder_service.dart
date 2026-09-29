@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../shared/models/booking.dart';
 import '../../shared/models/reminder_offset.dart';
 import 'notification_service.dart';
 
@@ -12,13 +13,135 @@ class BookingReminderService {
 
   BookingReminderService(this._notificationService, this._prefs);
 
+  static const String keyGlobalEnabled = 'global_reminders_enabled';
+  static const String keyGlobalOffsets = 'global_reminder_offsets';
+
   static String _key(String bookingId) => 'reminder_$bookingId';
 
-  /// Sets a reminder notification for [bookingId].
-  ///
-  /// - If [offset] is [ReminderOffset.none], existing reminder is cancelled and cleared.
-  /// - If the computed trigger time is in the past, returns `false` and does not schedule.
-  /// - Otherwise, schedules the OS notification, persists configuration, and returns `true`.
+  /// Generates a deterministic, positive 31-bit notification ID for a given (bookingId, offset) pair.
+  static int getNotificationId(String bookingId, ReminderOffset offset) {
+    return '${bookingId}_${offset.name}'.hashCode & 0x7FFFFFFF;
+  }
+
+  // ==========================================
+  // Global Multi-Trigger Settings & Scheduling
+  // ==========================================
+
+  /// Retrieves global reminder settings from SharedPreferences.
+  /// Defaults to enabled: true with 1 day before (24hr) active.
+  GlobalReminderSettings getGlobalSettings() {
+    final enabled = _prefs.getBool(keyGlobalEnabled) ?? true;
+    final list = _prefs.getStringList(keyGlobalOffsets);
+    Set<ReminderOffset> offsets = {ReminderOffset.oneDay};
+    if (list != null) {
+      offsets = list
+          .map((e) => ReminderOffset.fromString(e))
+          .where((o) => o != ReminderOffset.none)
+          .toSet();
+      if (offsets.isEmpty && enabled) {
+        offsets = {ReminderOffset.oneDay};
+      }
+    }
+    return GlobalReminderSettings(
+      enabled: enabled,
+      selectedOffsets: offsets,
+    );
+  }
+
+  /// Persists global reminder settings to SharedPreferences.
+  Future<void> saveGlobalSettings(GlobalReminderSettings settings) async {
+    await _prefs.setBool(keyGlobalEnabled, settings.enabled);
+    await _prefs.setStringList(
+      keyGlobalOffsets,
+      settings.selectedOffsets.map((o) => o.name).toList(),
+    );
+  }
+
+  /// Schedules notifications for [booking] across all active global reminder offsets.
+  /// Returns the number of successfully scheduled notifications.
+  Future<int> scheduleRemindersForBooking(
+    Booking booking, [
+    GlobalReminderSettings? settings,
+  ]) async {
+    final activeSettings = settings ?? getGlobalSettings();
+    if (!activeSettings.enabled) {
+      return 0;
+    }
+
+    final displayName = booking.vendorName.trim().isNotEmpty
+        ? booking.vendorName.trim()
+        : 'Vendor';
+    final formattedDate = DateFormat('MMM dd, yyyy').format(booking.startDate);
+
+    int count = 0;
+    for (final offset in activeSettings.selectedOffsets) {
+      if (offset == ReminderOffset.none) continue;
+
+      final triggerTime = booking.startDate.subtract(offset.duration);
+      if (triggerTime.isAfter(DateTime.now())) {
+        final id = getNotificationId(booking.id, offset);
+        final title = 'Booking Reminder (${offset.displayLabel}) — $displayName';
+        final body =
+            'Upcoming 24hr booking for $displayName starts on $formattedDate.';
+
+        final scheduled = await _notificationService.scheduleNotification(
+          id,
+          title,
+          body,
+          triggerTime,
+          payload: booking.id,
+        );
+        if (scheduled) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /// Cancels all scheduled reminder triggers across all offsets for [bookingId].
+  Future<void> cancelRemindersForBooking(String bookingId) async {
+    for (final offset in ReminderOffset.values) {
+      final id = getNotificationId(bookingId, offset);
+      await _notificationService.cancelNotification(id);
+    }
+    // Also cancel legacy single-id notification
+    await _notificationService.cancelNotification(bookingId.hashCode);
+  }
+
+  /// Resyncs all reminders: updates settings if provided, cancels existing alarms,
+  /// and schedules active offsets for all upcoming bookings.
+  Future<int> resyncAllReminders(
+    List<Booking> bookings, [
+    GlobalReminderSettings? newSettings,
+  ]) async {
+    if (newSettings != null) {
+      await saveGlobalSettings(newSettings);
+    }
+    final activeSettings = newSettings ?? getGlobalSettings();
+
+    // Cancel all existing notifications
+    await _notificationService.cancelAllNotifications();
+
+    if (!activeSettings.enabled) {
+      return 0;
+    }
+
+    int totalScheduled = 0;
+    final now = DateTime.now();
+    for (final booking in bookings) {
+      if (booking.startDate.isAfter(now.subtract(const Duration(days: 7)))) {
+        totalScheduled += await scheduleRemindersForBooking(booking, activeSettings);
+      }
+    }
+    return totalScheduled;
+  }
+
+  // ==========================================
+  // Single-Offset / Legacy Methods (Backward Compatible)
+  // ==========================================
+
+  /// Sets a single reminder notification for [bookingId].
   Future<bool> setReminder(
     String bookingId,
     DateTime startDate,
@@ -65,9 +188,7 @@ class BookingReminderService {
     return false;
   }
 
-  /// Cancels any scheduled notification for [bookingId].
-  ///
-  /// If [clearStorage] is true, also removes the persisted reminder record.
+  /// Cancels scheduled notification for [bookingId].
   Future<void> cancelReminder(
     String bookingId, {
     bool clearStorage = true,
@@ -80,7 +201,6 @@ class BookingReminderService {
   }
 
   /// Cancels only the OS notification while keeping the stored reminder metadata intact.
-  /// Useful for soft-delete with undo window.
   Future<void> cancelNotificationOnly(String bookingId) async {
     await cancelReminder(bookingId, clearStorage: false);
   }
@@ -91,7 +211,6 @@ class BookingReminderService {
   }
 
   /// Retrieves the current [ReminderOffset] for [bookingId] from SharedPreferences.
-  /// Returns `null` if no reminder is configured.
   ReminderOffset? getReminder(String bookingId) {
     final raw = _prefs.getString(_key(bookingId));
     if (raw == null || raw.isEmpty) return null;
@@ -124,8 +243,6 @@ class BookingReminderService {
   }
 
   /// Reschedules an existing reminder for [bookingId] against a [newStartDate].
-  /// Cancels the old notification and schedules a new one with the original offset.
-  /// Returns `false` if no prior reminder existed or if the new trigger time is in the past.
   Future<bool> rescheduleForBooking(
     String bookingId,
     DateTime newStartDate, {

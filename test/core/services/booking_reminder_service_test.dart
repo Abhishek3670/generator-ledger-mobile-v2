@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ledger/core/services/booking_reminder_service.dart';
 import 'package:ledger/core/services/notification_service.dart';
+import 'package:ledger/shared/models/booking.dart';
 import 'package:ledger/shared/models/reminder_offset.dart';
 
 class FakeNotificationService extends NotificationService {
   final List<ScheduledCall> scheduledCalls = [];
   final List<int> cancelledIds = [];
+  bool allCancelled = false;
   bool shouldSucceed = true;
 
   @override
@@ -37,6 +40,13 @@ class FakeNotificationService extends NotificationService {
   Future<void> cancelNotification(int id) async {
     cancelledIds.add(id);
   }
+
+  @override
+  Future<void> cancelAllNotifications() async {
+    allCancelled = true;
+    cancelledIds.clear();
+    scheduledCalls.clear();
+  }
 }
 
 class ScheduledCall {
@@ -58,7 +68,7 @@ class ScheduledCall {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('BookingReminderService Tests', () {
+  group('BookingReminderService Tests (Single Offset / Legacy)', () {
     late FakeNotificationService notificationService;
     late SharedPreferences prefs;
     late BookingReminderService reminderService;
@@ -236,6 +246,143 @@ void main() {
     test('getReminder gracefully parses legacy plain text offset values', () async {
       await prefs.setString('reminder_LEGACY', 'threeHours');
       expect(reminderService.getReminder('LEGACY'), ReminderOffset.threeHours);
+    });
+  });
+
+  group('WO-104: Global Multi-Trigger Settings & Scheduling Tests', () {
+    late FakeNotificationService notificationService;
+    late SharedPreferences prefs;
+    late BookingReminderService reminderService;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+      notificationService = FakeNotificationService();
+      reminderService = BookingReminderService(notificationService, prefs);
+    });
+
+    test('getGlobalSettings defaults to enabled: true and 1 day before', () {
+      final settings = reminderService.getGlobalSettings();
+      expect(settings.enabled, isTrue);
+      expect(settings.selectedOffsets, {ReminderOffset.oneDay});
+    });
+
+    test('saveGlobalSettings stores and retrieves custom global settings', () async {
+      const custom = GlobalReminderSettings(
+        enabled: true,
+        selectedOffsets: {ReminderOffset.oneHour, ReminderOffset.oneDay},
+      );
+      await reminderService.saveGlobalSettings(custom);
+
+      final retrieved = reminderService.getGlobalSettings();
+      expect(retrieved.enabled, isTrue);
+      expect(retrieved.selectedOffsets, {ReminderOffset.oneHour, ReminderOffset.oneDay});
+
+      expect(prefs.getBool(BookingReminderService.keyGlobalEnabled), isTrue);
+      expect(
+        prefs.getStringList(BookingReminderService.keyGlobalOffsets),
+        containsAll(['oneHour', 'oneDay']),
+      );
+    });
+
+    test('getNotificationId produces deterministic positive 31-bit IDs', () {
+      final id1 = BookingReminderService.getNotificationId('BK-100', ReminderOffset.oneDay);
+      final id2 = BookingReminderService.getNotificationId('BK-100', ReminderOffset.oneDay);
+      final id3 = BookingReminderService.getNotificationId('BK-100', ReminderOffset.oneHour);
+
+      expect(id1, equals(id2));
+      expect(id1, isNot(equals(id3)));
+      expect(id1 >= 0, isTrue);
+    });
+
+    test('scheduleRemindersForBooking schedules multiple alarms for active offsets', () async {
+      const settings = GlobalReminderSettings(
+        enabled: true,
+        selectedOffsets: {ReminderOffset.oneHour, ReminderOffset.oneDay},
+      );
+      await reminderService.saveGlobalSettings(settings);
+
+      final startDate = DateTime.now().add(const Duration(days: 3));
+      final booking = Booking(
+        id: 'BK-MULTI-1',
+        vendorId: 'V-1',
+        vendorName: 'Apex Genset',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: startDate,
+        status: 'confirmed',
+      );
+
+      final count = await reminderService.scheduleRemindersForBooking(booking);
+      expect(count, 2);
+      expect(notificationService.scheduledCalls.length, 2);
+
+      final formattedDate = DateFormat('MMM dd, yyyy').format(startDate);
+      for (final call in notificationService.scheduledCalls) {
+        expect(call.title, contains('Booking Reminder'));
+        expect(call.title, contains('Apex Genset'));
+        expect(call.body, 'Upcoming 24hr booking for Apex Genset starts on $formattedDate.');
+        expect(call.payload, 'BK-MULTI-1');
+      }
+    });
+
+    test('scheduleRemindersForBooking returns 0 when global reminders are disabled', () async {
+      await reminderService.saveGlobalSettings(
+        const GlobalReminderSettings(enabled: false),
+      );
+
+      final booking = Booking(
+        id: 'BK-DISABLED',
+        vendorId: 'V-1',
+        vendorName: 'Apex Genset',
+        generatorId: 'GEN-1',
+        capacity: '100 kVA',
+        date: DateTime.now().add(const Duration(days: 3)),
+        status: 'confirmed',
+      );
+
+      final count = await reminderService.scheduleRemindersForBooking(booking);
+      expect(count, 0);
+      expect(notificationService.scheduledCalls, isEmpty);
+    });
+
+    test('cancelRemindersForBooking cancels notifications across all possible offsets', () async {
+      await reminderService.cancelRemindersForBooking('BK-CANCEL-ALL');
+      expect(notificationService.cancelledIds.length, greaterThanOrEqualTo(ReminderOffset.values.length));
+    });
+
+    test('resyncAllReminders cancels existing and reschedules upcoming bookings', () async {
+      final now = DateTime.now();
+      final bookings = [
+        Booking(
+          id: 'BK-SYNC-1',
+          vendorId: 'V-1',
+          vendorName: 'Vendor 1',
+          generatorId: 'GEN-1',
+          capacity: '50 kVA',
+          date: now.add(const Duration(days: 2)),
+          status: 'confirmed',
+        ),
+        Booking(
+          id: 'BK-SYNC-2',
+          vendorId: 'V-2',
+          vendorName: 'Vendor 2',
+          generatorId: 'GEN-2',
+          capacity: '100 kVA',
+          date: now.add(const Duration(days: 5)),
+          status: 'confirmed',
+        ),
+      ];
+
+      const newSettings = GlobalReminderSettings(
+        enabled: true,
+        selectedOffsets: {ReminderOffset.oneDay},
+      );
+
+      final scheduled = await reminderService.resyncAllReminders(bookings, newSettings);
+      expect(notificationService.allCancelled, isTrue);
+      expect(scheduled, 2);
+      expect(notificationService.scheduledCalls.length, 2);
     });
   });
 }

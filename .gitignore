@@ -3,7 +3,7 @@ stitch_generator_ledger_design/
 AGENTS.md
 PLAN.md
 graphify-out/
-screens
+/screens/
 
 # Internal planning/docs (not for repo)
 .docs/

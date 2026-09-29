@@ -196,7 +196,7 @@ void main() {
   });
 
   group('AddBookingModal Reminder Selector', () {
-    testWidgets('displays REMINDER (Optional) section and defaults to None', (
+    testWidgets('does not display REMINDER (Optional) dropdown selector', (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(800, 1400);
@@ -218,9 +218,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('REMINDER (Optional)'), findsOneWidget);
-      expect(find.byKey(const Key('add-booking-reminder-selector')), findsOneWidget);
-      expect(find.text('None'), findsOneWidget);
+      expect(find.text('REMINDER (Optional)'), findsNothing);
+      expect(find.byKey(const Key('add-booking-reminder-selector')), findsNothing);
     });
   });
 

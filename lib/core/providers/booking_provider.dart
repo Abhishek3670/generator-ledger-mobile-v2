@@ -135,6 +135,9 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _ref.invalidate(calendarEventsProvider);
       _ref.invalidate(calendarDayBookingsProvider);
 
+      // Schedule global multi-trigger reminders
+      unawaited(_reminder?.scheduleRemindersForBooking(booking));
+
       final offset = reminderOffset ?? booking.reminderOffset;
       if (offset != null && offset != ReminderOffset.none) {
         unawaited(_reminder?.setReminder(
@@ -175,6 +178,10 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _ref.invalidate(calendarDayBookingsProvider);
 
       if (dateChanged) {
+        unawaited(() async {
+          await _reminder?.cancelRemindersForBooking(booking.id);
+          await _reminder?.scheduleRemindersForBooking(booking);
+        }());
         unawaited(_reminder?.rescheduleForBooking(
           booking.id,
           booking.startDate,
@@ -201,6 +208,7 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     _deleteTimer?.cancel();
     if (_lastDeletedBooking != null) {
       await _repository.deleteBooking(_lastDeletedBooking!.id);
+      unawaited(_reminder?.cancelRemindersForBooking(_lastDeletedBooking!.id));
       unawaited(_reminder?.clearReminderStorage(_lastDeletedBooking!.id));
       _lastDeletedBooking = null;
     }
@@ -211,7 +219,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     _lastDeletedBooking = _cachedBookings[index];
     _lastDeletedIndex = index;
 
-    // Immediately cancel OS notification BEFORE 5s undo timer starts
+    // Immediately cancel OS notifications BEFORE 5s undo timer starts
+    unawaited(_reminder?.cancelRemindersForBooking(bookingId));
     unawaited(_reminder?.cancelNotificationOnly(bookingId));
 
     _cachedBookings = List<Booking>.from(_cachedBookings)..removeAt(index);
@@ -221,6 +230,7 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       if (_lastDeletedBooking != null && _lastDeletedBooking!.id == bookingId) {
         try {
           await _repository.deleteBooking(bookingId);
+          unawaited(_reminder?.cancelRemindersForBooking(bookingId));
           unawaited(_reminder?.clearReminderStorage(bookingId));
           _lastDeletedBooking = null;
           _lastDeletedIndex = null;
@@ -233,6 +243,7 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
               ..insert(_lastDeletedIndex!.clamp(0, _cachedBookings.length), _lastDeletedBooking!);
             state = AsyncValue.data(_cachedBookings);
             // Re-schedule reminder on delete failure
+            unawaited(_reminder?.scheduleRemindersForBooking(_lastDeletedBooking!));
             unawaited(_reminder?.rescheduleForBooking(
               _lastDeletedBooking!.id,
               _lastDeletedBooking!.startDate,
@@ -261,7 +272,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _ref.invalidate(calendarEventsProvider);
       _ref.invalidate(calendarDayBookingsProvider);
 
-      // Re-schedule reminder using original persisted settings from SharedPreferences
+      // Re-schedule reminders using global settings and legacy persisted settings
+      unawaited(_reminder?.scheduleRemindersForBooking(restored));
       unawaited(_reminder?.rescheduleForBooking(
         restored.id,
         restored.startDate,

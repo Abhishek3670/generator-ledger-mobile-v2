@@ -15,13 +15,11 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify illustrative icon
-    expect(find.byIcon(Icons.construction), findsOneWidget);
+    // Verify Header and title
+    expect(find.text('Booking Reminders'), findsOneWidget);
+    expect(find.text('INTEGRATIONS / SETTINGS'), findsOneWidget);
 
-    // Verify "Coming Soon" header
-    expect(find.text('Coming Soon'), findsOneWidget);
-
-    // Verify description
-    expect(find.textContaining('under development'), findsOneWidget);
+    // Verify master switch card
+    expect(find.text('Enable Booking Reminders'), findsOneWidget);
   });
 }

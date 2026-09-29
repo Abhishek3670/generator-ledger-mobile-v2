@@ -40,4 +40,51 @@ void main() {
       expect(ReminderOffset.fromString('unknown_value'), ReminderOffset.none);
     });
   });
+
+  group('GlobalReminderSettings Tests', () {
+    test('defaults to enabled: true and selectedOffsets: {ReminderOffset.oneDay}', () {
+      const settings = GlobalReminderSettings();
+      expect(settings.enabled, isTrue);
+      expect(settings.selectedOffsets, {ReminderOffset.oneDay});
+    });
+
+    test('copyWith modifies attributes properly', () {
+      const initial = GlobalReminderSettings();
+      final disabled = initial.copyWith(enabled: false);
+      expect(disabled.enabled, isFalse);
+      expect(disabled.selectedOffsets, {ReminderOffset.oneDay});
+
+      final multiOffset = initial.copyWith(
+        selectedOffsets: {ReminderOffset.oneHour, ReminderOffset.oneDay},
+      );
+      expect(multiOffset.enabled, isTrue);
+      expect(multiOffset.selectedOffsets, {ReminderOffset.oneHour, ReminderOffset.oneDay});
+    });
+
+    test('toMap and fromMap serialize and deserialize properly', () {
+      const original = GlobalReminderSettings(
+        enabled: true,
+        selectedOffsets: {ReminderOffset.thirtyMin, ReminderOffset.oneDay},
+      );
+      final map = original.toMap();
+      expect(map['enabled'], isTrue);
+      expect(map['selected_offsets'], containsAll(['thirtyMin', 'oneDay']));
+
+      final restored = GlobalReminderSettings.fromMap(map);
+      expect(restored, original);
+    });
+
+    test('equality and hashCode match for identical configurations', () {
+      const a = GlobalReminderSettings(
+        enabled: true,
+        selectedOffsets: {ReminderOffset.oneHour, ReminderOffset.oneDay},
+      );
+      const b = GlobalReminderSettings(
+        enabled: true,
+        selectedOffsets: {ReminderOffset.oneDay, ReminderOffset.oneHour},
+      );
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
+  });
 }
