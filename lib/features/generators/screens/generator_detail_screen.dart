@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_bookings.dart';
 import '../../../data/mock/mock_vendors.dart';
 import '../../../data/mock/mock_generators.dart';
+import '../../../core/navigation/hero_tags.dart';
 import '../modals/edit_generator_modal.dart';
 import '../widgets/generator_action_menu.dart';
 
@@ -103,19 +104,16 @@ class _GeneratorDetailScreenState extends State<GeneratorDetailScreen> {
     _refreshBookings();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Booking $newBookingId created successfully!'),
-        backgroundColor: AppColors.success,
-      ),
+      const SnackBar(content: Text('Booking created successfully')),
     );
   }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2025),
-      lastDate: DateTime(2030),
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -146,7 +144,7 @@ class _GeneratorDetailScreenState extends State<GeneratorDetailScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Generator Details',
+          'GENERATOR DETAILS',
           style: AppTypography.headlineSmall.copyWith(color: Colors.white),
         ),
         backgroundColor: AppColors.primary,
@@ -171,87 +169,93 @@ class _GeneratorDetailScreenState extends State<GeneratorDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header Identity Section
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _generator.id,
-                          style: AppTypography.headlineMedium.copyWith(color: AppColors.primary),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
+              Hero(
+                tag: HeroTags.generatorCard(_generator.id),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceContainer,
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: Text(
-                                '${_generator.category.toUpperCase()} GENSET',
-                                style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
-                              ),
+                            Text(
+                              _generator.id,
+                              style: AppTypography.headlineMedium.copyWith(color: AppColors.primary),
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceContainer,
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: Text(
-                                _generator.capacity.toUpperCase(),
-                                style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
-                              ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceContainer,
+                                    border: Border.all(color: AppColors.border),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  child: Text(
+                                    '${_generator.category.toUpperCase()} GENSET',
+                                    style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
+                                  ),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceContainer,
+                                    border: Border.all(color: AppColors.border),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  child: Text(
+                                    _generator.capacity.toUpperCase(),
+                                    style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
+                                  ),
+                                ),
+                                if (_generator.type.isNotEmpty && _generator.type != '-')
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceContainer,
+                                      border: Border.all(color: AppColors.border),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    child: Text(
+                                      _generator.type.toUpperCase(),
+                                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
+                                    ),
+                                  ),
+                              ],
                             ),
-                            if (_generator.type.isNotEmpty && _generator.type != '-')
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceContainer,
-                                  border: Border.all(color: AppColors.border),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                child: Text(
-                                  _generator.type.toUpperCase(),
-                                  style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
-                                ),
-                              ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
 
-                  // Availability Status Badge
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
-                      border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
-                      borderRadius: BorderRadius.circular(9999),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.check_circle, color: AppColors.success, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Available',
-                          style: AppTypography.labelCaps.copyWith(color: AppColors.success, fontSize: 11),
+                      // Availability Status Badge
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFECFDF5),
+                          border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                          borderRadius: BorderRadius.circular(9999),
                         ),
-                      ],
-                    ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle, color: AppColors.success, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Available',
+                              style: AppTypography.labelCaps.copyWith(color: AppColors.success, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
               const SizedBox(height: 24),
 

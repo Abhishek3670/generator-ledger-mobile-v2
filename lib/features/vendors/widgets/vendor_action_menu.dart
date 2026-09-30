@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/modal_scaffold.dart';
-import '../../../data/mock/mock_vendors.dart';
+import '../../../shared/models/vendor.dart';
 
 class VendorActionMenu extends StatelessWidget {
-  final MockVendor vendor;
+  final Vendor vendor;
   final VoidCallback onClose;
   final VoidCallback onEdit;
   final VoidCallback onDelete;

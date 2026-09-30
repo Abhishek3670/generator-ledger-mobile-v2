@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
+import 'animated_pressable.dart';
 
 /// An expandable Floating Action Button (FAB) menu item.
 class ExpandableFABItem {
@@ -164,13 +165,38 @@ class _ExpandableFABMenuState extends State<ExpandableFABMenu> with SingleTicker
                       ),
                       
                       // Active/expanded primary FAB
-                      FloatingActionButton(
-                        onPressed: _toggleMenu,
-                        backgroundColor: AppColors.primaryDark,
-                        foregroundColor: Colors.white,
-                        shape: const StadiumBorder(),
-                        elevation: 4,
-                        child: Icon(widget.expandedIcon),
+                      AnimatedPressable(
+                        onTap: _toggleMenu,
+                        borderRadius: BorderRadius.circular(9999),
+                        child: Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryDark,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: AnimatedBuilder(
+                              animation: _animationController,
+                              builder: (context, child) {
+                                return Transform.rotate(
+                                  angle: _animationController.value * 3.141592653589793 / 2, // 90 degrees
+                                  child: Icon(
+                                    widget.expandedIcon,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -192,13 +218,43 @@ class _ExpandableFABMenuState extends State<ExpandableFABMenu> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: _toggleMenu,
-      backgroundColor: _isOpen ? AppColors.primaryDark : AppColors.accent,
-      foregroundColor: _isOpen ? Colors.white : AppColors.primary,
-      shape: const StadiumBorder(),
-      elevation: 4,
-      child: Icon(_isOpen ? widget.expandedIcon : widget.collapsedIcon),
+    final bgColor = _isOpen ? AppColors.primaryDark : AppColors.accent;
+    final fgColor = _isOpen ? Colors.white : AppColors.primary;
+
+    return AnimatedPressable(
+      onTap: _toggleMenu,
+      borderRadius: BorderRadius.circular(9999),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: bgColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              final isClosing = _animationController.value < 0.5;
+              return Transform.rotate(
+                angle: _animationController.value * 3.141592653589793 / 2, // 90 degrees
+                child: Icon(
+                  isClosing ? widget.collapsedIcon : widget.expandedIcon,
+                  color: fgColor,
+                  key: ValueKey<bool>(isClosing),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 
@@ -237,23 +293,34 @@ class _ExpandableFABMenuState extends State<ExpandableFABMenu> with SingleTicker
                 ),
               ),
               const SizedBox(width: 12),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: FloatingActionButton(
-                  onPressed: () {
-                    _toggleMenu();
-                    item.onPressed();
-                  },
-                  heroTag: 'expandable_item_$index',
-                  backgroundColor: (item.label.toLowerCase().contains('add') ||
-                          item.label.toLowerCase().contains('create'))
-                      ? AppColors.accent
-                      : Colors.white,
-                  foregroundColor: AppColors.primary,
-                  shape: const StadiumBorder(),
-                  elevation: 2,
-                  child: Icon(item.icon, size: 20),
+              AnimatedPressable(
+                onTap: () {
+                  _toggleMenu();
+                  item.onPressed();
+                },
+                borderRadius: BorderRadius.circular(9999),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: (item.label.toLowerCase().contains('add') ||
+                            item.label.toLowerCase().contains('create'))
+                        ? AppColors.accent
+                        : Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    item.icon,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],

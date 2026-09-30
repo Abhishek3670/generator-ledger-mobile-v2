@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
+enum CalendarSelectionMode {
+  single,
+  range,
+  multi,
+}
+
 /// A custom inline calendar widget supporting range selection and styling matching the design system.
 class InlineCalendar extends StatefulWidget {
   /// The currently selected start date.
@@ -11,14 +17,26 @@ class InlineCalendar extends StatefulWidget {
   final DateTime? endDate;
 
   /// Callback triggered when the selected date range changes.
-  final Function(DateTime? start, DateTime? end) onRangeSelected;
+  final Function(DateTime? start, DateTime? end)? onRangeSelected;
+
+  /// The selection mode (single, range, multi)
+  final CalendarSelectionMode selectionMode;
+
+  /// The list of selected dates for multi-selection mode
+  final List<DateTime>? selectedDates;
+
+  /// Callback triggered when the selected dates list changes
+  final Function(List<DateTime> dates)? onDatesChanged;
 
   /// Creates an [InlineCalendar].
   const InlineCalendar({
     super.key,
     this.startDate,
     this.endDate,
-    required this.onRangeSelected,
+    this.onRangeSelected,
+    this.selectionMode = CalendarSelectionMode.single,
+    this.selectedDates,
+    this.onDatesChanged,
   });
 
   @override
@@ -56,36 +74,30 @@ class _InlineCalendarState extends State<InlineCalendar> {
   }
 
   void _onDayTapped(DateTime day) {
-    // Reset range or select start/end
-    if (widget.startDate == null || (widget.startDate != null && widget.endDate != null)) {
-      widget.onRangeSelected(day, null);
-    } else {
-      if (day.isBefore(widget.startDate!)) {
-        widget.onRangeSelected(day, null);
+    if (widget.selectionMode == CalendarSelectionMode.multi) {
+      final currentDates = List<DateTime>.from(widget.selectedDates ?? []);
+      final index = currentDates.indexWhere((d) => _isSameDay(d, day));
+      if (index >= 0) {
+        currentDates.removeAt(index);
       } else {
-        widget.onRangeSelected(widget.startDate, day);
+        currentDates.add(day);
       }
+      widget.onDatesChanged?.call(currentDates);
+    } else {
+      widget.onRangeSelected?.call(day, null);
     }
   }
 
   bool _isDateSelected(DateTime day) {
+    if (widget.selectionMode == CalendarSelectionMode.multi) {
+      return (widget.selectedDates ?? []).any((d) => _isSameDay(d, day));
+    }
     if (widget.startDate == null) return false;
-    
-    // Check if matching start or end date
-    final startMatches = _isSameDay(day, widget.startDate!);
-    final endMatches = widget.endDate != null && _isSameDay(day, widget.endDate!);
-    
-    return startMatches || endMatches;
+    return _isSameDay(day, widget.startDate!);
   }
 
   bool _isDateInRange(DateTime day) {
-    if (widget.startDate == null || widget.endDate == null) return false;
-    
-    final midnightDay = DateTime(day.year, day.month, day.day);
-    final midnightStart = DateTime(widget.startDate!.year, widget.startDate!.month, widget.startDate!.day);
-    final midnightEnd = DateTime(widget.endDate!.year, widget.endDate!.month, widget.endDate!.day);
-    
-    return midnightDay.isAfter(midnightStart) && midnightDay.isBefore(midnightEnd);
+    return false;
   }
 
   bool _isSameDay(DateTime d1, DateTime d2) {

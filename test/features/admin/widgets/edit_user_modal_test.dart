@@ -20,7 +20,7 @@ void main() {
       ),
     ));
 
-    expect(find.text('EDIT USER'), findsOneWidget);
+    expect(find.text('Edit User'), findsOneWidget);
     expect(find.text('USERNAME'), findsOneWidget);
     expect(find.text('ROLE'), findsOneWidget);
     expect(find.text('STATUS'), findsOneWidget);

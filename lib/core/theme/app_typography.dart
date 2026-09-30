@@ -2,45 +2,62 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 abstract final class AppTypography {
-  static TextStyle get displayLarge => GoogleFonts.spaceGrotesk(
+  // Display (32sp): Page titles, hero numbers
+  static TextStyle get display => GoogleFonts.spaceGrotesk(
         fontSize: 32,
-        fontWeight: FontWeight.w600,
-        height: 40 / 32,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w700,
+        height: 1.2,
+        letterSpacing: -0.02 * 32,
       );
 
-  static TextStyle get headlineMedium => GoogleFonts.spaceGrotesk(
+  // Headline (24sp): Section headers
+  static TextStyle get headline => GoogleFonts.spaceGrotesk(
         fontSize: 24,
         fontWeight: FontWeight.w700,
-        height: 32 / 24,
-        letterSpacing: 0,
+        height: 1.2,
+        letterSpacing: -0.01 * 24,
       );
 
-  static TextStyle get headlineSmall => GoogleFonts.spaceGrotesk(
-        fontSize: 18,
+  // Title (20sp): Card titles
+  static TextStyle get title => GoogleFonts.spaceGrotesk(
+        fontSize: 20,
         fontWeight: FontWeight.w600,
-        height: 24 / 18,
-        letterSpacing: 0,
+        height: 1.3,
       );
 
-  static TextStyle get bodyMedium => GoogleFonts.inter(
+  // Body Large (16sp): Primary content
+  static TextStyle get bodyLarge => GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
-        height: 26 / 16,
-        letterSpacing: 0,
+        height: 1.5,
       );
 
-  static TextStyle get bodySmall => GoogleFonts.inter(
+  // Body Medium (14sp): Secondary content
+  static TextStyle get bodyMedium => GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w400,
-        height: 22 / 14,
-        letterSpacing: 0,
+        height: 1.5,
       );
 
+  // Label (12sp): Captions, metadata
+  static TextStyle get label => GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        height: 1.4,
+      );
+
+  // Label Caps (11sp): All-caps utility labels
   static TextStyle get labelCaps => GoogleFonts.spaceGrotesk(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        height: 16 / 11,
-        letterSpacing: 0,
+        height: 1.4,
+        letterSpacing: 0.1 * 11,
       );
+
+  // --- Backwards Compatibility Aliases ---
+  static TextStyle get displayLarge => display;
+  static TextStyle get headlineMedium => headline;
+  static TextStyle get headlineSmall => title;
+  static TextStyle get bodySmall => bodyMedium;
 }
+

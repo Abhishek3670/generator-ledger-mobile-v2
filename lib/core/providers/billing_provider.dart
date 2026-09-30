@@ -1,25 +1,58 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
+import 'package:ledger/data/repositories/billing_repository.dart';
 import '../../shared/models/billing.dart';
-import 'booking_provider.dart';
 
-final billingProvider = Provider<List<BillingSummary>>((ref) {
-  final bookings = ref.watch(bookingProvider);
-  final confirmed = bookings.where((booking) => booking.status == 'confirmed');
-  final grouped = <String, List<BillingLine>>{};
+/// Repository provider for billing operations
+final billingRepositoryProvider = Provider<BillingRepository>((ref) {
+  return BillingRepository(apiClient: ref.watch(apiClientProvider));
+});
 
-  for (final booking in confirmed) {
-    grouped.putIfAbsent(booking.vendorId, () => []).add(
-          BillingLine(booking: booking, pricePerCapacity: 0),
-        );
+/// Date range filter state for billing screen
+class BillingDateRange {
+  final DateTime startDate;
+  final DateTime endDate;
+  final String? vendorId;
+
+  const BillingDateRange({
+    required this.startDate,
+    required this.endDate,
+    this.vendorId,
+  });
+
+  BillingDateRange copyWith({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? vendorId,
+  }) {
+    return BillingDateRange(
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      vendorId: vendorId ?? this.vendorId,
+    );
+  }
+}
+
+/// Date range state provider
+final billingDateRangeProvider =
+    StateProvider<BillingDateRange?>((ref) {
+  return null;
+});
+
+/// Billing data provider - fetches from API with current date range
+final billingProvider =
+    FutureProvider<BillingResponse?>((ref) async {
+  final repository = ref.watch(billingRepositoryProvider);
+  final dateRange = ref.watch(billingDateRangeProvider);
+
+  if (dateRange == null) {
+    return null;
   }
 
-  return grouped.entries.map((entry) {
-    final first = entry.value.first.booking;
-    return BillingSummary(
-      vendorId: entry.key,
-      vendorName: first.vendorName,
-      lines: entry.value,
-    );
-  }).toList();
+  return repository.getBillingPreview(
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+    vendorId: dateRange.vendorId,
+  );
 });

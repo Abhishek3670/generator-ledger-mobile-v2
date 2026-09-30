@@ -3,8 +3,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/mock/mock_generators.dart';
-import '../../../shared/widgets/modal_scaffold.dart';
-import '../../../shared/widgets/capacity_chip_selector.dart';
+import '../../../shared/widgets/draggable_form_sheet.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 class EditGeneratorModal extends StatefulWidget {
   final MockGenerator generator;
@@ -40,9 +41,17 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
     super.initState();
     _idController = TextEditingController(text: widget.generator.id);
     _typeController = TextEditingController(text: widget.generator.type);
-    _notesController = TextEditingController(); // Notes are optional and start blank or can check if there are fields
-    _selectedCategory = widget.generator.category;
-    _selectedStatus = widget.generator.status;
+    _notesController = TextEditingController(); // Notes are optional and start blank
+    const validStatuses = ['active', 'offline'];
+    const validCategories = ['retailer', 'permanent', 'emergency'];
+
+    _selectedStatus = validStatuses.contains(widget.generator.status.toLowerCase())
+        ? widget.generator.status.toLowerCase()
+        : 'active';
+
+    _selectedCategory = validCategories.contains(widget.generator.category.toLowerCase())
+        ? widget.generator.category.toLowerCase()
+        : null;
     
     // Normalize capacity string (e.g., '250 kVA' or '250' -> select closest or extract number)
     final numMatch = RegExp(r'\d+').firstMatch(widget.generator.capacity);
@@ -68,165 +77,160 @@ class _EditGeneratorModalState extends State<EditGeneratorModal> {
 
   @override
   Widget build(BuildContext context) {
-    return ModalScaffold(
-      title: 'EDIT GENERATOR',
-      isVisible: widget.isVisible,
-      onClose: widget.onClose,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Generator ID
-            _buildFieldLabel('GENERATOR ID'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _idController,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'e.g. GEN-250KVA-XT'),
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter generator ID' : null,
-            ),
-            const SizedBox(height: 16),
+    if (!widget.isVisible) return const SizedBox.shrink();
 
-            // Capacity Selector
-            _buildFieldLabel('CAPACITY (kVA)'),
-            const SizedBox(height: 8),
-            CapacityChipSelector(
-              selectedCapacity: _selectedCapacity,
-              onCapacitySelected: (cap) {
-                setState(() {
-                  _selectedCapacity = cap;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Type
-            _buildFieldLabel('TYPE'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _typeController,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'e.g. 6R / SL90 / HA'),
-              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter type' : null,
-            ),
-            const SizedBox(height: 16),
-
-            // Category Selection
-            _buildFieldLabel('CATEGORY'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
-              hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem<String>(
-                  value: 'retailer',
-                  child: Row(
-                    children: [
-                      Icon(Icons.storefront, size: 18, color: AppColors.primary),
-                      SizedBox(width: 8),
-                      Text('Retailer', style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'permanent',
-                  child: Row(
-                    children: [
-                      Icon(Icons.domain, size: 18, color: AppColors.primary),
-                      SizedBox(width: 8),
-                      Text('Permanent', style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'emergency',
-                  child: Row(
-                    children: [
-                      Icon(Icons.emergency_outlined, size: 18, color: AppColors.primary),
-                      SizedBox(width: 8),
-                      Text('Emergency', style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value;
-                });
-              },
-              validator: (value) => value == null ? 'Please select category' : null,
-            ),
-            const SizedBox(height: 16),
-
-            // Status Selection
-            _buildFieldLabel('STATUS'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedStatus,
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem<String>(
-                  value: 'active',
-                  child: Text('Active', style: TextStyle(fontSize: 14)),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'offline',
-                  child: Text('Offline', style: TextStyle(fontSize: 14)),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedStatus = value ?? 'active';
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Notes
-            _buildFieldLabel('NOTES (OPTIONAL)'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _notesController,
-              maxLines: 3,
-              style: AppTypography.bodyMedium,
-              decoration: _inputDecoration(hintText: 'Add any relevant details...'),
-            ),
-          ],
-        ),
-      ),
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+    final formContent = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextButton(
-            onPressed: widget.onClose,
-            child: Text('CANCEL', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary)),
+          // Generator ID
+          AppTextField(
+            labelText: 'GENERATOR ID',
+            hintText: 'e.g. GEN-250KVA-XT',
+            controller: _idController,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter generator ID' : null,
+            readOnly: true,
           ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                final updatedGen = MockGenerator(
-                  id: _idController.text.trim().toUpperCase(),
-                  capacity: '$_selectedCapacity kVA',
-                  type: _typeController.text.trim(),
-                  status: _selectedStatus,
-                  category: _selectedCategory!,
-                );
-                widget.onSave(updatedGen);
-              }
+          const SizedBox(height: 16),
+
+          // Capacity (Read-Only)
+          _buildFieldLabel('CAPACITY (kVA)'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainer,
+                  border: Border.all(color: AppColors.border, width: 1),
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  '$_selectedCapacity kVA',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Type
+          AppTextField(
+            labelText: 'TYPE',
+            hintText: 'e.g. 6R / SL90 / HA',
+            controller: _typeController,
+            validator: (value) => value == null || value.trim().isEmpty ? 'Please enter type' : null,
+          ),
+          const SizedBox(height: 16),
+
+          // Category Selection
+          _buildFieldLabel('CATEGORY'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedCategory,
+            hint: Text('Select Category', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem<String>(
+                value: 'retailer',
+                child: Row(
+                  children: [
+                    Icon(Icons.storefront, size: 18, color: AppColors.primary),
+                    SizedBox(width: 8),
+                    Text('Retailer', style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+              DropdownMenuItem<String>(
+                value: 'permanent',
+                child: Row(
+                  children: [
+                    Icon(Icons.domain, size: 18, color: AppColors.primary),
+                    SizedBox(width: 8),
+                    Text('Permanent', style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+              DropdownMenuItem<String>(
+                value: 'emergency',
+                child: Row(
+                  children: [
+                    Icon(Icons.emergency_outlined, size: 18, color: AppColors.primary),
+                    SizedBox(width: 8),
+                    Text('Emergency', style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedCategory = value;
+              });
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.primary,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('SAVE', style: AppTypography.labelCaps.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            validator: (value) => value == null ? 'Please select category' : null,
+          ),
+          const SizedBox(height: 16),
+
+          // Status Selection
+          _buildFieldLabel('STATUS'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedStatus,
+            decoration: _inputDecoration(),
+            items: const [
+              DropdownMenuItem<String>(
+                value: 'active',
+                child: Text('Active', style: TextStyle(fontSize: 14)),
+              ),
+              DropdownMenuItem<String>(
+                value: 'offline',
+                child: Text('Offline', style: TextStyle(fontSize: 14)),
+              ),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedStatus = value ?? 'active';
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Notes
+          AppTextField(
+            labelText: 'NOTES (OPTIONAL)',
+            hintText: 'Add any relevant details...',
+            controller: _notesController,
           ),
         ],
       ),
+    );
+
+    return DraggableFormSheet(
+      title: 'Edit Generator',
+      category: 'generators',
+      onClose: widget.onClose,
+      footer: AppButton(
+        label: 'SAVE',
+        isFullWidth: true,
+        onPressed: () {
+          if (_formKey.currentState?.validate() ?? false) {
+            final updatedGen = MockGenerator(
+              id: _idController.text.trim().toUpperCase(),
+              capacity: '$_selectedCapacity kVA',
+              type: _typeController.text.trim(),
+              status: _selectedStatus,
+              category: _selectedCategory!,
+            );
+            widget.onSave(updatedGen);
+          }
+        },
+        variant: AppButtonVariant.accent,
+      ),
+      child: formContent,
     );
   }
 

@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
+import '../providers/auth_provider.dart';
 
 /// Fully-styled pre-auth Login Screen.
 ///
 /// Features centered branding, username/password form card with focus glow,
 /// and a primary pill Sign In button.
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -28,15 +31,38 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleSignIn() {
+  Future<void> _handleSignIn() async {
     if (_formKey.currentState?.validate() ?? false) {
-      AppRouter.isLoggedIn = true;
-      context.go('/dashboard');
+      setState(() => _errorMessage = null);
+      try {
+        await ref
+            .read(authProvider.notifier)
+            .login(_usernameController.text.trim(), _passwordController.text);
+        AppRouter.refreshAuthState();
+        if (mounted) {
+          context.go('/dashboard');
+        }
+      } catch (error) {
+        if (mounted) {
+          setState(() => _errorMessage = _messageFor(error));
+        }
+      }
     }
+  }
+
+  String _messageFor(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '');
+    if (message.isEmpty) {
+      return 'Login failed. Please try again.';
+    }
+    return message;
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
@@ -63,8 +89,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppDimensions.modalRadius),
-                    border: Border.all(color: AppColors.outlineVariant, width: 1),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.modalRadius,
+                    ),
+                    border: Border.all(
+                      color: AppColors.outlineVariant,
+                      width: 1,
+                    ),
                     boxShadow: const [
                       BoxShadow(
                         offset: Offset(0, 1),
@@ -117,13 +148,37 @@ class _LoginScreenState extends State<LoginScreen> {
                           obscureText: true,
                           controller: _passwordController,
                         ),
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withValues(alpha: 0.08),
+                              border: const Border(
+                                left: BorderSide(
+                                  color: AppColors.danger,
+                                  width: 4,
+                                ),
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.functionalRadius,
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            child: Text(
+                              _errorMessage!,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.danger,
+                              ),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 32),
 
                         // Sign In Button
                         SizedBox(
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: _handleSignIn,
+                            onPressed: isLoading ? null : _handleSignIn,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -131,13 +186,22 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: const StadiumBorder(),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            child: Text(
-                              'Sign In',
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    'Sign In',
+                                    style: AppTypography.bodyMedium.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
@@ -201,9 +265,7 @@ class _StyledTextFieldState extends State<_StyledTextField> {
       children: [
         Text(
           widget.label.toUpperCase(),
-          style: AppTypography.labelCaps.copyWith(
-            color: AppColors.onSurface,
-          ),
+          style: AppTypography.labelCaps.copyWith(color: AppColors.onSurface),
         ),
         const SizedBox(height: 8),
         Container(
@@ -231,7 +293,9 @@ class _StyledTextFieldState extends State<_StyledTextField> {
               focusNode: _focusNode,
               controller: widget.controller,
               obscureText: widget.obscureText,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.primary,
+              ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return ''; // empty to keep it compact
@@ -244,8 +308,14 @@ class _StyledTextFieldState extends State<_StyledTextField> {
                 enabledBorder: InputBorder.none,
                 errorBorder: InputBorder.none,
                 focusedErrorBorder: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                errorStyle: TextStyle(height: 0, fontSize: 0), // hide error text
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                errorStyle: TextStyle(
+                  height: 0,
+                  fontSize: 0,
+                ), // hide error text
               ),
             ),
           ),

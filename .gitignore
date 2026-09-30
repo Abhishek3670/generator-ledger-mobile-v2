@@ -3,7 +3,18 @@ stitch_generator_ledger_design/
 AGENTS.md
 PLAN.md
 graphify-out/
-screens
+/screens/
+
+# Internal planning/docs (not for repo)
+.docs/
+.aionrs/
+docs/
+M11_PLANNING_SUMMARY.md
+INTEGRATION_PLAN.md
+UI_UX_ENHANCEMENT_PLAN.md
+
+# Source logo (final version in assets/icons/)
+logo.png
 
 # Flutter/Dart generated files
 .dart_tool/
@@ -11,8 +22,11 @@ screens
 .flutter-plugins-dependencies
 .packages
 build/
+android/.gradle/
+android/.kotlin/
 
 # IDE and local machine files
 .idea/
 *.iml
 .vscode/
+.claude/

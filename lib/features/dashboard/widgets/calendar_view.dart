@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_bookings.dart';
+import '../../../shared/models/calendar_event.dart';
 
 /// Monthly calendar view displaying confirmed bookings and counts per day.
 class CalendarView extends StatefulWidget {
@@ -16,8 +16,8 @@ class CalendarView extends StatefulWidget {
   /// Callback triggered when a new day is selected.
   final ValueChanged<DateTime> onDaySelected;
 
-  /// The list of mock bookings to display on the calendar.
-  final List<MockBooking> bookings;
+  /// The list of events to display on the calendar.
+  final List<CalendarEvent> events;
 
   /// Creates a [CalendarView].
   const CalendarView({
@@ -25,7 +25,7 @@ class CalendarView extends StatefulWidget {
     required this.selectedDay,
     required this.focusedDay,
     required this.onDaySelected,
-    required this.bookings,
+    required this.events,
   });
 
   @override
@@ -41,12 +41,13 @@ class _CalendarViewState extends State<CalendarView> {
     _focusedDay = widget.focusedDay;
   }
 
-  List<MockBooking> _getBookingsForDay(DateTime day) {
-    return widget.bookings.where((b) {
-      return b.date.year == day.year &&
-          b.date.month == day.month &&
-          b.date.day == day.day;
-    }).toList();
+  int _getBookingCountForDay(DateTime day) {
+    final dateStr = DateFormat('yyyy-MM-dd').format(day);
+    final event = widget.events.firstWhere(
+      (e) => e.date == dateStr,
+      orElse: () => CalendarEvent(date: '', count: 0, title: ''),
+    );
+    return event.count;
   }
 
   int _daysInMonth(DateTime date) {
@@ -92,52 +93,7 @@ class _CalendarViewState extends State<CalendarView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Card Title/Header Row
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'CALENDAR',
-                        style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Vendor Bookings',
-                        style: AppTypography.headlineMedium.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 20,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Confirmed bookings by date.',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                // Helper copy on wider screens (we can conditionally show it)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (MediaQuery.of(context).size.width > 360) {
-                      return Text(
-                        'Click a date to view details.',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-          ),
-          const Divider(color: AppColors.border, height: 1),
+
 
           // 2. Controls Row
           Padding(
@@ -295,7 +251,7 @@ class _CalendarViewState extends State<CalendarView> {
                             cellDate.month == widget.selectedDay.month &&
                             cellDate.day == widget.selectedDay.day;
 
-                        final dayBookings = _getBookingsForDay(cellDate);
+                        final bookingCount = _getBookingCountForDay(cellDate);
 
                         return Expanded(
                           child: InkWell(
@@ -327,7 +283,7 @@ class _CalendarViewState extends State<CalendarView> {
                                           : AppColors.textSecondary,
                                     ),
                                   ),
-                                  if (dayBookings.isNotEmpty)
+                                  if (bookingCount > 0)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 4,
@@ -338,7 +294,7 @@ class _CalendarViewState extends State<CalendarView> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        '${dayBookings.length} bk',
+                                        '$bookingCount bk',
                                         textAlign: TextAlign.center,
                                         style: AppTypography.labelCaps.copyWith(
                                           color: Colors.white,

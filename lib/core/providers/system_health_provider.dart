@@ -1,34 +1,81 @@
-import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'api_client_provider.dart';
+import '../../data/repositories/system_health_repository.dart';
 import '../../shared/models/system_health.dart';
-import '../services/mock_data_service.dart';
 
-final systemHealthProvider =
-    StateNotifierProvider<SystemHealthNotifier, SystemHealth>((ref) {
-  return SystemHealthNotifier(MockDataService().getSystemHealth());
+final systemHealthRepositoryProvider = Provider<SystemHealthRepository>((ref) {
+  return SystemHealthRepository(apiClient: ref.watch(apiClientProvider));
 });
 
-class SystemHealthNotifier extends StateNotifier<SystemHealth> {
-  SystemHealthNotifier(super.initialHealth);
+final systemHealthProvider =
+    StateNotifierProvider<SystemHealthNotifier, AsyncValue<SystemHealth>>((ref) {
+  final repository = ref.watch(systemHealthRepositoryProvider);
+  return SystemHealthNotifier(repository);
+});
 
-  void refresh() {
-    final random = Random();
-    final cpu = double.parse((0.2 + random.nextDouble() * 3).toStringAsFixed(1));
-    final memory =
-        double.parse((12.0 + random.nextDouble() * 2).toStringAsFixed(1));
-    final temperature =
-        double.parse((38.0 + random.nextDouble() * 4).toStringAsFixed(1));
+class SystemHealthNotifier extends StateNotifier<AsyncValue<SystemHealth>> {
+  SystemHealthNotifier(this._repository) : super(const AsyncValue.loading()) {
+    _fetchHealth();
+  }
 
-    state = state.copyWith(
-      cpu: cpu,
-      memory: memory,
-      temperature: temperature,
-      lastChecked: DateTime.now(),
-      cpuTrend: [...state.cpuTrend.skip(1), 40 - cpu],
-      memoryTrend: [...state.memoryTrend.skip(1), 40 - memory],
-      temperatureTrend: [...state.temperatureTrend.skip(1), 40 - temperature],
+  final SystemHealthRepository _repository;
+  Timer? _pollingTimer;
+  final List<SystemHealth> _history = [];
+  static const int _maxHistorySize = 20;
+  static const Duration _pollingInterval = Duration(seconds: 30);
+
+  Future<void> _fetchHealth() async {
+    try {
+      final health = await _repository.getHealth();
+      _addToHistory(health);
+      state = AsyncValue.data(_buildHealthWithTrends(health));
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  void _addToHistory(SystemHealth health) {
+    _history.add(health);
+    if (_history.length > _maxHistorySize) {
+      _history.removeAt(0);
+    }
+  }
+
+  SystemHealth _buildHealthWithTrends(SystemHealth latest) {
+    if (_history.isEmpty) {
+      return latest;
+    }
+
+    return latest.copyWith(
+      cpuTrend: _history.map((h) => h.cpu).toList(),
+      memoryTrend: _history.map((h) => h.memory).toList(),
+      temperatureTrend: _history.map((h) => h.temperature).toList(),
     );
   }
+
+  void startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(_pollingInterval, (_) {
+      _fetchHealth();
+    });
+  }
+
+  void stopPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
+  }
+
+  Future<void> refresh() async {
+    await _fetchHealth();
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
 }
+
