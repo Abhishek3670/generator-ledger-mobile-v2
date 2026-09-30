@@ -23,12 +23,6 @@ def flutter_root
   raise "FLUTTER_ROOT not found. Please try to re-run pod install."
 end
 
-podfile_root = File.dirname(__FILE__)
-linkage_dependencies = []
-
-# This option must be at the very bottom of this file.
-eval(File.read(File.join(flutter_root, 'packages', 'flutter_tools', 'bin', 'podfile_helper.rb')), binding, podfile_root)
-
 target 'Runner' do
   flutter_install_all_ios_pods File.join(flutter_root, 'packages', 'flutter_tools', 'bin', 'flutter_tools.rb')
 
