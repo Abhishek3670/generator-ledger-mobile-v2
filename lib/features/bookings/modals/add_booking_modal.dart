@@ -15,6 +15,7 @@ import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../core/providers/booking_provider.dart';
 import '../../../core/providers/generator_provider.dart';
+import '../../../core/providers/notification_provider.dart';
 import '../../../core/providers/vendor_provider.dart';
 
 import '../../../core/services/user_preferences_service.dart';
@@ -196,7 +197,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     setState(() {
       _vendorError = _selectedVendorId == null
           ? 'Please search and select a vendor'
@@ -249,8 +250,9 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     final baseTime = DateTime.now().millisecondsSinceEpoch;
     for (int i = 0; i < _selectedDates.length; i++) {
       final date = _selectedDates[i];
-      newBookings.add(Booking(
-        id: 'BK-$baseTime-$i',
+      final bookingId = 'BK-$baseTime-$i';
+      final newBooking = Booking(
+        id: bookingId,
         vendorId: _selectedVendorId!,
         vendorName: selectedVendor.name,
         generatorId: genId,
@@ -259,7 +261,12 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         endDate: date,
         status: 'confirmed',
         notes: _notesController.text.trim(),
-      ));
+      );
+      newBookings.add(newBooking);
+
+      // Automatically schedule global reminders for the newly created booking
+      final reminderService = ref.read(bookingReminderServiceProvider);
+      await reminderService.scheduleRemindersForBooking(newBooking);
     }
 
     final prefs = ref.read(userPreferencesServiceProvider);

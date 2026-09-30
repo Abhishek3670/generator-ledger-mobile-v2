@@ -5,6 +5,24 @@ All notable changes to the generator-ledger-mobile-v2 project will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-30
+
+### Added
+- **Booking Reminders & Notification System** — Complete notification infrastructure and global reminder settings
+  - Local notification system (`flutter_local_notifications`) with exact & inexact alarm scheduling
+  - Global reminder settings under Settings → Integrations with master toggle and multi-select trigger intervals
+  - Automatic scheduling for 24-hr genset bookings ("1 day before" default)
+  - Active reminder indicators (Amber bell `#fbbf24`) across Dashboard, Bookings directory, and Booking detail modal
+  - Multi-trigger reminder support with deterministic notification IDs
+
+### Changed
+- **AddBookingModal** — Removed individual reminder dropdown in favor of unified global settings
+- **BookingDetailModal** — Now pre-selects active global reminder offset in ReminderPickerSheet
+
+### Fixed
+- Android 13/14+ (API 34+) exact alarm permissions (`USE_EXACT_ALARM`) and boot receivers
+- Timezone initialization fallback preventing `LateInitializationError`
+
 ## [1.0.3] - 2026-07-16
 
 ### Added

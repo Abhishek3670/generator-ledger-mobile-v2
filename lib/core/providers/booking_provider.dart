@@ -2,9 +2,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client_provider.dart';
+import 'notification_provider.dart';
+import '../services/booking_reminder_service.dart';
 import '../../data/repositories/booking_repository.dart';
 import '../../shared/models/booking.dart';
 import '../../shared/models/calendar_event.dart';
+import '../../shared/models/reminder_offset.dart';
 
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
   return BookingRepository(apiClient: ref.watch(apiClientProvider));
@@ -14,7 +17,11 @@ final bookingProvider =
     StateNotifierProvider<BookingNotifier, AsyncValue<List<Booking>>>((
       ref,
     ) {
-      return BookingNotifier(ref.watch(bookingRepositoryProvider), ref);
+      return BookingNotifier(
+        ref.watch(bookingRepositoryProvider),
+        ref,
+        reminderService: ref.watch(bookingReminderServiceProvider),
+      );
     });
 
 /// Single batch provider that fetches ALL vendor bookings in one request.
@@ -62,12 +69,27 @@ class AllVendorBookingsNotifier extends StateNotifier<AsyncValue<Map<String, Lis
 }
 
 class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
-  BookingNotifier(this._repository, this._ref) : super(const AsyncValue.loading()) {
+  BookingNotifier(
+    this._repository,
+    this._ref, {
+    BookingReminderService? reminderService,
+  })  : _reminderService = reminderService,
+        super(const AsyncValue.loading()) {
     loadBookings();
   }
 
   final BookingRepository _repository;
   final Ref _ref;
+  final BookingReminderService? _reminderService;
+
+  BookingReminderService? get _reminder {
+    if (_reminderService != null) return _reminderService;
+    try {
+      return _ref.read(bookingReminderServiceProvider);
+    } catch (_) {
+      return null;
+    }
+  }
 
   List<Booking> _cachedBookings = [];
   Booking? _lastDeletedBooking;
@@ -102,7 +124,7 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     }
   }
 
-  Future<void> addBooking(Booking booking) async {
+  Future<void> addBooking(Booking booking, [ReminderOffset? reminderOffset]) async {
     final previous = List<Booking>.of(_cachedBookings);
     _cachedBookings = [booking, ..._cachedBookings];
     state = AsyncValue.data(_cachedBookings);
@@ -112,6 +134,20 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _ref.invalidate(allVendorBookingsProvider);
       _ref.invalidate(calendarEventsProvider);
       _ref.invalidate(calendarDayBookingsProvider);
+
+      // Schedule global multi-trigger reminders
+      unawaited(_reminder?.scheduleRemindersForBooking(booking));
+
+      final offset = reminderOffset ?? booking.reminderOffset;
+      if (offset != null && offset != ReminderOffset.none) {
+        unawaited(_reminder?.setReminder(
+          booking.id,
+          booking.startDate,
+          offset,
+          vendorName: booking.vendorName,
+        ));
+      }
+
       await loadBookings();
     } catch (error, stackTrace) {
       _cachedBookings = previous;
@@ -121,6 +157,13 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
   }
 
   Future<void> updateBooking(Booking booking) async {
+    final oldBooking = _cachedBookings.cast<Booking?>().firstWhere(
+      (b) => b?.id == booking.id,
+      orElse: () => null,
+    );
+    final dateChanged = oldBooking != null &&
+        !oldBooking.startDate.isAtSameMomentAs(booking.startDate);
+
     final previous = List<Booking>.of(_cachedBookings);
     _cachedBookings = [
       for (final existing in _cachedBookings)
@@ -133,6 +176,26 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _ref.invalidate(allVendorBookingsProvider);
       _ref.invalidate(calendarEventsProvider);
       _ref.invalidate(calendarDayBookingsProvider);
+
+      if (dateChanged) {
+        unawaited(() async {
+          await _reminder?.cancelRemindersForBooking(booking.id);
+          await _reminder?.scheduleRemindersForBooking(booking);
+        }());
+        unawaited(_reminder?.rescheduleForBooking(
+          booking.id,
+          booking.startDate,
+          vendorName: booking.vendorName,
+        ));
+      } else if (booking.reminderOffset != null) {
+        unawaited(_reminder?.setReminder(
+          booking.id,
+          booking.startDate,
+          booking.reminderOffset!,
+          vendorName: booking.vendorName,
+        ));
+      }
+
       await loadBookings();
     } catch (error, stackTrace) {
       _cachedBookings = previous;
@@ -145,6 +208,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     _deleteTimer?.cancel();
     if (_lastDeletedBooking != null) {
       await _repository.deleteBooking(_lastDeletedBooking!.id);
+      unawaited(_reminder?.cancelRemindersForBooking(_lastDeletedBooking!.id));
+      unawaited(_reminder?.clearReminderStorage(_lastDeletedBooking!.id));
       _lastDeletedBooking = null;
     }
 
@@ -154,6 +219,10 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
     _lastDeletedBooking = _cachedBookings[index];
     _lastDeletedIndex = index;
 
+    // Immediately cancel OS notifications BEFORE 5s undo timer starts
+    unawaited(_reminder?.cancelRemindersForBooking(bookingId));
+    unawaited(_reminder?.cancelNotificationOnly(bookingId));
+
     _cachedBookings = List<Booking>.from(_cachedBookings)..removeAt(index);
     state = AsyncValue.data(_cachedBookings);
 
@@ -161,6 +230,8 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       if (_lastDeletedBooking != null && _lastDeletedBooking!.id == bookingId) {
         try {
           await _repository.deleteBooking(bookingId);
+          unawaited(_reminder?.cancelRemindersForBooking(bookingId));
+          unawaited(_reminder?.clearReminderStorage(bookingId));
           _lastDeletedBooking = null;
           _lastDeletedIndex = null;
           _ref.invalidate(allVendorBookingsProvider);
@@ -171,6 +242,13 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
             _cachedBookings = List<Booking>.from(_cachedBookings)
               ..insert(_lastDeletedIndex!.clamp(0, _cachedBookings.length), _lastDeletedBooking!);
             state = AsyncValue.data(_cachedBookings);
+            // Re-schedule reminder on delete failure
+            unawaited(_reminder?.scheduleRemindersForBooking(_lastDeletedBooking!));
+            unawaited(_reminder?.rescheduleForBooking(
+              _lastDeletedBooking!.id,
+              _lastDeletedBooking!.startDate,
+              vendorName: _lastDeletedBooking!.vendorName,
+            ));
           }
           _lastDeletedBooking = null;
           _lastDeletedIndex = null;
@@ -182,16 +260,25 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
 
   void undoDeleteBooking() {
     if (_lastDeletedBooking != null && _lastDeletedIndex != null) {
+      final restored = _lastDeletedBooking!;
       _deleteTimer?.cancel();
       final insertIndex = _lastDeletedIndex!.clamp(0, _cachedBookings.length);
       _cachedBookings = List<Booking>.from(_cachedBookings)
-        ..insert(insertIndex, _lastDeletedBooking!);
+        ..insert(insertIndex, restored);
       state = AsyncValue.data(_cachedBookings);
       _lastDeletedBooking = null;
       _lastDeletedIndex = null;
       _ref.invalidate(allVendorBookingsProvider);
       _ref.invalidate(calendarEventsProvider);
       _ref.invalidate(calendarDayBookingsProvider);
+
+      // Re-schedule reminders using global settings and legacy persisted settings
+      unawaited(_reminder?.scheduleRemindersForBooking(restored));
+      unawaited(_reminder?.rescheduleForBooking(
+        restored.id,
+        restored.startDate,
+        vendorName: restored.vendorName,
+      ));
     }
   }
 }
