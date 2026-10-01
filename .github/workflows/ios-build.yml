@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       export_method:
-        description: 'Export method'
+        description: "Export method"
         required: true
-        default: 'development'
+        default: "development"
         type: choice
         options:
           - development
@@ -18,30 +18,64 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      # ---------------------------------------------------------
+      # Checkout
+      # ---------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ---------------------------------------------------------
+      # Flutter
+      # ---------------------------------------------------------
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
 
+      - name: Verify Flutter
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      # ---------------------------------------------------------
+      # Flutter dependencies
+      # ---------------------------------------------------------
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Install CocoaPods
-        working-directory: ios
-        run: pod install
+      # Make sure iOS Flutter artifacts are available
+      - name: Precache iOS artifacts
+        run: flutter precache --ios
 
-      - name: Build IPA (unsigned)
+      # ---------------------------------------------------------
+      # CocoaPods
+      # ---------------------------------------------------------
+      - name: Install iOS pods
+        working-directory: ios
+        run: pod install --repo-update
+
+      # ---------------------------------------------------------
+      # Build
+      # ---------------------------------------------------------
+      - name: Build iOS
         run: flutter build ios --release --no-codesign
 
+      # ---------------------------------------------------------
+      # Create unsigned IPA
+      # ---------------------------------------------------------
       - name: Create IPA
         working-directory: build/ios/iphoneos
-        run: zip -r ../ipa/Runner.ipa Runner.app
+        run: |
+          mkdir -p ../ipa
+          zip -r ../ipa/Runner.ipa Runner.app
 
+      # ---------------------------------------------------------
+      # Upload artifact
+      # ---------------------------------------------------------
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa-${{ github.event.inputs.export_method }}
           path: build/ios/ipa/Runner.ipa
+          if-no-files-found: error
