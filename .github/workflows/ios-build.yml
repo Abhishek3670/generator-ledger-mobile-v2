@@ -70,13 +70,11 @@ jobs:
         working-directory: build/ios/iphoneos
         run: |
           rm -rf Payload
-          mkdir Payload
+          mkdir -p Payload
           cp -R Runner.app Payload/
       
           mkdir -p ../ipa
-      
-          cd Payload
-          zip -r ../ipa/Runner.ipa Runner.app
+          zip -r ../ipa/Runner.ipa Payload
           
       # ---------------------------------------------------------
       # Verify IPA
