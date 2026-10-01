@@ -39,12 +39,14 @@ jobs:
           flutter doctor -v
 
       # ---------------------------------------------------------
-      # Flutter dependencies
+      # Dependencies
       # ---------------------------------------------------------
       - name: Install dependencies
         run: flutter pub get
 
-      # Make sure iOS Flutter artifacts are available
+      # ---------------------------------------------------------
+      # iOS Flutter artifacts
+      # ---------------------------------------------------------
       - name: Precache iOS artifacts
         run: flutter precache --ios
 
@@ -62,7 +64,7 @@ jobs:
         run: flutter build ios --release --no-codesign
 
       # ---------------------------------------------------------
-      # Create unsigned IPA
+      # Create IPA
       # ---------------------------------------------------------
       - name: Create IPA
         working-directory: build/ios/iphoneos
@@ -71,7 +73,7 @@ jobs:
           zip -r ../ipa/Runner.ipa Runner.app
 
       # ---------------------------------------------------------
-      # Upload artifact
+      # Upload
       # ---------------------------------------------------------
       - name: Upload IPA
         uses: actions/upload-artifact@v4
