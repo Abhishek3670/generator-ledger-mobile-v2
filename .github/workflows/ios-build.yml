@@ -69,9 +69,26 @@ jobs:
       - name: Create IPA
         working-directory: build/ios/iphoneos
         run: |
+          rm -rf Payload
+          mkdir Payload
+          cp -R Runner.app Payload/
+      
           mkdir -p ../ipa
+      
+          cd Payload
           zip -r ../ipa/Runner.ipa Runner.app
-
+          
+      # ---------------------------------------------------------
+      # Verify IPA
+      # ---------------------------------------------------------
+      - name: Verify IPA
+        run: |
+          echo "Checking IPA structure..."
+          unzip -l build/ios/ipa/Runner.ipa | head -30
+      
+          echo "Checking for Payload/Runner.app..."
+          unzip -l build/ios/ipa/Runner.ipa | grep "Payload/Runner.app"
+          
       # ---------------------------------------------------------
       # Upload
       # ---------------------------------------------------------
