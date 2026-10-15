@@ -11,6 +11,8 @@ import '../providers/dashboard_provider.dart';
 import '../../../core/providers/booking_provider.dart';
 import '../../../core/providers/generator_provider.dart';
 import '../../../core/providers/vendor_provider.dart';
+import '../../../shared/models/booking.dart';
+import '../../../shared/models/calendar_event.dart';
 import '../../../shared/widgets/error_screen.dart';
 import '../../../shared/widgets/skeleton_loading.dart';
 import '../widgets/calendar_view.dart';
@@ -42,11 +44,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     
     final summary = ref.watch(dashboardSummaryProvider);
 
-    if (allVendorBookingsState.isLoading ||
-        generatorState.isLoading ||
-        vendorState.isLoading ||
-        calendarEventsState.isLoading ||
-        calendarDayBookingsState.isLoading) {
+    final isInitialLoading = (allVendorBookingsState.isLoading ||
+            generatorState.isLoading ||
+            vendorState.isLoading) &&
+        allVendorBookingsState.valueOrNull == null;
+
+    if (isInitialLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
@@ -78,7 +81,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       );
     }
-    if (allVendorBookingsState.hasError) {
+    if (allVendorBookingsState.hasError && allVendorBookingsState.valueOrNull == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: ErrorScreen(
@@ -87,7 +90,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       );
     }
-    if (generatorState.hasError) {
+    if (generatorState.hasError && generatorState.valueOrNull == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: ErrorScreen(
@@ -96,30 +99,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       );
     }
-    if (vendorState.hasError) {
+    if (vendorState.hasError && vendorState.valueOrNull == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: ErrorScreen(
           message: 'Error loading vendors: ${vendorState.error}',
           onRetry: () => ref.read(vendorProvider.notifier).loadVendors(),
-        ),
-      );
-    }
-    if (calendarEventsState.hasError) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: ErrorScreen(
-          message: 'Error loading calendar events: ${calendarEventsState.error}',
-          onRetry: () => ref.invalidate(calendarEventsProvider),
-        ),
-      );
-    }
-    if (calendarDayBookingsState.hasError) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: ErrorScreen(
-          message: 'Error loading day bookings: ${calendarDayBookingsState.error}',
-          onRetry: () => ref.invalidate(calendarDayBookingsProvider(selectedDateStr)),
         ),
       );
     }
@@ -183,7 +168,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 CalendarView(
                   selectedDay: _selectedDay,
                   focusedDay: _focusedDay,
-                  events: calendarEventsState.valueOrNull ?? [],
+                  events: calendarEventsState.valueOrNull ??
+                      _fallbackCalendarEvents(allVendorBookingsState.valueOrNull),
                   onDaySelected: (selectedDay) {
                     setState(() {
                       _selectedDay = selectedDay;
@@ -196,7 +182,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 // 3. Daily Bookings schedule list
                 DailyBookingsList(
                   selectedDay: _selectedDay,
-                  bookings: calendarDayBookingsState.valueOrNull ?? [],
+                  bookings: calendarDayBookingsState.valueOrNull ??
+                      _flattenVendorBookings(allVendorBookingsState.valueOrNull),
                   onViewAllPressed: () {
                     context.go('/bookings');
                   },
@@ -207,5 +194,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  List<CalendarEvent> _fallbackCalendarEvents(Map<String, List<Booking>>? map) {
+    if (map == null) return const [];
+    final dateCounts = <String, int>{};
+    for (final bookings in map.values) {
+      for (final booking in bookings) {
+        var cur = DateTime(booking.startDate.year, booking.startDate.month, booking.startDate.day);
+        final end = DateTime(booking.endDate.year, booking.endDate.month, booking.endDate.day);
+        while (!cur.isAfter(end)) {
+          final key = DateFormat('yyyy-MM-dd').format(cur);
+          dateCounts[key] = (dateCounts[key] ?? 0) + 1;
+          cur = cur.add(const Duration(days: 1));
+        }
+      }
+    }
+    return dateCounts.entries.map((e) {
+      return CalendarEvent(
+        date: e.key,
+        count: e.value,
+        title: '${e.value} booking(s)',
+      );
+    }).toList();
+  }
+
+  List<Booking> _flattenVendorBookings(Map<String, List<Booking>>? map) {
+    if (map == null) return const [];
+    return map.values.expand((bookings) => bookings).toList();
   }
 }

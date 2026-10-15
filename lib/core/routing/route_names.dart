@@ -1,5 +1,8 @@
 /// Named route constants for all screens in the application.
 abstract final class RouteNames {
+  /// Named route for splash / warm-up screen.
+  static const splash = 'splash';
+
   /// Named route for auth login screen.
   static const login = 'login';
 

@@ -44,13 +44,39 @@ class BookingRepository {
     );
   }
 
+  List<CalendarEvent>? _cachedCalendarEvents;
+
+  void clearCalendarCache() {
+    _cachedCalendarEvents = null;
+  }
+
   Future<List<CalendarEvent>> getCalendarEvents() async {
-    return _apiClient.get<List<CalendarEvent>>(
-      '/api/calendar/events',
-      fromJson: (json) => (json as List)
-          .map((e) => CalendarEvent.fromMap(e as Map<String, dynamic>))
-          .toList(),
-    );
+
+    try {
+      final events = await _apiClient.get<List<CalendarEvent>>(
+        '/api/calendar/events',
+        fromJson: (json) {
+          final list = switch (json) {
+            List<dynamic> l => l,
+            {'events': final List<dynamic> l} => l,
+            {'data': final List<dynamic> l} => l,
+            {'calendar_events': final List<dynamic> l} => l,
+            _ => <dynamic>[],
+          };
+          return list
+              .whereType<Map<String, dynamic>>()
+              .map((e) => CalendarEvent.fromMap(e))
+              .toList();
+        },
+      );
+      _cachedCalendarEvents = events;
+      return events;
+    } catch (_) {
+      if (_cachedCalendarEvents != null) {
+        return _cachedCalendarEvents!;
+      }
+      rethrow;
+    }
   }
 
   Future<List<Booking>> getCalendarDayBookings(String date) async {
@@ -62,8 +88,19 @@ class BookingRepository {
   }
 
   List<Booking> _parseCalendarDayResponse(dynamic json, String date) {
-    final rawMap = json as Map<String, dynamic>;
-    final rawList = rawMap['vendors'] as List<dynamic>? ?? [];
+    if (json is! Map<String, dynamic>) {
+      if (json is List) {
+        return json
+            .whereType<Map<String, dynamic>>()
+            .map((e) => Booking.fromMap(e))
+            .toList();
+      }
+      return [];
+    }
+    final rawMap = json;
+    final rawList = rawMap['vendors'] as List<dynamic>? ??
+        rawMap['bookings'] as List<dynamic>? ??
+        [];
     final List<Booking> result = [];
     
     for (final vendorData in rawList) {

@@ -40,7 +40,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             .login(_usernameController.text.trim(), _passwordController.text);
         AppRouter.refreshAuthState();
         if (mounted) {
-          context.go('/dashboard');
+          final hasSplash = GoRouter.of(context).configuration.routes.any((r) {
+            return r is GoRoute && r.path == '/splash';
+          });
+          if (hasSplash) {
+            context.go('/splash');
+          } else {
+            context.go('/dashboard');
+          }
         }
       } catch (error) {
         if (mounted) {

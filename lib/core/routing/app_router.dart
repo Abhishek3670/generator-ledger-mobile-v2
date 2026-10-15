@@ -11,6 +11,7 @@ import '../../features/generators/screens/generators_directory_screen.dart';
 import '../../features/bookings/screens/bookings_directory_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/splash/screens/splash_screen.dart';
 import '../../features/billing/screens/billing_preview_screen.dart';
 import '../../features/generators/screens/generator_detail_screen.dart';
 import '../../features/admin/screens/system_health_screen.dart';
@@ -67,11 +68,20 @@ abstract final class AppRouter {
           final pending = deepLinkService.consumePendingDeepLink();
           if (pending != null) return pending;
         }
-        return '/dashboard';
+        return '/splash';
       }
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        name: RouteNames.splash,
+        pageBuilder: (context, state) => SlideRightTransitionPage<void>(
+          key: state.pageKey,
+          swipeBack: false,
+          child: const SplashScreen(),
+        ),
+      ),
       GoRoute(
         path: '/login',
         name: RouteNames.login,
@@ -217,7 +227,10 @@ class _OperationalShell extends ConsumerWidget {
             }
           }
         },
-        userName: currentUser?.username ?? 'Guest',
+        userName: (currentUser != null &&
+                currentUser.username.trim().isNotEmpty)
+            ? currentUser.username.trim()
+            : 'User',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/admin/health'),
         onLogoutPressed: () async {
@@ -328,7 +341,10 @@ class _AdminShell extends ConsumerWidget {
             }
           }
         },
-        userName: currentUser?.username ?? 'Guest',
+        userName: (currentUser != null &&
+                currentUser.username.trim().isNotEmpty)
+            ? currentUser.username.trim()
+            : 'User',
         userRole: currentUser?.role ?? '',
         onSettingsPressed: () => context.go('/dashboard'),
         onLogoutPressed: () async {
