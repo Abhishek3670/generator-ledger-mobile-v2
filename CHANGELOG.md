@@ -5,6 +5,20 @@ All notable changes to the generator-ledger-mobile-v2 project will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-10-16
+
+### Added
+- **Splash Dashboard Preloader & Backend Warmup Suite**
+  - Branded `SplashScreen` (`#0f172a` navy, `#fbbf24` amber indicator) preloading 5 dashboard providers with 3-attempt warmup
+  - Direct post-login transition through `/splash` to eliminate latency on Dashboard initial load
+  - Resilient calendar parsing in `BookingRepository.getCalendarEvents()` supporting dynamic backend response shapes (List, Map) and caching
+
+### Fixed
+- **User Profile Navigation Drawer Binding**
+  - Dynamically bound authenticated `User` profile from `authProvider` to `SideNavigationDrawer` header
+  - Resolved username and role from cached session to prevent logged-in users from displaying as "Guest"
+  - Removed blocking full-screen error overlays from `DashboardScreen` with robust fallback event calculations
+
 ## [1.1.1] - 2026-10-15
 
 ### Added
