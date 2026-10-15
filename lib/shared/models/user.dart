@@ -17,6 +17,10 @@ class User {
 
   bool get isAdmin => role == 'admin';
 
+  /// Serialises to a JSON-compatible map for secure storage caching.
+  /// Field names mirror [fromMap] so the round-trip is lossless.
+  Map<String, dynamic> toJson() => toMap();
+
   Map<String, dynamic> toMap() {
     return {
       if (userId != null) 'user_id': userId,

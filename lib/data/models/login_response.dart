@@ -1,64 +1,49 @@
 import '../../shared/models/user.dart';
 
 class LoginResponse {
-  const LoginResponse({required this.token, required this.user});
+  const LoginResponse({
+    required this.token,
+    required this.user,
+    this.refreshToken,
+  });
 
+  /// Short-lived access token.
   final String token;
+
+  /// The authenticated user.
   final User user;
+
+  /// Long-lived rotating refresh token, if the backend provides one.
+  /// Absent when the server does not (yet) issue refresh tokens.
+  final String? refreshToken;
 
   factory LoginResponse.fromJson(dynamic json) {
     if (json is! Map<String, dynamic>) {
       throw const FormatException('Login response must be a JSON object');
     }
 
-    // Backend returns "access_token", try both "token" and "access_token"
-    final token = json['token'] ?? json['access_token'];
+    // Backend returns "access_token"; also accept bare "token" for compatibility.
+    final token = json['access_token'] ?? json['token'];
     if (token is! String || token.isEmpty) {
-      throw const FormatException('Login response is missing token (tried both "token" and "access_token")');
+      throw const FormatException(
+        'Login response is missing token (tried "access_token" and "token")',
+      );
     }
+
+    // Refresh token is optional — backends that don't support it simply omit it.
+    final refresh = json['refresh_token'] ?? json['refreshToken'];
+    final refreshToken = (refresh is String && refresh.isNotEmpty) ? refresh : null;
 
     final rawUser = json['user'];
-    if (rawUser is Map<String, dynamic>) {
-      return LoginResponse(token: token, user: _userFromJson(rawUser));
-    }
+    final user = rawUser is Map<String, dynamic>
+        ? User.fromMap(rawUser)
+        : _userFromJson(json);
 
-    return LoginResponse(token: token, user: _userFromJson(json));
+    return LoginResponse(token: token, user: user, refreshToken: refreshToken);
   }
 
+  // Kept for backward-compat with tests that pass a flat map without a "user" key.
   static User _userFromJson(Map<String, dynamic> json) {
-    return User(
-      username: _string(json, ['username', 'name', 'email']),
-      role: _string(json, ['role'], fallback: 'operator'),
-      status: _string(json, ['status'], fallback: 'ACTIVE'),
-      lastLogin: _date(json, ['lastLogin', 'last_login']),
-      createdAt: _date(json, ['createdAt', 'created_at', 'created']),
-    );
-  }
-
-  static String _string(
-    Map<String, dynamic> json,
-    List<String> keys, {
-    String fallback = '',
-  }) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is String && value.isNotEmpty) {
-        return value;
-      }
-    }
-    return fallback;
-  }
-
-  static DateTime _date(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is String) {
-        final parsed = DateTime.tryParse(value);
-        if (parsed != null) {
-          return parsed;
-        }
-      }
-    }
-    return DateTime.now();
+    return User.fromMap(json);
   }
 }

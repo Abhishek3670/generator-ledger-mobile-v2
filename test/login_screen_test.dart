@@ -175,4 +175,10 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<bool> verifyToken() async => false;
+
+  @override
+  Future<String?> refreshAccessToken() async => null;
+
+  @override
+  Future<String?> getCachedUserJson() async => null;
 }

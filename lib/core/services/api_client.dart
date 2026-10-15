@@ -1,26 +1,53 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/api_config.dart';
 import '../exceptions/api_exception.dart';
+import '../../data/repositories/auth_repository.dart';
 import 'token_storage.dart';
 
 typedef JsonParser<T> = T Function(dynamic json);
+
+/// Custom Dio request extra key that prevents the 401 retry interceptor from
+/// recursing on the token-refresh call itself.
+const _kSkipAuthRefresh = 'skip_auth_refresh';
 
 class ApiClient {
   ApiClient({
     Dio? dio,
     TokenStorage? tokenStorage,
     VoidCallback? onUnauthorized,
-  }) : _dio = dio ?? Dio(_baseOptions()),
-       _tokenStorage = tokenStorage ?? TokenStorage(),
-       _onUnauthorized = onUnauthorized {
+  })  : _dio = dio ?? Dio(_baseOptions()),
+        _tokenStorage = tokenStorage ?? TokenStorage(),
+        _onUnauthorized = onUnauthorized {
     _setupInterceptors();
   }
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
   final VoidCallback? _onUnauthorized;
+
+  // ── Auth-refresh dependency (setter-injected to break circular dep) ────────
+
+  /// Injected by the provider layer after both [ApiClient] and [AuthRepository]
+  /// are constructed.  Must be set before the first 401 can occur.
+  AuthRepository? _authRepository;
+
+  /// Called once at startup by the provider wiring layer.
+  // ignore: use_setters_to_change_properties
+  void setAuthRepository(AuthRepository repo) {
+    _authRepository = repo;
+  }
+
+  // ── Concurrent-refresh guard ───────────────────────────────────────────────
+
+  /// When a refresh is in progress, all subsequent 401s wait on this completer
+  /// instead of each launching their own refresh call.
+  Completer<String?>? _refreshCompleter;
+
+  // ── Unauthorised listeners (unchanged public API) ─────────────────────────
 
   static final List<VoidCallback> _unauthorizedListeners = [];
 
@@ -32,6 +59,8 @@ class ApiClient {
     _unauthorizedListeners.remove(listener);
   }
 
+  // ── Dio base options ──────────────────────────────────────────────────────
+
   static BaseOptions _baseOptions() {
     return BaseOptions(
       baseUrl: ApiConfig.baseUrl,
@@ -40,6 +69,8 @@ class ApiClient {
       headers: ApiConfig.defaultHeaders,
     );
   }
+
+  // ── Interceptors ──────────────────────────────────────────────────────────
 
   void _setupInterceptors() {
     _dio.interceptors.add(
@@ -52,24 +83,95 @@ class ApiClient {
           handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            await _tokenStorage.deleteToken();
-            _onUnauthorized?.call();
-            for (final listener in List<VoidCallback>.from(_unauthorizedListeners)) {
-              listener();
-            }
+          if (error.response?.statusCode != 401) {
+            handler.next(error);
+            return;
           }
-          handler.next(error);
+
+          // Don't retry the refresh call itself — avoid infinite loops.
+          final extras = error.requestOptions.extra;
+          if (extras[_kSkipAuthRefresh] == true ||
+              error.requestOptions.path.contains('/refresh')) {
+            _notifyUnauthorized();
+            handler.next(error);
+            return;
+          }
+
+          // ── Silent refresh ──────────────────────────────────────────────
+          final newToken = await _attemptRefresh();
+
+          if (newToken == null) {
+            // Refresh failed — clear session and redirect to login.
+            await _tokenStorage.deleteToken();
+            _notifyUnauthorized();
+            handler.next(error);
+            return;
+          }
+
+          // Retry the original request once with the new access token.
+          try {
+            final retryOptions = error.requestOptions;
+            retryOptions.headers['Authorization'] = 'Bearer $newToken';
+            final response = await _dio.fetch<dynamic>(retryOptions);
+            handler.resolve(response);
+          } catch (retryError) {
+            handler.next(error); // Surface the original error if retry fails.
+          }
         },
       ),
     );
 
     if (kDebugMode) {
       _dio.interceptors.add(
-        LogInterceptor(requestBody: true, responseBody: true, error: true),
+        // requestBody / responseBody are disabled to prevent access tokens
+        // and sensitive payloads from appearing in debug logs.
+        LogInterceptor(
+          request: true,
+          requestHeader: false, // Hides Authorization header
+          requestBody: false,
+          responseHeader: false,
+          responseBody: false,
+          error: true,
+        ),
       );
     }
   }
+
+  /// Ensures only one refresh call runs at a time.
+  /// All concurrent 401 handlers await the same [Completer].
+  Future<String?> _attemptRefresh() async {
+    // If a refresh is already in progress, wait for it.
+    if (_refreshCompleter != null) {
+      return _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<String?>();
+    try {
+      final newToken = await _authRepository?.refreshAccessToken();
+      _refreshCompleter!.complete(newToken);
+      return newToken;
+    } catch (_) {
+      _refreshCompleter!.complete(null);
+      return null;
+    } finally {
+      _refreshCompleter = null;
+    }
+  }
+
+  void _notifyUnauthorized() {
+    _onUnauthorized?.call();
+    for (final listener in List<VoidCallback>.from(_unauthorizedListeners)) {
+      listener();
+    }
+  }
+
+  // ── Dispose ───────────────────────────────────────────────────────────────
+
+  void dispose() {
+    _dio.close();
+  }
+
+  // ── HTTP verb helpers ─────────────────────────────────────────────────────
 
   Future<T> get<T>(
     String path, {
@@ -158,6 +260,8 @@ class ApiClient {
       throw _handleError(error);
     }
   }
+
+  // ── Error translation ─────────────────────────────────────────────────────
 
   ApiException _handleError(DioException error) {
     if (error.error is ApiException) {
