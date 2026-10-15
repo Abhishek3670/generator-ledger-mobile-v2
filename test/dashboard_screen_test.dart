@@ -52,6 +52,79 @@ void main() {
     expect(find.textContaining('Bookings:'), findsOneWidget);
     expect(find.textContaining('VIEW ALL'), findsOneWidget);
   });
+
+  testWidgets('CalendarView renders without overflow on narrow screens', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: CalendarView(
+              selectedDay: DateTime(2026, 10, 15),
+              focusedDay: DateTime(2026, 10, 15),
+              events: const [],
+              onDaySelected: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CalendarView), findsOneWidget);
+    expect(find.text('October 2026'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('DailyBookingsList groups bookings under vendor header', (tester) async {
+    final bookings = [
+      Booking(
+        id: 'BKG-001',
+        vendorId: 'VEN-01',
+        vendorName: 'Piyush Jaiswal',
+        generatorId: 'GEN-82KVA-BU-02',
+        capacity: '82 kVA',
+        date: DateTime(2026, 10, 15),
+        status: 'confirmed',
+      ),
+      Booking(
+        id: 'BKG-001',
+        vendorId: 'VEN-01',
+        vendorName: 'Piyush Jaiswal',
+        generatorId: 'GEN-20KVA-3R-08',
+        capacity: '20 kVA',
+        date: DateTime(2026, 10, 15),
+        status: 'confirmed',
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: DailyBookingsList(
+              selectedDay: DateTime(2026, 10, 15),
+              bookings: bookings,
+              onViewAllPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify vendor name appears exactly once in the vendor header
+    expect(find.text('Piyush Jaiswal'), findsOneWidget);
+    // Verify both booking items are present under the vendor
+    expect(find.textContaining('GEN-82KVA-BU-02'), findsOneWidget);
+    expect(find.textContaining('GEN-20KVA-3R-08'), findsOneWidget);
+    // Verify total count
+    expect(find.text('2 Total'), findsOneWidget);
+  });
 }
 
 class _FakeVendorRepository extends VendorRepository {

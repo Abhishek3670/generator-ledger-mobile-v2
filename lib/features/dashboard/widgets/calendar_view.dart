@@ -97,7 +97,7 @@ class _CalendarViewState extends State<CalendarView> {
 
           // 2. Controls Row
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -146,7 +146,7 @@ class _CalendarViewState extends State<CalendarView> {
                         side: const BorderSide(color: AppColors.border),
                         foregroundColor: AppColors.textSecondary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       ),
                       child: Text(
                         'today',
@@ -155,11 +155,20 @@ class _CalendarViewState extends State<CalendarView> {
                     ),
                   ],
                 ),
-                Text(
-                  DateFormat('MMMM yyyy').format(_focusedDay),
-                  style: AppTypography.headlineSmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        DateFormat('MMMM yyyy').format(_focusedDay),
+                        style: AppTypography.headlineSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],

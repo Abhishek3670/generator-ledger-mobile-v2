@@ -33,6 +33,15 @@ class DailyBookingsList extends StatelessWidget {
       return !dayOnly.isBefore(start) && !dayOnly.isAfter(end);
     }).toList();
 
+    final vendorGroups = <String, List<Booking>>{};
+    for (final booking in dailyBookings) {
+      final vendorKey = booking.vendorName.isNotEmpty
+          ? booking.vendorName
+          : (booking.vendorId.isNotEmpty ? booking.vendorId : 'Unknown Vendor');
+      vendorGroups.putIfAbsent(vendorKey, () => []).add(booking);
+    }
+    final vendorEntries = vendorGroups.entries.toList();
+
     final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDay);
 
     return Container(
@@ -92,15 +101,70 @@ class DailyBookingsList extends StatelessWidget {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: dailyBookings.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemCount: vendorEntries.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final booking = dailyBookings[index];
-                return CompactBookingRow(
-                  booking: booking,
-                  onTap: () {
-                    // Navigate to booking details (omitted for now)
-                  },
+                final entry = vendorEntries[index];
+                final vendorName = entry.key;
+                final vendorBookings = entry.value;
+                return Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
+                    border: Border.all(color: AppColors.border, width: 1),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDimensions.functionalRadius - 1),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Vendor Header Bar
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.04),
+                            border: const Border(
+                              bottom: BorderSide(color: AppColors.border, width: 1),
+                            ),
+                          ),
+                          child: Text(
+                            vendorName,
+                            style: AppTypography.bodyLarge.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Bookings under this vendor
+                        ...List.generate(vendorBookings.length, (bookingIndex) {
+                          final booking = vendorBookings[bookingIndex];
+                          final isLast = bookingIndex == vendorBookings.length - 1;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              CompactBookingRow(
+                                booking: booking,
+                                showVendor: false,
+                                isCard: false,
+                                onTap: () {
+                                  // Navigate to booking details (omitted for now)
+                                },
+                              ),
+                              if (!isLast)
+                                const Divider(
+                                  color: AppColors.border,
+                                  height: 1,
+                                  thickness: 1,
+                                ),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),

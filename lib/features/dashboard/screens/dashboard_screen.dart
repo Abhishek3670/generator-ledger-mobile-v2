@@ -31,7 +31,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bookingState = ref.watch(bookingProvider);
     final allVendorBookingsState = ref.watch(allVendorBookingsProvider);
     final generatorState = ref.watch(generatorProvider);
     final vendorState = ref.watch(vendorProvider);
@@ -43,8 +42,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     
     final summary = ref.watch(dashboardSummaryProvider);
 
-    if (bookingState.isLoading ||
-        allVendorBookingsState.isLoading ||
+    if (allVendorBookingsState.isLoading ||
         generatorState.isLoading ||
         vendorState.isLoading ||
         calendarEventsState.isLoading ||
@@ -77,16 +75,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ],
             ),
           ),
-        ),
-      );
-    }
-
-    if (bookingState.hasError) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: ErrorScreen(
-          message: 'Error loading bookings: ${bookingState.error}',
-          onRetry: () => ref.read(bookingProvider.notifier).loadBookings(),
         ),
       );
     }
@@ -144,7 +132,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ref.invalidate(calendarEventsProvider);
             ref.invalidate(calendarDayBookingsProvider(selectedDateStr));
             await Future.wait([
-              ref.read(bookingProvider.notifier).loadBookings(),
               ref.read(allVendorBookingsProvider.notifier).loadBookings(),
               ref.read(generatorProvider.notifier).loadGenerators(),
               ref.read(vendorProvider.notifier).loadVendors(),

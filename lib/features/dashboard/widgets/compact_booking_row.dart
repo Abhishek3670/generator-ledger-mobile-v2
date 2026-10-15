@@ -17,12 +17,20 @@ class CompactBookingRow extends ConsumerWidget {
   /// Optional override for whether a reminder is active.
   final bool? hasReminder;
 
+  /// Whether to display the vendor name row.
+  final bool showVendor;
+
+  /// Whether to style as a standalone bordered card.
+  final bool isCard;
+
   /// Creates a [CompactBookingRow].
   const CompactBookingRow({
     super.key,
     required this.booking,
     this.onTap,
     this.hasReminder,
+    this.showVendor = true,
+    this.isCard = true,
   });
 
   @override
@@ -40,16 +48,50 @@ class CompactBookingRow extends ConsumerWidget {
       }
     }
 
+    final idWithReminder = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'ID: ${booking.bookingId}',
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 11,
+          ),
+        ),
+        if (activeReminder) ...[
+          const SizedBox(width: 6),
+          const Icon(
+            Icons.notifications_active,
+            size: 13,
+            color: AppColors.accent,
+          ),
+        ],
+      ],
+    );
+
+    final statusBadgeWidget = StatusBadge(
+      label: booking.status.toUpperCase(),
+      type: _getStatusBadgeType(booking.status),
+    );
+
+    final generatorDisplay = booking.capacity.isNotEmpty && booking.capacity != 'N/A'
+        ? '${booking.generators.join(', ')} (${booking.capacity})'
+        : booking.generators.join(', ');
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.all(12.0),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border, width: 1),
-        ),
+        decoration: isCard
+            ? BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border, width: 1),
+              )
+            : const BoxDecoration(
+                color: Colors.transparent,
+              ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -57,57 +99,50 @@ class CompactBookingRow extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          booking.vendorName,
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                  if (showVendor) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            booking.vendorName,
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      StatusBadge(
-                        label: booking.status.toUpperCase(),
-                        type: _getStatusBadgeType(booking.status),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        'ID: ${booking.bookingId}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
-                      if (activeReminder) ...[
-                        const SizedBox(width: 6),
-                        const Icon(
-                          Icons.notifications_active,
-                          size: 13,
-                          color: AppColors.accent,
-                        ),
+                        const SizedBox(width: 8),
+                        statusBadgeWidget,
                       ],
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 4),
+                    idWithReminder,
+                  ] else ...[
+                    Row(
+                      children: [
+                        Expanded(child: idWithReminder),
+                        const SizedBox(width: 8),
+                        statusBadgeWidget,
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       const Icon(Icons.electric_bolt, size: 14, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Text(
-                        booking.generatorId,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
+                      Expanded(
+                        child: Text(
+                          generatorDisplay,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

@@ -72,14 +72,51 @@ class BookingRepository {
       final vendorName = vendor['vendor_name']?.toString() ?? '';
       final bookingsRaw = vendor['bookings'] as List<dynamic>? ?? [];
       
-      for (final item in bookingsRaw) {
-        final itemMap = Map<String, dynamic>.from(item as Map);
-        itemMap.putIfAbsent('vendor_id', () => vendorId);
-        itemMap.putIfAbsent('vendor_name', () => vendorName);
-        itemMap.putIfAbsent('start_date', () => date);
-        itemMap.putIfAbsent('end_date', () => date);
-        itemMap.putIfAbsent('status', () => 'confirmed');
-        result.add(Booking.fromMap(itemMap));
+      for (final bookingRaw in bookingsRaw) {
+        final bMap = Map<String, dynamic>.from(bookingRaw as Map);
+        final bookingId = (bMap['booking_id'] ?? bMap['id'] ?? '').toString();
+        final itemsRaw = bMap['items'] as List<dynamic>? ?? [];
+        
+        if (itemsRaw.isEmpty) {
+          bMap.putIfAbsent('vendor_id', () => vendorId);
+          bMap.putIfAbsent('vendor_name', () => vendorName);
+          bMap.putIfAbsent('start_date', () => date);
+          bMap.putIfAbsent('end_date', () => date);
+          bMap.putIfAbsent('status', () => 'confirmed');
+          result.add(Booking.fromMap(bMap));
+        } else {
+          for (final item in itemsRaw) {
+            final itemData = Map<String, dynamic>.from(item as Map);
+            final genId = (itemData['generator_id'] ?? itemData['generator'] ?? '').toString();
+            final capKva = itemData['capacity_kva'] ?? itemData['capacity'];
+            String capacityStr = 'N/A';
+            if (capKva is num) {
+              final isWhole = capKva.truncateToDouble() == capKva;
+              capacityStr = '${capKva.toStringAsFixed(isWhole ? 0 : 1)} kVA';
+            } else if (capKva is String && capKva.isNotEmpty) {
+              capacityStr = capKva;
+            }
+            final bookingItem = BookingItem.fromMap(itemData);
+
+            final startDtStr = (itemData['start_dt'] ?? itemData['startDate'] ?? date).toString();
+            final endDtStr = (itemData['end_dt'] ?? itemData['endDate'] ?? date).toString();
+            final startDate = DateTime.tryParse(startDtStr.split(' ')[0]) ?? DateTime.parse(date);
+            final endDate = DateTime.tryParse(endDtStr.split(' ')[0]) ?? startDate;
+
+            result.add(Booking(
+              id: bookingId,
+              vendorId: vendorId,
+              vendorName: vendorName.isEmpty ? 'Unknown Vendor' : vendorName,
+              generatorId: genId,
+              capacity: capacityStr,
+              date: startDate,
+              endDate: endDate,
+              status: (itemData['item_status'] ?? bMap['status'] ?? 'confirmed').toString(),
+              notes: (itemData['remarks'] ?? bMap['notes'] ?? '').toString(),
+              items: [bookingItem],
+            ));
+          }
+        }
       }
     }
     return result;

@@ -151,6 +151,60 @@ void main() {
       expect(bookings.single.capacity, '200 kVA'); // 125 + 75
       expect(bookings.single.status, 'Confirmed');
     });
+
+    test('getCalendarDayBookings expands multiple generator items into individual entries', () async {
+      final apiClient = _FakeApiClient(
+        response: {
+          'date': '2026-10-15',
+          'vendors': [
+            {
+              'vendor_id': 'VEN001',
+              'vendor_name': 'Piyush Jaiswal',
+              'bookings': [
+                {
+                  'booking_id': 'BKG-20261001-00001',
+                  'items': [
+                    {
+                      'generator_id': 'GEN-82KVA-BU-02',
+                      'capacity_kva': 82,
+                      'start_dt': '2026-10-15',
+                      'end_dt': '2026-10-15',
+                      'item_status': 'confirmed',
+                      'remarks': 'Main unit',
+                    },
+                    {
+                      'generator_id': 'GEN-20KVA-3R-08',
+                      'capacity_kva': 20,
+                      'start_dt': '2026-10-15',
+                      'end_dt': '2026-10-15',
+                      'item_status': 'confirmed',
+                      'remarks': 'Backup unit',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      );
+      final repository = BookingRepository(apiClient: apiClient);
+
+      final dayBookings = await repository.getCalendarDayBookings('2026-10-15');
+
+      expect(apiClient.lastGetPath, '/api/calendar/day');
+      expect(apiClient.lastQueryParameters, {'date': '2026-10-15'});
+      expect(dayBookings.length, 2);
+
+      expect(dayBookings[0].bookingId, 'BKG-20261001-00001');
+      expect(dayBookings[0].vendorName, 'Piyush Jaiswal');
+      expect(dayBookings[0].generatorId, 'GEN-82KVA-BU-02');
+      expect(dayBookings[0].capacity, '82 kVA');
+
+      expect(dayBookings[1].bookingId, 'BKG-20261001-00001');
+      expect(dayBookings[1].vendorName, 'Piyush Jaiswal');
+      expect(dayBookings[1].generatorId, 'GEN-20KVA-3R-08');
+      expect(dayBookings[1].capacity, '20 kVA');
+    });
   });
 }
 
