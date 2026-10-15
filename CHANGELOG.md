@@ -5,6 +5,21 @@ All notable changes to the generator-ledger-mobile-v2 project will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-10-15
+
+### Added
+- **Secure Persistent Auth & Rotating Refresh Tokens (WO-108)**
+  - Rotating refresh token and cached user stored securely in `FlutterSecureStorage` with atomic `clearAll()`
+  - Silent token renewal in `AuthRepository` with 401 retry interceptor and concurrency lock
+  - Automatic session restoration on app launch
+- **Dashboard Fast Load & Daily Booking Previews**
+  - Cache-first booking repository fetch eliminating multiple retry latency on login
+  - Clean bold vendor header cards grouping daily bookings in `DailyBookingsList` (`#0f172a`)
+  - Configurable `CompactBookingRow` layout for sub-item display with internal dividers
+
+### Fixed
+- **Calendar Booking Count Discrepancy** — Date range normalization in `CalendarView` synchronized with daily preview counts
+
 ## [1.1.0] - 2026-09-30
 
 ### Added
