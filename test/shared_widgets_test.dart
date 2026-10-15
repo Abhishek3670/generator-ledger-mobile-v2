@@ -435,4 +435,16 @@ class _NoopAuthRepository implements AuthRepository {
 
   @override
   Future<String?> getCachedUserJson() async => null;
+
+  @override
+  Future<String?> getToken() async => null;
+
+  @override
+  Future<String?> getRefreshToken() async => null;
+
+  @override
+  Future<void> cacheUser(User user) async {}
+
+  @override
+  User? extractUserFromToken(String token) => null;
 }

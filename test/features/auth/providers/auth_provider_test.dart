@@ -156,6 +156,86 @@ void main() {
       notifier.dispose();
     });
 
+    test(
+        'restoreSession: authenticated + verify returns 404 (non-existent backend endpoint) -> preserves cached user',
+        () async {
+      await tokenStorage.saveToken('valid-access-token');
+      await tokenStorage.saveUserJson(jsonEncode(testUser.toJson()));
+
+      apiClient.onGet = (path) {
+        if (path == AuthRepository.verifyPath) {
+          throw DioException(
+            requestOptions: RequestOptions(path: path),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: path),
+            ),
+            type: DioExceptionType.badResponse,
+          );
+        }
+        return true;
+      };
+
+      final notifier = AuthNotifier(authRepository);
+      await pumpEventQueue();
+
+      expect(notifier.state.hasValue, isTrue);
+      expect(notifier.state.value, isNotNull);
+      expect(notifier.state.value!.username, 'alice');
+      notifier.dispose();
+    });
+
+    test(
+        'restoreSession: cached user missing -> extracts user claims from JWT token payload',
+        () async {
+      // JWT token with base64url payload {"sub":"jwt_operator","role":"operator"}
+      const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+      final payload = base64Url
+          .encode(utf8.encode(jsonEncode({'sub': 'jwt_operator', 'role': 'operator'})))
+          .replaceAll('=', '');
+      const signature = 'fake_signature';
+      final jwtToken = '$header.$payload.$signature';
+
+      await tokenStorage.saveToken(jwtToken);
+      // No cached user in storage
+
+      final notifier = AuthNotifier(authRepository);
+      await pumpEventQueue();
+
+      expect(notifier.state.hasValue, isTrue);
+      expect(notifier.state.value, isNotNull);
+      expect(notifier.state.value!.username, 'jwt_operator');
+      expect(notifier.state.value!.role, 'operator');
+      notifier.dispose();
+    });
+
+    test('login: backend response without username -> falls back to login username', () async {
+      apiClient.onPost = (path, data) {
+        if (path == AuthRepository.loginPath) {
+          return {
+            'access_token': 'jwt_token',
+            'token_type': 'bearer',
+          };
+        }
+        return <String, dynamic>{};
+      };
+
+      final notifier = AuthNotifier(authRepository);
+      await pumpEventQueue();
+
+      await notifier.login('logged_user', 'secret');
+
+      expect(notifier.state.hasValue, isTrue);
+      expect(notifier.state.value, isNotNull);
+      expect(notifier.state.value!.username, 'logged_user');
+
+      final cachedJson = await tokenStorage.getUserJson();
+      expect(cachedJson, isNotNull);
+      final decoded = jsonDecode(cachedJson!) as Map<String, dynamic>;
+      expect(decoded['username'], 'logged_user');
+      notifier.dispose();
+    });
+
     test('logout: clears state and removes all credentials from storage', () async {
       await tokenStorage.saveToken('active-token');
       await tokenStorage.saveRefreshToken('active-refresh');

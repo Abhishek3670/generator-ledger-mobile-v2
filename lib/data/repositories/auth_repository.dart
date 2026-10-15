@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../../core/services/api_client.dart';
 import '../../core/services/token_storage.dart';
+import '../../shared/models/user.dart';
 import '../models/login_request.dart';
 import '../models/login_response.dart';
 
@@ -30,18 +31,30 @@ class AuthRepository {
       fromJson: LoginResponse.fromJson,
     );
 
+    // Ensure user profile has the authenticated username, falling back to login credentials
+    final resolvedUsername = response.user.username.trim().isNotEmpty
+        ? response.user.username.trim()
+        : username.trim();
+
+    final resolvedUser = response.user.copyWith(username: resolvedUsername);
+    final finalResponse = LoginResponse(
+      token: response.token,
+      user: resolvedUser,
+      refreshToken: response.refreshToken,
+    );
+
     // Persist access token (always present).
-    await _tokenStorage.saveToken(response.token);
+    await _tokenStorage.saveToken(finalResponse.token);
 
     // Persist refresh token when provided by the backend.
-    if (response.refreshToken != null) {
-      await _tokenStorage.saveRefreshToken(response.refreshToken!);
+    if (finalResponse.refreshToken != null) {
+      await _tokenStorage.saveRefreshToken(finalResponse.refreshToken!);
     }
 
     // Cache user JSON for session restoration on next app start.
-    await _tokenStorage.saveUserJson(jsonEncode(response.user.toJson()));
+    await _tokenStorage.saveUserJson(jsonEncode(finalResponse.user.toJson()));
 
-    return response;
+    return finalResponse;
   }
 
   Future<void> logout() async {
@@ -66,6 +79,13 @@ class AuthRepository {
     if (!await isAuthenticated()) return false;
     try {
       return await _apiClient.get<bool>(verifyPath, fromJson: (_) => true);
+    } on DioException catch (e) {
+      // 404 indicates the verify endpoint is not implemented on the backend.
+      // This is non-fatal: the token was not explicitly rejected (not a 401).
+      if (e.response?.statusCode == 404) {
+        return true;
+      }
+      return false;
     } catch (_) {
       // verifyToken deliberately swallows errors — let the caller decide
       // whether to attempt a refresh or force login.
@@ -131,8 +151,47 @@ class AuthRepository {
     }
   }
 
-  // ── User cache ────────────────────────────────────────────────────────────
+  // ── User cache & Token helpers ───────────────────────────────────────────
+
+  /// Returns the stored access token, or null.
+  Future<String?> getToken() => _tokenStorage.getToken();
+
+  /// Returns the stored refresh token, or null.
+  Future<String?> getRefreshToken() => _tokenStorage.getRefreshToken();
 
   /// Returns the cached [User] JSON string from secure storage, or null.
   Future<String?> getCachedUserJson() => _tokenStorage.getUserJson();
+
+  /// Persists the [User] profile to secure storage cache.
+  Future<void> cacheUser(User user) =>
+      _tokenStorage.saveUserJson(jsonEncode(user.toJson()));
+
+  /// Attempts to extract user claims from JWT access token payload.
+  User? extractUserFromToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final normalized = base64Url.normalize(parts[1]);
+      final payloadString = utf8.decode(base64Url.decode(normalized));
+      final map = jsonDecode(payloadString);
+      if (map is Map<String, dynamic>) {
+        final rawUsername = map['username'] ??
+            map['user_name'] ??
+            map['name'] ??
+            map['fullName'] ??
+            map['sub'] ??
+            map['email'];
+        if (rawUsername != null && rawUsername.toString().trim().isNotEmpty) {
+          return User(
+            userId: (map['user_id'] ?? map['userId'] ?? map['id'])?.toString(),
+            username: rawUsername.toString().trim(),
+            role: (map['role'] ?? 'operator').toString(),
+            status: (map['status'] ?? 'ACTIVE').toString(),
+            createdAt: DateTime.now(),
+          );
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
 }

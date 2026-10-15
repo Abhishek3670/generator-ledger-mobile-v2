@@ -33,9 +33,16 @@ class User {
   }
 
   static User fromMap(Map<String, dynamic> map) {
+    final rawUsername = map['username'] ??
+        map['user_name'] ??
+        map['name'] ??
+        map['fullName'] ??
+        map['email'] ??
+        map['sub'];
+
     return User(
-      userId: (map['user_id'] ?? map['userId'])?.toString(),
-      username: (map['username'] ?? '').toString(),
+      userId: (map['user_id'] ?? map['userId'] ?? map['id'])?.toString(),
+      username: (rawUsername ?? '').toString().trim(),
       role: (map['role'] ?? 'operator').toString(),
       status: (map['status'] ?? 'ACTIVE').toString(),
       lastLogin: _parseDate(map['last_login'] ?? map['lastLogin']),

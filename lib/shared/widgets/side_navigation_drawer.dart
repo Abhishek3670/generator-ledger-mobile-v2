@@ -89,51 +89,64 @@ class SideNavigationDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: isLight ? AppColors.primary : AppColors.accent,
-                        backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-                        child: avatarUrl == null
-                            ? Text(
-                                userName.substring(0, 1).toUpperCase(),
-                                style: AppTypography.headlineSmall.copyWith(
-                                  color: isLight ? Colors.white : AppColors.primary,
-                                  fontSize: 16,
-                                ),
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    Builder(
+                      builder: (context) {
+                        final displayName =
+                            userName.trim().isNotEmpty ? userName.trim() : 'User';
+                        return Row(
                           children: [
-                            Text(
-                              userName,
-                              style: AppTypography.bodyMedium.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: isLight ? AppColors.primary : Colors.white,
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor:
+                                  isLight ? AppColors.primary : AppColors.accent,
+                              backgroundImage: avatarUrl != null
+                                  ? NetworkImage(avatarUrl!)
+                                  : null,
+                              child: avatarUrl == null
+                                  ? Text(
+                                      displayName.substring(0, 1).toUpperCase(),
+                                      style: AppTypography.headlineSmall.copyWith(
+                                        color: isLight
+                                            ? Colors.white
+                                            : AppColors.primary,
+                                        fontSize: 16,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayName,
+                                    style: AppTypography.bodyMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: isLight
+                                          ? AppColors.primary
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                  if (userRole.isNotEmpty)
+                                    Text(
+                                      isLight ? userRole.toUpperCase() : userRole,
+                                      style: isLight
+                                        ? AppTypography.labelCaps.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 11,
+                                          )
+                                        : AppTypography.bodySmall.copyWith(
+                                            color: Colors.white70,
+                                          ),
+                                    ),
+                                ],
                               ),
                             ),
-                            if (userRole.isNotEmpty)
-                              Text(
-                                isLight ? userRole.toUpperCase() : userRole,
-                                style: isLight
-                                    ? AppTypography.labelCaps.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 11,
-                                      )
-                                    : AppTypography.bodySmall.copyWith(
-                                        color: Colors.white70,
-                                      ),
-                              ),
                           ],
-                        ),
-                      ),
-                    ],
-                  ),
+                        );
+                      },
+                    ),
                   if (isLight) ...[
                     const SizedBox(height: 12),
                     Text(

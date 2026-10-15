@@ -48,21 +48,43 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
     if (mounted) state = const AsyncValue.loading();
 
+    // 1. Immediately restore cached user so UI displays active user profile
+    await _loadCachedUser();
+
+    // 2. Fallback: extract from token if cache was missing or empty
+    if (state.value == null || state.value!.username.trim().isEmpty) {
+      final token = await _authRepository.getToken();
+      if (token != null) {
+        final fallbackUser = _authRepository.extractUserFromToken(token);
+        if (fallbackUser != null) {
+          await _authRepository.cacheUser(fallbackUser);
+          if (mounted) state = AsyncValue.data(fallbackUser);
+        }
+      }
+    }
+
+    // 3. Verify token with backend
     final verified = await _authRepository.verifyToken();
     if (verified) {
-      await _loadCachedUser();
+      if (state.value == null) {
+        await _loadCachedUser();
+      }
       return;
     }
 
-    // Access token may be expired — attempt a silent refresh.
+    // 4. Token verification failed (401/expired) — attempt silent refresh
     final newToken = await _authRepository.refreshAccessToken();
     if (newToken == null) {
-      // Refresh failed (revoked / expired / absent) — force login.
-      if (mounted) state = const AsyncValue.data(null);
+      // Refresh failed — if credentials were cleared or explicitly revoked, clear state
+      final hasActiveToken = await _authRepository.isAuthenticated();
+      final refreshToken = await _authRepository.getRefreshToken();
+      if (!hasActiveToken || (refreshToken != null && refreshToken.isNotEmpty)) {
+        if (mounted) state = const AsyncValue.data(null);
+      }
       return;
     }
 
-    // Re-verify with the new access token.
+    // 5. Re-verify with the new access token
     final reVerified = await _authRepository.verifyToken();
     if (reVerified) {
       await _loadCachedUser();
