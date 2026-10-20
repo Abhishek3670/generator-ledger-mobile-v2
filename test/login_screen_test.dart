@@ -229,29 +229,8 @@ class _FakeAuthRepository implements AuthRepository {
   Future<bool> getStayLoggedIn() async => stayLoggedIn ?? true;
 
   @override
-  Future<void> logout() async {}
-
-  @override
   Future<bool> isAuthenticated() async => false;
 
   @override
-  Future<bool> verifyToken() async => false;
-
-  @override
-  Future<String?> refreshAccessToken() async => null;
-
-  @override
-  Future<String?> getCachedUserJson() async => null;
-
-  @override
-  Future<String?> getToken() async => null;
-
-  @override
-  Future<String?> getRefreshToken() async => null;
-
-  @override
-  Future<void> cacheUser(User user) async {}
-
-  @override
-  User? extractUserFromToken(String token) => null;
+  dynamic noSuchMethod(Invocation invocation) => null;
 }

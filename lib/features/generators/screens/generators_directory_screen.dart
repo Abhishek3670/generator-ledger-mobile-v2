@@ -435,19 +435,14 @@ class _GeneratorsDirectoryScreenState
         ? ref.watch(calendarDayBookingsProvider(dateStr))
         : null;
 
-    final bookedGenIds = <String>{};
-    if (dayBookingsAsync?.hasValue == true) {
-      for (final booking in dayBookingsAsync!.value!) {
-        if (booking.generatorId.isNotEmpty) {
-          bookedGenIds.add(booking.generatorId);
-        }
-        for (final item in booking.items) {
-          if (item.generatorId.isNotEmpty) {
-            bookedGenIds.add(item.generatorId);
-          }
-        }
-      }
-    }
+    final bookedGenIds = {
+      if (dayBookingsAsync?.hasValue == true)
+        for (final b in dayBookingsAsync!.value!) ...[
+          if (b.generatorId.isNotEmpty) b.generatorId,
+          for (final item in b.items)
+            if (item.generatorId.isNotEmpty) item.generatorId,
+        ],
+    };
 
     final generators = baseGenerators.map((gen) {
       if (_selectedDate == null) {

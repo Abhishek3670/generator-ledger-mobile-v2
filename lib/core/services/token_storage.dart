@@ -103,29 +103,15 @@ class TokenStorage {
 
   // ── Stay logged in preference ─────────────────────────────────────────────
 
-  Future<void> saveStayLoggedIn(bool stayLoggedIn) {
-    return _backend.write(
-      key: stayLoggedInKey,
-      value: stayLoggedIn ? 'true' : 'false',
-    );
-  }
+  Future<void> saveStayLoggedIn(bool stayLoggedIn) =>
+      _backend.write(key: stayLoggedInKey, value: stayLoggedIn ? 'true' : 'false');
 
-  Future<bool> getStayLoggedIn() async {
-    final value = await _backend.read(key: stayLoggedInKey);
-    // Defaults to true for mobile user convenience
-    return value == null || value == 'true';
-  }
-
-  Future<void> deleteStayLoggedIn() {
-    return _backend.delete(key: stayLoggedInKey);
-  }
+  Future<bool> getStayLoggedIn() async =>
+      (await _backend.read(key: stayLoggedInKey)) != 'false';
 
   /// Clears stored tokens on fresh startup if user did not choose to stay logged in.
   Future<void> clearSessionIfEphemeral() async {
-    final stay = await getStayLoggedIn();
-    if (!stay) {
-      await clearAll();
-    }
+    if (!await getStayLoggedIn()) await clearAll();
   }
 
   // ── Bulk operations ───────────────────────────────────────────────────────

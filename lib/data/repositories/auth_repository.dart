@@ -17,7 +17,6 @@ class AuthRepository {
   static const String logoutPath = '/api/logout';
   static const String verifyPath = '/auth/verify';
   static const String refreshPath = '/api/auth/refresh';
-  static const String fallbackRefreshPath = '/auth/refresh';
 
   final ApiClient _apiClient;
   final TokenStorage _tokenStorage;
@@ -54,17 +53,14 @@ class AuthRepository {
     // Persist access token (always present).
     await _tokenStorage.saveToken(finalResponse.token);
 
-    // Persist refresh token when provided by the backend and user wants to stay logged in.
-    if (stayLoggedIn && finalResponse.refreshToken != null) {
-      await _tokenStorage.saveRefreshToken(finalResponse.refreshToken!);
-    } else if (!stayLoggedIn) {
-      await _tokenStorage.deleteRefreshToken();
-    }
-
-    // Cache user JSON for session restoration on next app start if stayLoggedIn.
+    // Persist refresh token & cached profile when user wants to stay logged in.
     if (stayLoggedIn) {
+      if (finalResponse.refreshToken != null) {
+        await _tokenStorage.saveRefreshToken(finalResponse.refreshToken!);
+      }
       await _tokenStorage.saveUserJson(jsonEncode(finalResponse.user.toJson()));
     } else {
+      await _tokenStorage.deleteRefreshToken();
       await _tokenStorage.deleteUserJson();
     }
 
@@ -119,66 +115,46 @@ class AuthRepository {
   /// - On network error → returns `null` WITHOUT clearing credentials so the
   ///   user stays in-app and can retry when connectivity returns.
   Future<String?> refreshAccessToken() async {
-    final stayLoggedIn = await _tokenStorage.getStayLoggedIn();
-    if (!stayLoggedIn) {
+    if (!await _tokenStorage.getStayLoggedIn()) {
       await _tokenStorage.clearAll();
       return null;
     }
 
     final refreshToken = await _tokenStorage.getRefreshToken();
-    if (refreshToken == null || refreshToken.isEmpty) {
-      // No refresh token stored — session cannot be continued.
-      return null;
-    }
+    if (refreshToken == null || refreshToken.isEmpty) return null;
 
-    Map<String, dynamic> response;
     try {
-      response = await _apiClient.post<Map<String, dynamic>>(
-        AuthRepository.refreshPath,
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        refreshPath,
         data: {'refresh_token': refreshToken},
         fromJson: (json) => json as Map<String, dynamic>,
       );
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        try {
-          response = await _apiClient.post<Map<String, dynamic>>(
-            AuthRepository.fallbackRefreshPath,
-            data: {'refresh_token': refreshToken},
-            fromJson: (json) => json as Map<String, dynamic>,
-          );
-        } catch (_) {
-          return null;
-        }
-      } else {
-        final status = e.response?.statusCode;
-        if (status == 401 || status == 403) {
-          // Refresh token is invalid / revoked — force the user to log in.
-          await _tokenStorage.clearAll();
-        }
+
+      final newAccessToken =
+          (response['access_token'] ?? response['token']) as String?;
+      if (newAccessToken == null || newAccessToken.isEmpty) {
+        await _tokenStorage.clearAll();
         return null;
       }
+
+      await _tokenStorage.saveToken(newAccessToken);
+
+      final newRefreshToken =
+          (response['refresh_token'] ?? response['refreshToken']) as String?;
+      if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
+        await _tokenStorage.saveRefreshToken(newRefreshToken);
+      }
+
+      return newAccessToken;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        await _tokenStorage.clearAll();
+      }
+      return null;
     } catch (_) {
       return null;
     }
-
-    // Extract the new access token.
-    final newAccessToken =
-        (response['access_token'] ?? response['token']) as String?;
-    if (newAccessToken == null || newAccessToken.isEmpty) {
-      await _tokenStorage.clearAll();
-      return null;
-    }
-
-    await _tokenStorage.saveToken(newAccessToken);
-
-    // Rotate the refresh token if the backend issues a new one.
-    final newRefreshToken =
-        (response['refresh_token'] ?? response['refreshToken']) as String?;
-    if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
-      await _tokenStorage.saveRefreshToken(newRefreshToken);
-    }
-
-    return newAccessToken;
   }
 
   // ── User cache & Token helpers ───────────────────────────────────────────

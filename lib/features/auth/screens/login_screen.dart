@@ -177,14 +177,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         // Stay logged in Checkbox
                         InkWell(
-                          onTap: () {
-                            setState(() {
-                              _stayLoggedIn = !_stayLoggedIn;
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.functionalRadius,
-                          ),
+                          onTap: () => setState(() => _stayLoggedIn = !_stayLoggedIn),
+                          borderRadius: BorderRadius.circular(AppDimensions.functionalRadius),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
@@ -199,11 +193,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _stayLoggedIn = val ?? true;
-                                      });
-                                    },
+                                    onChanged: (val) =>
+                                        setState(() => _stayLoggedIn = val ?? true),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -217,7 +208,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ],
                             ),
                           ),
-                        
                         ),
                         if (_errorMessage != null) ...[
                           const SizedBox(height: 16),
