@@ -1,3 +1,4 @@
+import 'package:ledger/core/exceptions/api_exception.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,36 +97,37 @@ void main() {
     },
   );
 
-  testWidgets(
-    'AddBookingModal pre-fills values from preferences',
-    (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({
-        'last_selected_vendor': 'vendor_1',
-        'last_selected_capacity': ['100'],
-      });
-      final prefs = await SharedPreferences.getInstance();
+  testWidgets('AddBookingModal pre-fills values from preferences', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'last_selected_vendor': 'vendor_1',
+      'last_selected_capacity': ['100'],
+    });
+    final prefs = await SharedPreferences.getInstance();
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
-            vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
-            generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
-            sharedPreferencesProvider.overrideWithValue(prefs),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
-            ),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+          vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
+          generatorRepositoryProvider.overrideWithValue(
+            _FakeGeneratorRepository(),
+          ),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // Check capacity selection is pre-selected
-      expect(find.text('Capacity (kVA)'), findsOneWidget);
-    },
-  );
+    // Check capacity selection is pre-selected
+    expect(find.text('Capacity (kVA)'), findsOneWidget);
+  });
 
   testWidgets(
     'AddBookingModal clears last vendor preference on draft discard',
@@ -138,9 +140,13 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            bookingRepositoryProvider.overrideWithValue(_FakeBookingRepository()),
+            bookingRepositoryProvider.overrideWithValue(
+              _FakeBookingRepository(),
+            ),
             vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
-            generatorRepositoryProvider.overrideWithValue(_FakeGeneratorRepository()),
+            generatorRepositoryProvider.overrideWithValue(
+              _FakeGeneratorRepository(),
+            ),
             sharedPreferencesProvider.overrideWithValue(prefs),
           ],
           child: const MaterialApp(
@@ -165,6 +171,164 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(prefs.containsKey('last_selected_vendor'), isFalse);
+    },
+  );
+
+  testWidgets(
+    'AddBookingModal supports adding and removing additional schedule lines',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _providerOverrides(),
+          child: const MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final addRequirementButton = find.text('Add Another Genset / Schedule');
+      expect(addRequirementButton, findsOneWidget);
+      await tester.ensureVisible(addRequirementButton);
+      await tester.tap(addRequirementButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('ITEM #2'), findsOneWidget);
+
+      final deleteButton = find.byIcon(Icons.delete_outline);
+      expect(deleteButton, findsOneWidget);
+      await tester.tap(deleteButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('ITEM #2'), findsNothing);
+    },
+  );
+
+  testWidgets('AddBookingModal quantity stepper updates count', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _providerOverrides(),
+        child: const MaterialApp(
+          home: Scaffold(
+            body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('QUANTITY'), findsOneWidget);
+    expect(find.text('1'), findsAtLeastNWidgets(1));
+
+    final addQtyFinder = find.byIcon(Icons.add);
+    await tester.ensureVisible(addQtyFinder.first);
+    await tester.tap(addQtyFinder.first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('2'), findsAtLeastNWidgets(1));
+
+    final removeQtyFinder = find.byIcon(Icons.remove);
+    await tester.tap(removeQtyFinder.first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsAtLeastNWidgets(1));
+  });
+
+  testWidgets(
+    'AddBookingModal handles submission failure gracefully and displays error banner without closing',
+    (WidgetTester tester) async {
+      bool closed = false;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _providerOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(
+                lockedVendorId: 'VEN011',
+                onClose: () => closed = true,
+                onSave: (bookings) async {
+                  throw const ApiException(
+                    statusCode: 409,
+                    message: 'Insufficient 20 kVA inventory on 2026-11-20',
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Submit
+      final createButton = find.text('Create Booking').last;
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      // Modal must NOT be closed
+      expect(closed, isFalse);
+
+      // Error banner must be visible
+      expect(
+        find.text('Insufficient 20 kVA inventory on 2026-11-20'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'AddBookingModal blocks submission when quantity exceeds local available inventory',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({
+        'last_selected_capacity': ['100'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+
+      bool saveCalled = false;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ..._providerOverrides(),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(
+                lockedVendorId: 'VEN011',
+                onClose: _dummyClose,
+                onSave: (bookings) async {
+                  saveCalled = true;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap add quantity twice: 1 -> 2 -> 3 (mock inventory has two 100 kVA units)
+      final addQtyFinder = find.byIcon(Icons.add);
+      await tester.ensureVisible(addQtyFinder.first);
+      await tester.tap(addQtyFinder.first);
+      await tester.pumpAndSettle();
+      await tester.tap(addQtyFinder.first);
+      await tester.pumpAndSettle();
+
+      // Attempt to submit
+      final createButton = find.text('Create Booking').last;
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      expect(saveCalled, isFalse);
+      expect(
+        find.textContaining('Insufficient inventory for 100 kVA'),
+        findsOneWidget,
+      );
     },
   );
 }
@@ -226,7 +390,10 @@ class _FakeVendorRepository extends VendorRepository {
 
 class _FakeGeneratorRepository extends GeneratorRepository {
   @override
-  Future<List<MockGenerator>> getGenerators({String? inventoryGroup, String? date}) async {
+  Future<List<MockGenerator>> getGenerators({
+    String? inventoryGroup,
+    String? date,
+  }) async {
     return List.of(mockGenerators);
   }
 }
