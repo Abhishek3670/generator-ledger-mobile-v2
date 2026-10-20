@@ -1133,6 +1133,33 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       (sum, req) => sum + req.quantity,
     );
 
+    // Group individual dates by capacity
+    final List<String> capacityOrder = [];
+    final Map<String, Map<DateTime, int>> capacityDateMap = {};
+    final Map<String, int> capacityEmptyDateQuantity = {};
+
+    for (final req in _requirements) {
+      final cap = req.selectedCapacities.isNotEmpty
+          ? req.selectedCapacities.first
+          : (req.selectedGeneratorId ?? '50');
+
+      if (!capacityOrder.contains(cap)) {
+        capacityOrder.add(cap);
+      }
+
+      if (req.selectedDates.isEmpty) {
+        capacityEmptyDateQuantity[cap] =
+            (capacityEmptyDateQuantity[cap] ?? 0) + req.quantity;
+      } else {
+        capacityDateMap.putIfAbsent(cap, () => <DateTime, int>{});
+        final dateMap = capacityDateMap[cap]!;
+        for (final date in req.selectedDates) {
+          final normalized = DateTime(date.year, date.month, date.day);
+          dateMap[normalized] = (dateMap[normalized] ?? 0) + req.quantity;
+        }
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(12),
@@ -1146,70 +1173,122 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         children: [
           Expanded(
             child: Column(
-              children: List.generate(_requirements.length, (i) {
-                final req = _requirements[i];
-                final cap = req.selectedCapacities.isNotEmpty
-                    ? req.selectedCapacities.first
-                    : '50';
-                final dateStr = _formatDateList(req.selectedDates);
-                final isLast = i == _requirements.length - 1;
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: List.generate(capacityOrder.length, (gIndex) {
+                final cap = capacityOrder[gIndex];
+                final isLast = gIndex == capacityOrder.length - 1;
+                final dateMap = capacityDateMap[cap] ?? {};
+                final sortedDates = dateMap.keys.toList()
+                  ..sort((a, b) => a.compareTo(b));
+                final emptyQty = capacityEmptyDateQuantity[cap];
 
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.calendar_today_outlined,
-                          size: 13,
-                          color: AppColors.primary,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F172A),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '$cap kVA',
+                            style: const TextStyle(
+                              fontFamily: 'SpaceGrotesk',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            dateStr,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.bodySmall.copyWith(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6.0),
-                          child: Text(
-                            '|',
-                            style: TextStyle(
-                              color: Color(0xFFE2E8F0),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '$cap kVA',
-                          style: AppTypography.bodySmall.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6.0),
-                          child: Text(
-                            '|',
-                            style: TextStyle(
-                              color: Color(0xFFE2E8F0),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${req.quantity} unit${req.quantity > 1 ? 's' : ''}',
-                          style: AppTypography.bodySmall.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ...sortedDates.map((date) {
+                                final qty = dateMap[date]!;
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 2.0),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 11,
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          DateFormat('MMM d, yyyy').format(date),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '$qty unit${qty > 1 ? 's' : ''}',
+                                        style: AppTypography.bodySmall
+                                            .copyWith(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              if (emptyQty != null && emptyQty > 0)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 2.0),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 11,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          'Select dates',
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                            fontSize: 11,
+                                            fontStyle: FontStyle.italic,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '$emptyQty unit${emptyQty > 1 ? 's' : ''}',
+                                        style: AppTypography.bodySmall
+                                            .copyWith(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ],

@@ -493,6 +493,35 @@ void main() {
       expect(booking.items[1].startDt, contains('-18'));
     },
   );
+
+  testWidgets(
+    'Order Summary displays individual dates grouped by capacity',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({
+        'last_selected_capacity': ['45'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ..._providerOverrides(),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verify capacity badge and total units in summary table
+      expect(find.text('45 kVA'), findsWidgets);
+      expect(find.text('Total Units'), findsOneWidget);
+    },
+  );
 }
 
 void _dummyClose() {}
