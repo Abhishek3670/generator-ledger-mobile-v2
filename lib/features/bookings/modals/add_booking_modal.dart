@@ -11,6 +11,7 @@ import '../../../shared/models/generator.dart';
 import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
+import '../../../shared/widgets/inline_calendar.dart';
 import '../../../core/providers/booking_provider.dart';
 import '../../../core/providers/generator_provider.dart';
 import '../../../core/providers/notification_provider.dart';
@@ -477,13 +478,24 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         ? allGeneratorIds.first
         : 'AUTO-ASSIGN';
 
+    final allSelectedDates = _requirements
+        .expand((r) => r.selectedDates)
+        .toList()
+      ..sort((a, b) => a.compareTo(b));
+    final overallStartDate = allSelectedDates.isNotEmpty
+        ? allSelectedDates.first
+        : DateTime.now();
+    final overallEndDate = allSelectedDates.isNotEmpty
+        ? allSelectedDates.last
+        : DateTime.now();
+
     final newBooking = Booking.withGenerators(
       bookingId: 'BK-$baseTime-0',
       vendorId: _selectedVendorId!,
       vendorName: selectedVendor.name,
       generators: allGeneratorIds.isNotEmpty ? allGeneratorIds : [primaryGenId],
-      startDate: _requirements.first.selectedDates.first,
-      endDate: _requirements.last.selectedDates.last,
+      startDate: overallStartDate,
+      endDate: overallEndDate,
       status: 'confirmed',
       notes: _notesController.text.trim(),
       capacity: capacityText,
@@ -506,6 +518,9 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       await widget.onSave([newBooking]);
       _autoSaveTimer?.cancel();
       await _draftService.clearDraft('add_booking');
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
@@ -578,66 +593,158 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     return result ?? false;
   }
 
-  String _formatDateRange(List<DateTime> dates) {
+  String _formatDateList(List<DateTime> dates) {
     if (dates.isEmpty) return 'Select dates';
-    if (dates.length == 1) {
-      return DateFormat('MMM d, yyyy').format(dates.first);
+    final sorted = List<DateTime>.from(dates)..sort((a, b) => a.compareTo(b));
+    if (sorted.length == 1) {
+      return DateFormat('MMM d, yyyy').format(sorted.first);
     }
-    final first = dates.first;
-    final last = dates.last;
-    if (first.year == last.year) {
-      if (first.month == last.month && first.day == last.day) {
-        return DateFormat('MMM d, yyyy').format(first);
+    final allSameYear = sorted.every((d) => d.year == sorted.first.year);
+    final allSameMonth =
+        allSameYear && sorted.every((d) => d.month == sorted.first.month);
+
+    if (allSameMonth) {
+      final monthName = DateFormat('MMM').format(sorted.first);
+      final days = sorted.map((d) => d.day).join(', ');
+      return '$monthName $days, ${sorted.first.year}';
+    } else if (allSameYear) {
+      if (sorted.length <= 3) {
+        final parts =
+            sorted.map((d) => DateFormat('MMM d').format(d)).join(', ');
+        return '$parts, ${sorted.first.year}';
+      } else {
+        return '${DateFormat('MMM d').format(sorted.first)} – ${DateFormat('MMM d').format(sorted.last)} (${sorted.length} dates, ${sorted.first.year})';
       }
-      return '${DateFormat('MMM d').format(first)} – ${DateFormat('MMM d, yyyy').format(last)}';
     } else {
-      return '${DateFormat('MMM d, yyyy').format(first)} – ${DateFormat('MMM d, yyyy').format(last)}';
+      if (sorted.length <= 2) {
+        return sorted.map((d) => DateFormat('MMM d, yyyy').format(d)).join(', ');
+      } else {
+        return '${DateFormat('MMM d, yyyy').format(sorted.first)} – ${DateFormat('MMM d, yyyy').format(sorted.last)} (${sorted.length} dates)';
+      }
     }
   }
 
-  Future<void> _pickDateRange(BookingRequirement req) async {
-    final now = DateTime.now();
-    final initialRange = req.selectedDates.isNotEmpty
-        ? DateTimeRange(
-            start: req.selectedDates.first,
-            end: req.selectedDates.last,
-          )
-        : DateTimeRange(start: now, end: now);
+  Future<void> _pickIndividualDates(BookingRequirement req) async {
+    List<DateTime> tempDates = List<DateTime>.from(req.selectedDates);
+    final initialMonth =
+        tempDates.isNotEmpty ? tempDates.first : DateTime.now();
 
-    final picked = await showDateRangePicker(
+    final result = await showDialog<List<DateTime>>(
       context: context,
-      initialDateRange: initialRange,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2035),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.primary,
-            ),
-          ),
-          child: child!,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Select Dates',
+                    style: TextStyle(
+                      fontFamily: 'SpaceGrotesk',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${tempDates.length} selected',
+                      style: const TextStyle(
+                        fontFamily: 'SpaceGrotesk',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 320,
+                child: InlineCalendar(
+                  startDate: initialMonth,
+                  selectionMode: CalendarSelectionMode.multi,
+                  selectedDates: tempDates,
+                  onDatesChanged: (dates) {
+                    setDialogState(() {
+                      tempDates = List.from(dates)
+                        ..sort((a, b) => a.compareTo(b));
+                    });
+                  },
+                ),
+              ),
+              actions: [
+                Row(
+                  children: [
+                    if (tempDates.isNotEmpty)
+                      TextButton(
+                        onPressed: () {
+                          setDialogState(() {
+                            tempDates.clear();
+                          });
+                        },
+                        child: const Text(
+                          'Clear All',
+                          style: TextStyle(
+                            color: AppColors.danger,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(null),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(tempDates),
+                      child: const Text('Done'),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
       },
     );
 
-    if (picked != null) {
-      final dates = <DateTime>[];
-      var cur = DateTime(
-        picked.start.year,
-        picked.start.month,
-        picked.start.day,
-      );
-      final end = DateTime(picked.end.year, picked.end.month, picked.end.day);
-      while (!cur.isAfter(end)) {
-        dates.add(cur);
-        cur = cur.add(const Duration(days: 1));
-      }
+    if (result != null) {
       setState(() {
-        req.selectedDates = dates;
+        req.selectedDates = result;
       });
       _onFormChanged();
     }
@@ -657,7 +764,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     final dropdownCaps = availableCapacities.contains(currentCap)
         ? availableCapacities
         : [currentCap, ...availableCapacities];
-    final dateText = _formatDateRange(req.selectedDates);
+    final dateText = _formatDateList(req.selectedDates);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -896,7 +1003,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                   ),
                   const SizedBox(height: 4),
                   InkWell(
-                    onTap: () => _pickDateRange(req),
+                    onTap: () => _pickIndividualDates(req),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       height: 40,
@@ -1044,7 +1151,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                 final cap = req.selectedCapacities.isNotEmpty
                     ? req.selectedCapacities.first
                     : '50';
-                final dateStr = _formatDateRange(req.selectedDates);
+                final dateStr = _formatDateList(req.selectedDates);
                 final isLast = i == _requirements.length - 1;
 
                 return Column(

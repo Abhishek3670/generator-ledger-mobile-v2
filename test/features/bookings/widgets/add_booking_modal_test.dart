@@ -18,6 +18,7 @@ import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/data/repositories/generator_repository.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
+import 'package:ledger/shared/widgets/inline_calendar.dart';
 import 'package:ledger/shared/widgets/draggable_form_sheet.dart';
 
 void main() {
@@ -389,6 +390,107 @@ void main() {
         find.textContaining('Insufficient inventory for 100 kVA'),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'AddBookingModal supports discrete individual date selection via dialog',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _providerOverrides(),
+          child: const MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final datePickerTrigger = find.ancestor(
+        of: find.byIcon(Icons.calendar_today_outlined).first,
+        matching: find.byType(InkWell),
+      );
+      expect(datePickerTrigger, findsWidgets);
+      await tester.ensureVisible(datePickerTrigger.first);
+      await tester.tap(datePickerTrigger.first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select Dates'), findsOneWidget);
+      expect(find.byType(InlineCalendar), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
+
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select Dates'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'AddBookingModal generates discrete booking items for each individual selected date',
+    (WidgetTester tester) async {
+      List<Booking>? savedBookings;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _providerOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(
+                lockedVendorId: 'VEN011',
+                onClose: _dummyClose,
+                onSave: (bookings) async {
+                  savedBookings = bookings;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final datePickerTrigger = find.ancestor(
+        of: find.byIcon(Icons.calendar_today_outlined).first,
+        matching: find.byType(InkWell),
+      );
+      await tester.ensureVisible(datePickerTrigger.first);
+      await tester.tap(datePickerTrigger.first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select Dates'), findsOneWidget);
+
+      final clearAll = find.text('Clear All');
+      if (clearAll.evaluate().isNotEmpty) {
+        await tester.tap(clearAll);
+        await tester.pumpAndSettle();
+      }
+
+      final day15Finder = find.widgetWithText(GestureDetector, '15');
+      final day18Finder = find.widgetWithText(GestureDetector, '18');
+      if (day15Finder.evaluate().isNotEmpty) {
+        await tester.tap(day15Finder.first);
+        await tester.pumpAndSettle();
+      }
+      if (day18Finder.evaluate().isNotEmpty) {
+        await tester.tap(day18Finder.first);
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
+      final createButton = find.text('Create Booking').last;
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      expect(savedBookings, isNotNull);
+      expect(savedBookings!.length, 1);
+      final booking = savedBookings!.first;
+      expect(booking.items.length, 2);
+      expect(booking.items[0].startDt, contains('-15'));
+      expect(booking.items[1].startDt, contains('-18'));
     },
   );
 }
