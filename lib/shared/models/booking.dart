@@ -21,7 +21,7 @@ class BookingItem {
   });
 
   factory BookingItem.fromMap(Map<String, dynamic> map) {
-    final startDtRaw = (map['start_dt'] ?? map['startDt'] ?? '').toString();
+    final startDtRaw = (map['start_dt'] ?? map['startDt'] ?? map['date'] ?? '').toString();
     final isEmergency = map['is_emergency'] == true || map['inventory_type'] == 'emergency';
     final capacityKva = map['capacity_kva'] is num ? (map['capacity_kva'] as num).toInt() : null;
 
@@ -29,17 +29,21 @@ class BookingItem {
       generatorId: (map['generator_id'] ?? '').toString(),
       capacityKva: capacityKva,
       startDt: startDtRaw,
-      endDt: (map['end_dt'] ?? map['endDt'] ?? '').toString(),
+      endDt: (map['end_dt'] ?? map['endDt'] ?? map['date'] ?? '').toString(),
       itemStatus: (map['item_status'] ?? map['status'] ?? '').toString(),
       isEmergency: isEmergency,
       remarks: (map['remarks'] ?? '').toString(),
     );
   }
 
+  String get date => startDt.split(RegExp(r'[ T]'))[0];
+
   Map<String, dynamic> toMap() {
+    final dateStr = startDt.isNotEmpty ? startDt.split(RegExp(r'[ T]'))[0] : '';
     return {
       'generator_id': generatorId,
-      'capacity_kva': capacityKva,
+      if (capacityKva != null) 'capacity_kva': capacityKva,
+      'date': dateStr,
       'start_dt': startDt,
       'end_dt': endDt,
       'item_status': itemStatus,

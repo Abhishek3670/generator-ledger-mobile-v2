@@ -80,6 +80,54 @@ void main() {
       expect(firstItem['date'], '2026-05-01');
     });
 
+    test('createBooking includes required date field in every item when items are populated', () async {
+      final apiClient = _FakeApiClient(
+        response: {
+          'booking_id': 'BK-MULTI-01',
+          'success': true,
+        },
+      );
+      final repository = BookingRepository(apiClient: apiClient);
+
+      await repository.createBooking(
+        Booking.withGenerators(
+          bookingId: 'BK-MULTI-01',
+          vendorId: 'VEN001',
+          vendorName: 'TEST',
+          generators: ['GEN-30', 'GEN-45'],
+          startDate: DateTime(2026, 11, 17),
+          endDate: DateTime(2026, 11, 18),
+          status: 'confirmed',
+          notes: '',
+          capacity: '75 kVA',
+          items: [
+            BookingItem(
+              generatorId: 'GEN-30',
+              capacityKva: 30,
+              startDt: '2026-11-17',
+              itemStatus: 'confirmed',
+              isEmergency: false,
+              remarks: 'Item 1',
+            ),
+            BookingItem(
+              generatorId: 'GEN-45',
+              capacityKva: 45,
+              startDt: '2026-11-18',
+              itemStatus: 'confirmed',
+              isEmergency: false,
+              remarks: 'Item 2',
+            ),
+          ],
+        ),
+      );
+
+      final postData = apiClient.lastPostData as Map<String, dynamic>;
+      final items = postData['items'] as List;
+      expect(items.length, 2);
+      expect((items[0] as Map)['date'], '2026-11-17');
+      expect((items[1] as Map)['date'], '2026-11-18');
+    });
+
     test('updateBooking uses PATCH and deleteBooking uses DELETE', () async {
       final apiClient = _FakeApiClient(
         response: {
