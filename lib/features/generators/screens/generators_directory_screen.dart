@@ -416,6 +416,7 @@ class _GeneratorsDirectoryScreenState
             });
           },
         ),
+        const SizedBox(height: 88),
       ],
     );
   }

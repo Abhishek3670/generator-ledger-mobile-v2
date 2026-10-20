@@ -51,11 +51,15 @@ class CompactBookingRow extends ConsumerWidget {
     final idWithReminder = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'ID: ${booking.bookingId}',
-          style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-            fontSize: 11,
+        Flexible(
+          child: Text(
+            'ID: ${booking.bookingId}',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         if (activeReminder) ...[

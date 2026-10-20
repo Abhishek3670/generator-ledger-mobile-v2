@@ -65,13 +65,18 @@ class DailyBookingsList extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Bookings: $formattedDate',
-                style: AppTypography.headlineSmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  'Bookings: $formattedDate',
+                  style: AppTypography.headlineSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${dailyBookings.length} Total',
                 style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),

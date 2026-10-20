@@ -111,6 +111,59 @@ void main() {
       expect(find.text('EMERGENCY'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'InventoryGroupSection renders title row with ellipsis without overflow on narrow width',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 250,
+              child: InventoryGroupSection(
+                title: 'Very Long Retailer Genset Category Name That Should Ellipsize',
+                description: 'Test description',
+                category: 'retailer',
+                generators: [],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final textFinder = find.text('Very Long Retailer Genset Category Name That Should Ellipsize');
+      expect(textFinder, findsOneWidget);
+      final textWidget = tester.widget<Text>(textFinder);
+      expect(textWidget.maxLines, equals(1));
+      expect(textWidget.overflow, equals(TextOverflow.ellipsis));
+    },
+  );
+
+  testWidgets(
+    'GeneratorsDirectoryScreen includes bottom SizedBox of height 88 for search FAB clearance',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            generatorRepositoryProvider.overrideWithValue(
+              _FakeGeneratorRepository(),
+            ),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: GeneratorsDirectoryScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final sizedBoxFinder = find.byWidgetPredicate(
+        (widget) => widget is SizedBox && widget.height == 88,
+      );
+      expect(sizedBoxFinder, findsOneWidget);
+    },
+  );
 }
 
 class _FakeGeneratorRepository extends GeneratorRepository {

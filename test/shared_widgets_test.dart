@@ -31,6 +31,31 @@ void main() {
     expect(find.text('DASHBOARD'), findsOneWidget);
   });
 
+  testWidgets('AppBottomNavBar contains SafeArea(top: false) and content height 64', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: AppBottomNavBar(currentIndex: 0, onTap: (_) {}),
+        ),
+      ),
+    );
+    final safeAreaFinder = find.descendant(
+      of: find.byType(AppBottomNavBar),
+      matching: find.byType(SafeArea),
+    );
+    expect(safeAreaFinder, findsOneWidget);
+    final safeAreaWidget = tester.widget<SafeArea>(safeAreaFinder);
+    expect(safeAreaWidget.top, isFalse);
+
+    final sizedBoxFinder = find.descendant(
+      of: safeAreaFinder,
+      matching: find.byWidgetPredicate(
+        (widget) => widget is SizedBox && widget.height == 64,
+      ),
+    );
+    expect(sizedBoxFinder, findsOneWidget);
+  });
+
   testWidgets('AdminBottomNavBar renders successfully', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -44,6 +69,34 @@ void main() {
     );
     expect(find.byType(AdminBottomNavBar), findsOneWidget);
     expect(find.text('HEALTH'), findsOneWidget);
+  });
+
+  testWidgets('AdminBottomNavBar contains SafeArea(top: false) and content height 64', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: AdminBottomNavBar(
+            currentIndex: 0,
+            onTap: (_) {},
+          ),
+        ),
+      ),
+    );
+    final safeAreaFinder = find.descendant(
+      of: find.byType(AdminBottomNavBar),
+      matching: find.byType(SafeArea),
+    );
+    expect(safeAreaFinder, findsOneWidget);
+    final safeAreaWidget = tester.widget<SafeArea>(safeAreaFinder);
+    expect(safeAreaWidget.top, isFalse);
+
+    final sizedBoxFinder = find.descendant(
+      of: safeAreaFinder,
+      matching: find.byWidgetPredicate(
+        (widget) => widget is SizedBox && widget.height == 64,
+      ),
+    );
+    expect(sizedBoxFinder, findsOneWidget);
   });
 
   testWidgets('BackdropBlurOverlay renders successfully when visible', (

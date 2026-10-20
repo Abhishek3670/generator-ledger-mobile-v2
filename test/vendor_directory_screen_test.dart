@@ -100,6 +100,35 @@ void main() {
     expect(find.text('VEN011'), findsWidgets);
     expect(find.text('CATEGORY'), findsOneWidget);
   });
+
+  testWidgets(
+    'VendorGroupSection renders title row with ellipsis without overflow on narrow width',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 250,
+              child: VendorGroupSection(
+                title: 'Very Long Retailer Vendor Category Name That Should Ellipsize',
+                description: 'Test description',
+                category: 'retailer',
+                vendors: [],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final textFinder = find.text('Very Long Retailer Vendor Category Name That Should Ellipsize');
+      expect(textFinder, findsOneWidget);
+      final textWidget = tester.widget<Text>(textFinder);
+      expect(textWidget.maxLines, equals(1));
+      expect(textWidget.overflow, equals(TextOverflow.ellipsis));
+    },
+  );
 }
 
 class _FakeVendorRepository extends VendorRepository {

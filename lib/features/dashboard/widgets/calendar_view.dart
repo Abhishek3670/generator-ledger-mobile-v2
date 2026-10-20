@@ -295,24 +295,26 @@ class _CalendarViewState extends State<CalendarView> {
                                   if (bookingCount > 0)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 3,
+                                        horizontal: 2,
+                                        vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
                                         color: AppColors.primary,
                                         borderRadius: BorderRadius.circular(4),
                                       ),
-                                      child: Text(
-                                        '$bookingCount bk',
-                                        textAlign: TextAlign.center,
-                                        style: AppTypography.labelCaps.copyWith(
-                                          color: Colors.white,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0,
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '$bookingCount bk',
+                                          textAlign: TextAlign.center,
+                                          style: AppTypography.labelCaps.copyWith(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0,
+                                          ),
+                                          maxLines: 1,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     )
                                   else

@@ -77,30 +77,37 @@ class _VendorGroupSectionState extends State<VendorGroupSection> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(
-                    widget.title,
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: titleColor,
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.headlineSmall.copyWith(
+                          color: titleColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () {
-                      AppToast.show(
-                        context,
-                        message: widget.description,
-                        type: ToastType.info,
-                      );
-                    },
-                    icon: Icon(Icons.info_outline, color: titleColor, size: 18),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        AppToast.show(
+                          context,
+                          message: widget.description,
+                          type: ToastType.info,
+                        );
+                      },
+                      icon: Icon(Icons.info_outline, color: titleColor, size: 18),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(

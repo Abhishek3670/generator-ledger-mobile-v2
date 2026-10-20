@@ -28,57 +28,70 @@ class AdminBottomNavBar extends StatelessWidget {
       (icon: Icons.extension_outlined, activeIcon: Icons.extension, label: 'INTEGRATIONS'),
     ];
 
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
-          height: 80,
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.95), // Slate-900 with 95% opacity
             border: const Border(
               top: BorderSide(color: AppColors.primaryDark, width: 1), // Slate-800
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(items.length, (index) {
+          child: SafeArea(
+            top: false,
+            minimum: EdgeInsets.only(bottom: bottomInset),
+            child: SizedBox(
+              height: 64,
+              child: Row(
+                children: List.generate(items.length, (index) {
               final isSelected = index == currentIndex;
               final item = items[index];
 
-              return GestureDetector(
-                onTap: () => onTap(index),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.tertiaryFixed : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12), // rounded-xl
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isSelected ? item.activeIcon : item.icon,
-                        color: isSelected ? AppColors.onTertiaryFixed : AppColors.slate400,
-                        size: 20,
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onTap(index),
+                  behavior: HitTestBehavior.opaque,
+                  child: Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.tertiaryFixed : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12), // rounded-xl
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item.label,
-                        style: AppTypography.labelCaps.copyWith(
-                          fontSize: 9,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                          color: isSelected ? AppColors.onTertiaryFixed : AppColors.slate400,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isSelected ? item.activeIcon : item.icon,
+                            color: isSelected ? AppColors.onTertiaryFixed : AppColors.slate400,
+                            size: 20,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.labelCaps.copyWith(
+                              fontSize: 9,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              color: isSelected ? AppColors.onTertiaryFixed : AppColors.slate400,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               );
             }),
+              ),
+            ),
           ),
         ),
       ),
