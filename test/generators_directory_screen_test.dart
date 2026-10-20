@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ledger/core/providers/generator_provider.dart';
 import 'package:ledger/data/mock/mock_generators.dart';
 import 'package:ledger/data/repositories/generator_repository.dart';
+import 'package:ledger/core/providers/booking_provider.dart';
+import 'package:ledger/data/repositories/booking_repository.dart';
+import 'package:ledger/shared/models/booking.dart';
 import 'package:ledger/features/generators/screens/generators_directory_screen.dart';
 import 'package:ledger/features/generators/widgets/inventory_group_section.dart';
 import 'package:ledger/shared/widgets/floating_search_fab.dart';
@@ -194,6 +197,96 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'GeneratorsDirectoryScreen cross-references date filter with bookings and filters booked gensets',
+    (tester) async {
+      final fakeBookingRepo = _FakeBookingRepository();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            generatorRepositoryProvider.overrideWithValue(
+              _FakeGeneratorRepository(),
+            ),
+            bookingRepositoryProvider.overrideWithValue(fakeBookingRepo),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: GeneratorsDirectoryScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap the date filter pill to open date picker
+      await tester.tap(find.text('All Dates'));
+      await tester.pumpAndSettle();
+
+      // Pick date by tapping OK in dialog
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      // Booked badge appears on booked genset, FREE badge appears on free gensets
+      expect(find.text('BOOKED'), findsWidgets);
+      expect(find.text('FREE'), findsWidgets);
+
+      // Open Filter & Sort sheet
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+
+      // Select 'Booked' chip
+      await tester.tap(find.text('Booked'));
+      await tester.pump();
+
+      // Tap APPLY
+      await tester.tap(find.text('APPLY'));
+      await tester.pumpAndSettle();
+
+      // Verify booked generator is visible and free ones are filtered out
+      expect(find.text('GEN-100KVA-02'), findsOneWidget);
+      expect(find.text('GEN-100KVA-6R-01'), findsNothing);
+
+      // Open Filter & Sort sheet and select 'Free'
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Free'));
+      await tester.pump();
+
+      await tester.tap(find.text('APPLY'));
+      await tester.pumpAndSettle();
+
+      // Verify free generator is visible and booked one is filtered out
+      expect(find.text('GEN-100KVA-6R-01'), findsOneWidget);
+      expect(find.text('GEN-100KVA-02'), findsNothing);
+    },
+  );
+}
+
+class _FakeBookingRepository extends BookingRepository {
+  @override
+  Future<List<Booking>> getCalendarDayBookings(String date) async {
+    return [
+      Booking(
+        id: 'BK-001',
+        vendorId: 'VEN-001',
+        vendorName: 'Test Vendor',
+        generatorId: 'GEN-100KVA-02',
+        capacity: '100 kVA',
+        date: DateTime.parse(date),
+        status: 'confirmed',
+        items: [
+          BookingItem(
+            generatorId: 'GEN-100KVA-02',
+            startDt: date,
+            itemStatus: 'confirmed',
+            isEmergency: false,
+            remarks: '',
+          ),
+        ],
+      ),
+    ];
+  }
 }
 
 class _FakeGeneratorRepository extends GeneratorRepository {

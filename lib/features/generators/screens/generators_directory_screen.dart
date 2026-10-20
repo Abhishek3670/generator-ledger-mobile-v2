@@ -19,6 +19,7 @@ import '../modals/edit_generator_modal.dart';
 import '../modals/generator_detail_modal.dart';
 import '../widgets/generator_action_menu.dart';
 import '../providers/generators_provider.dart';
+import '../../../core/providers/booking_provider.dart';
 import '../../../shared/widgets/destructive_confirmation_dialog.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../../core/routing/app_router.dart';
@@ -313,9 +314,8 @@ class _GeneratorsDirectoryScreenState
         _selectedDate = picked;
         _dateController.text = DateFormat('dd-MM-yyyy').format(picked);
       });
-      ref.read(generatorProvider.notifier).loadGenerators(
-        date: DateFormat('yyyy-MM-dd').format(picked),
-      );
+      final dateStr = DateFormat('yyyy-MM-dd').format(picked);
+      ref.invalidate(calendarDayBookingsProvider(dateStr));
     }
   }
 
@@ -425,7 +425,43 @@ class _GeneratorsDirectoryScreenState
   Widget build(BuildContext context) {
     final generatorsAsync = ref.watch(generatorProvider);
     final connectivity = ref.watch(connectivityProvider);
-    final generators = generatorsAsync.valueOrNull ?? [];
+    final baseGenerators = generatorsAsync.valueOrNull ?? [];
+
+    final dateStr = _selectedDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+        : null;
+
+    final dayBookingsAsync = dateStr != null
+        ? ref.watch(calendarDayBookingsProvider(dateStr))
+        : null;
+
+    final bookedGenIds = <String>{};
+    if (dayBookingsAsync?.hasValue == true) {
+      for (final booking in dayBookingsAsync!.value!) {
+        if (booking.generatorId.isNotEmpty) {
+          bookedGenIds.add(booking.generatorId);
+        }
+        for (final item in booking.items) {
+          if (item.generatorId.isNotEmpty) {
+            bookedGenIds.add(item.generatorId);
+          }
+        }
+      }
+    }
+
+    final generators = baseGenerators.map((gen) {
+      if (_selectedDate == null) {
+        return gen;
+      }
+      final isBooked = bookedGenIds.contains(gen.id);
+      return gen.copyWith(
+        bookingStatus: isBooked ? 'Booked' : 'Free',
+      );
+    }).toList();
+
+    final isDayBookingsLoading = _selectedDate != null &&
+        (dayBookingsAsync?.isLoading ?? false) &&
+        !dayBookingsAsync!.hasValue;
 
     // Detect tab changes to close swipe actions
     try {
@@ -481,6 +517,10 @@ class _GeneratorsDirectoryScreenState
             children: [
             RefreshIndicator(
               onRefresh: () async {
+                if (_selectedDate != null) {
+                  final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+                  ref.invalidate(calendarDayBookingsProvider(dateStr));
+                }
                 await ref.read(generatorProvider.notifier).loadGenerators();
               },
               child: SingleChildScrollView(
@@ -590,7 +630,6 @@ class _GeneratorsDirectoryScreenState
                                       _dateController.clear();
                                       _bookingStatusFilter = 'All';
                                     });
-                                    ref.read(generatorProvider.notifier).loadGenerators();
                                   },
                                   borderRadius: const BorderRadius.horizontal(right: Radius.circular(9999)),
                                   child: const Padding(
@@ -639,23 +678,26 @@ class _GeneratorsDirectoryScreenState
                     ),
                     const SizedBox(height: 24),
 
-                    generatorsAsync.when(
-                      data: (_) => _buildGeneratorContent(
-                        retailerGensets,
-                        permanentGensets,
-                        emergencyGensets,
-                      ),
-                      loading: () => Column(
-                        children: List.generate(3, (index) => const Padding(
-                          padding: EdgeInsets.only(bottom: 16.0),
-                          child: SkeletonCard(height: 120),
-                        )),
-                      ),
-                      error: (error, stack) => ErrorScreen(
-                        message: error.toString(),
-                        onRetry: () => ref.read(generatorProvider.notifier).loadGenerators(),
-                      ),
-                    ),
+                    (generatorsAsync.isLoading || isDayBookingsLoading)
+                        ? Column(
+                            children: List.generate(
+                              3,
+                              (index) => const Padding(
+                                padding: EdgeInsets.only(bottom: 16.0),
+                                child: SkeletonCard(height: 120),
+                              ),
+                            ),
+                          )
+                        : generatorsAsync.hasError
+                            ? ErrorScreen(
+                                message: generatorsAsync.error.toString(),
+                                onRetry: () => ref.read(generatorProvider.notifier).loadGenerators(),
+                              )
+                            : _buildGeneratorContent(
+                                retailerGensets,
+                                permanentGensets,
+                                emergencyGensets,
+                              ),
                   ],
                 ),
               ),
