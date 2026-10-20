@@ -143,6 +143,52 @@ void main() {
     },
   );
 
+  testWidgets(
+    'BookingsDirectoryScreen selects month and year via MonthYearPickerDialog',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bookingRepositoryProvider.overrideWithValue(
+              _FakeBookingRepository(),
+            ),
+            vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: BookingsDirectoryScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open Month & Year Picker Dialog
+      final pickMonthBtn = find.byKey(const ValueKey('btn_pick_month'));
+      expect(pickMonthBtn, findsOneWidget);
+      await tester.tap(pickMonthBtn);
+      await tester.pumpAndSettle();
+
+      // Verify Dialog header
+      expect(find.text('SELECT MONTH & YEAR'), findsOneWidget);
+
+      // Verify year buttons exist
+      expect(find.byKey(const ValueKey('btn_picker_prev_year')), findsOneWidget);
+      expect(find.byKey(const ValueKey('btn_picker_next_year')), findsOneWidget);
+
+      // Tap May (month 5)
+      final mayBtn = find.byKey(const ValueKey('btn_picker_month_5'));
+      expect(mayBtn, findsOneWidget);
+      await tester.tap(mayBtn);
+      await tester.pumpAndSettle();
+
+      // Dialog is closed
+      expect(find.text('SELECT MONTH & YEAR'), findsNothing);
+
+      // Selected month updates to MAY
+      final currentYear = DateTime.now().year;
+      expect(find.text('MAY $currentYear'), findsOneWidget);
+    },
+  );
+
   testWidgets('BookingsDirectoryScreen filters by search text input', (
     tester,
   ) async {

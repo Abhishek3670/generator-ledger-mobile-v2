@@ -18,6 +18,9 @@ class SectionHeader extends StatelessWidget {
   /// Whether to use [AppTypography.displayLarge] (otherwise defaults to [AppTypography.headlineMedium]).
   final bool useDisplayLg;
 
+  /// Optional action widget displayed on the right of the header title row.
+  final Widget? action;
+
   /// Creates a [SectionHeader].
   const SectionHeader({
     super.key,
@@ -25,6 +28,7 @@ class SectionHeader extends StatelessWidget {
     required this.title,
     this.description,
     this.useDisplayLg = false,
+    this.action,
   });
 
   @override
@@ -33,14 +37,32 @@ class SectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          category.toUpperCase(),
-          style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: useDisplayLg ? AppTypography.displayLarge : AppTypography.headlineMedium,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    category.toUpperCase(),
+                    style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    title,
+                    style: useDisplayLg ? AppTypography.displayLarge : AppTypography.headlineMedium,
+                  ),
+                ],
+              ),
+            ),
+            if (action != null) ...[
+              const SizedBox(width: 12),
+              action!,
+            ],
+          ],
         ),
         if (description != null) ...[
           const SizedBox(height: 6),

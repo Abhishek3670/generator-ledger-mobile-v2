@@ -132,188 +132,151 @@ class _BookingsDirectoryScreenState
 
   Widget _buildMonthFilter() {
     final now = DateTime.now();
-    final isCurrentMonth = _selectedMonth != null &&
-        _selectedMonth!.year == now.year &&
-        _selectedMonth!.month == now.month;
     final isAllSelected = _selectedMonth == null;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.modalRadius),
         border: Border.all(color: AppColors.border, width: 1),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Row(
-            children: [
-              IconButton(
-                key: const ValueKey('btn_prev_month'),
-                tooltip: 'Previous month',
-                icon: const Icon(Icons.chevron_left, size: 20),
-                onPressed: () {
-                  setState(() {
-                    final base = _selectedMonth ?? DateTime.now();
-                    _selectedMonth = DateTime(base.year, base.month - 1);
-                  });
-                },
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  foregroundColor: AppColors.primary,
-                  shape: const CircleBorder(
-                    side: BorderSide(color: AppColors.border, width: 1),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  minimumSize: const Size(34, 34),
-                ),
+          IconButton(
+            key: const ValueKey('btn_prev_month'),
+            tooltip: 'Previous month',
+            icon: const Icon(Icons.chevron_left, size: 20),
+            onPressed: () {
+              setState(() {
+                final base = _selectedMonth ?? DateTime.now();
+                _selectedMonth = DateTime(base.year, base.month - 1);
+              });
+            },
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.primary,
+              shape: const CircleBorder(
+                side: BorderSide(color: AppColors.border, width: 1),
               ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: InkWell(
-                  key: const ValueKey('btn_pick_month'),
-                  onTap: () async {
-                    final initial = _selectedMonth ?? DateTime.now();
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: initial,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2035),
-                      helpText: 'SELECT MONTH',
-                      initialDatePickerMode: DatePickerMode.year,
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _selectedMonth = DateTime(picked.year, picked.month);
-                      });
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.calendar_month,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              isAllSelected
-                                  ? 'ALL MONTHS'
-                                  : DateFormat('MMMM yyyy')
-                                      .format(_selectedMonth!)
-                                      .toUpperCase(),
-                              style: AppTypography.title.copyWith(
-                                fontSize: 16,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.arrow_drop_down,
-                          size: 18,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                key: const ValueKey('btn_next_month'),
-                tooltip: 'Next month',
-                icon: const Icon(Icons.chevron_right, size: 20),
-                onPressed: () {
-                  setState(() {
-                    final base = _selectedMonth ?? DateTime.now();
-                    _selectedMonth = DateTime(base.year, base.month + 1);
-                  });
-                },
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  foregroundColor: AppColors.primary,
-                  shape: const CircleBorder(
-                    side: BorderSide(color: AppColors.border, width: 1),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  minimumSize: const Size(34, 34),
-                ),
-              ),
-              const SizedBox(width: 6),
-              InkWell(
-                key: const ValueKey('btn_toggle_all_months'),
-                onTap: () {
-                  setState(() {
-                    if (isAllSelected) {
-                      _selectedMonth = DateTime(now.year, now.month);
-                    } else {
-                      _selectedMonth = null;
-                    }
-                  });
-                },
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isAllSelected ? AppColors.primary : AppColors.surface,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: isAllSelected ? AppColors.primary : AppColors.border,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    'ALL',
-                    style: AppTypography.labelCaps.copyWith(
-                      fontSize: 11,
-                      color: isAllSelected ? Colors.white : AppColors.textSecondary,
-                      fontWeight: isAllSelected ? FontWeight.bold : FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              padding: const EdgeInsets.all(4),
+              minimumSize: const Size(34, 34),
+            ),
           ),
-          if (!isCurrentMonth && !isAllSelected)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: GestureDetector(
-                key: const ValueKey('btn_reset_current_month'),
-                onTap: () {
+          const SizedBox(width: 4),
+          Expanded(
+            child: InkWell(
+              key: const ValueKey('btn_pick_month'),
+              onTap: () async {
+                final initial = _selectedMonth ?? DateTime.now();
+                final picked = await showDialog<DateTime>(
+                  context: context,
+                  builder: (context) => _MonthYearPickerDialog(
+                    initialDate: initial,
+                  ),
+                );
+                if (picked != null) {
                   setState(() {
-                    _selectedMonth = DateTime(now.year, now.month);
+                    _selectedMonth = DateTime(picked.year, picked.month);
                   });
-                },
+                }
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.replay, size: 12, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(
-                      'RESET TO CURRENT MONTH',
-                      style: AppTypography.labelCaps.copyWith(
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.bold,
+                    const Icon(
+                      Icons.calendar_month,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          isAllSelected
+                              ? 'ALL MONTHS'
+                              : DateFormat('MMMM yyyy')
+                                  .format(_selectedMonth!)
+                                  .toUpperCase(),
+                          style: AppTypography.title.copyWith(
+                            fontSize: 16,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.arrow_drop_down,
+                      size: 18,
+                      color: AppColors.textSecondary,
                     ),
                   ],
                 ),
               ),
             ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            key: const ValueKey('btn_next_month'),
+            tooltip: 'Next month',
+            icon: const Icon(Icons.chevron_right, size: 20),
+            onPressed: () {
+              setState(() {
+                final base = _selectedMonth ?? DateTime.now();
+                _selectedMonth = DateTime(base.year, base.month + 1);
+              });
+            },
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.primary,
+              shape: const CircleBorder(
+                side: BorderSide(color: AppColors.border, width: 1),
+              ),
+              padding: const EdgeInsets.all(4),
+              minimumSize: const Size(34, 34),
+            ),
+          ),
+          const SizedBox(width: 6),
+          InkWell(
+            key: const ValueKey('btn_toggle_all_months'),
+            onTap: () {
+              setState(() {
+                if (isAllSelected) {
+                  _selectedMonth = DateTime(now.year, now.month);
+                } else {
+                  _selectedMonth = null;
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isAllSelected ? AppColors.primary : AppColors.surface,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: isAllSelected ? AppColors.primary : AppColors.border,
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'ALL',
+                style: AppTypography.labelCaps.copyWith(
+                  fontSize: 11,
+                  color: isAllSelected ? Colors.white : AppColors.textSecondary,
+                  fontWeight: isAllSelected ? FontWeight.bold : FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -491,11 +454,35 @@ class _BookingsDirectoryScreenState
                       ),
                     ],
                     // Page Header
-                    const SectionHeader(
+                    SectionHeader(
                       category: 'DIRECTORY',
                       title: 'Bookings by Vendor',
                       description:
                           'Review active reservations and manage vendor schedules.',
+                      action: IconButton(
+                        key: const ValueKey('btn_reset_current_month'),
+                        tooltip: 'Reset to current month',
+                        icon: const Icon(Icons.refresh, size: 20),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
+                          shape: const CircleBorder(
+                            side: BorderSide(color: AppColors.border, width: 1),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          minimumSize: const Size(36, 36),
+                        ),
+                        onPressed: () async {
+                          final now = DateTime.now();
+                          setState(() {
+                            _selectedMonth = DateTime(now.year, now.month);
+                          });
+                          ref.invalidate(allVendorBookingsProvider);
+                          await ref
+                              .read(allVendorBookingsProvider.notifier)
+                              .loadBookings();
+                        },
+                      ),
                     ),
                     const SizedBox(height: 16),
                     _buildMonthFilter(),
@@ -626,6 +613,205 @@ class _BookingsDirectoryScreenState
           ],
         ),
       ),
+      ),
+    );
+  }
+}
+
+/// Modal dialog allowing the user to select month and year without date picking.
+class _MonthYearPickerDialog extends StatefulWidget {
+  final DateTime initialDate;
+
+  const _MonthYearPickerDialog({required this.initialDate});
+
+  @override
+  State<_MonthYearPickerDialog> createState() => _MonthYearPickerDialogState();
+}
+
+class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
+  late int _selectedYear;
+  late int _selectedMonth;
+
+  static const _months = [
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedYear = widget.initialDate.year;
+    _selectedMonth = widget.initialDate.month;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.structuralRadius),
+        side: const BorderSide(color: AppColors.border, width: 1),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header: Title & Close Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'SELECT MONTH & YEAR',
+                  style: AppTypography.labelCaps.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('btn_picker_close'),
+                  icon: const Icon(
+                    Icons.close,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Year Navigator: [<] 2026 [>]
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius:
+                    BorderRadius.circular(AppDimensions.functionalRadius),
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    key: const ValueKey('btn_picker_prev_year'),
+                    icon: const Icon(
+                      Icons.chevron_left,
+                      size: 22,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _selectedYear--;
+                      });
+                    },
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(),
+                  ),
+                  Text(
+                    '$_selectedYear',
+                    style: AppTypography.title.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  IconButton(
+                    key: const ValueKey('btn_picker_next_year'),
+                    icon: const Icon(
+                      Icons.chevron_right,
+                      size: 22,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _selectedYear++;
+                      });
+                    },
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Month Grid: 4 columns x 3 rows
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 12,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 1.6,
+              ),
+              itemBuilder: (context, index) {
+                final monthNum = index + 1;
+                final isSelected = monthNum == _selectedMonth &&
+                    _selectedYear == widget.initialDate.year;
+                final isCurrentCalendarMonth =
+                    monthNum == now.month && _selectedYear == now.year;
+
+                return InkWell(
+                  key: ValueKey('btn_picker_month_$monthNum'),
+                  onTap: () {
+                    Navigator.of(context)
+                        .pop(DateTime(_selectedYear, monthNum));
+                  },
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.functionalRadius),
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primary : Colors.white,
+                      borderRadius: BorderRadius.circular(
+                          AppDimensions.functionalRadius),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isCurrentCalendarMonth
+                                ? AppColors.primary
+                                : AppColors.border),
+                        width: isCurrentCalendarMonth && !isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Text(
+                      _months[index],
+                      style: AppTypography.labelCaps.copyWith(
+                        fontSize: 12,
+                        color: isSelected
+                            ? Colors.white
+                            : (isCurrentCalendarMonth
+                                ? AppColors.primary
+                                : AppColors.textPrimary),
+                        fontWeight: isSelected || isCurrentCalendarMonth
+                            ? FontWeight.bold
+                            : FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
