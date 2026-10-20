@@ -6,10 +6,12 @@ import 'app.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/haptic_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/token_storage.dart';
 import 'core/services/user_preferences_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await TokenStorage().clearSessionIfEphemeral();
   await HapticService.initialize();
   await NotificationService().initialize();
   final prefs = await SharedPreferences.getInstance();

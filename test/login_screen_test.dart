@@ -39,6 +39,30 @@ void main() {
     expect(find.text('Sign In'), findsOneWidget);
   });
 
+  testWidgets('LoginScreen renders Stay logged in checkbox default checked and togglable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_loginScreenApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Stay logged in'), findsOneWidget);
+    final checkboxFinder = find.byKey(const Key('checkbox_stay_logged_in'));
+    expect(checkboxFinder, findsOneWidget);
+    expect(tester.widget<Checkbox>(checkboxFinder).value, isTrue);
+
+    // Toggle by tapping "Stay logged in"
+    await tester.tap(find.text('Stay logged in'));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<Checkbox>(checkboxFinder).value, isFalse);
+
+    // Toggle back
+    await tester.tap(find.text('Stay logged in'));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<Checkbox>(checkboxFinder).value, isTrue);
+  });
+
   testWidgets('LoginScreen Sign In button triggers validation', (tester) async {
     await tester.pumpWidget(_loginScreenApp());
 
@@ -90,6 +114,34 @@ void main() {
 
       expect(repository.username, 'owner');
       expect(repository.password, 'Qwerty@345');
+      expect(repository.stayLoggedIn, isTrue);
+      expect(find.text('Dashboard'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'LoginScreen passes stayLoggedIn false to repository when unchecked',
+    (tester) async {
+      final repository = _FakeAuthRepository();
+      await tester.pumpWidget(_loginScreenApp(repository: repository));
+      await tester.pumpAndSettle();
+
+      // Uncheck "Stay logged in"
+      await tester.tap(find.text('Stay logged in'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('input_username')), 'owner');
+      await tester.enterText(
+        find.byKey(const Key('input_password')),
+        'Qwerty@345',
+      );
+      await tester.tap(find.text('Sign In'));
+      await tester.pump();
+
+      expect(repository.stayLoggedIn, isFalse);
+
+      repository.completeLogin();
+      await tester.pumpAndSettle();
       expect(find.text('Dashboard'), findsOneWidget);
     },
   );
@@ -141,6 +193,7 @@ class _FakeAuthRepository implements AuthRepository {
   final _loginCompleter = Completer<LoginResponse>();
   String? username;
   String? password;
+  bool? stayLoggedIn;
 
   void completeLogin() {
     _loginCompleter.complete(
@@ -158,14 +211,22 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<LoginResponse> login(String username, String password) {
+  Future<LoginResponse> login(
+    String username,
+    String password, {
+    bool stayLoggedIn = true,
+  }) {
     this.username = username;
     this.password = password;
+    this.stayLoggedIn = stayLoggedIn;
     if (error != null) {
       return Future<LoginResponse>.error(error!);
     }
     return _loginCompleter.future;
   }
+
+  @override
+  Future<bool> getStayLoggedIn() async => stayLoggedIn ?? true;
 
   @override
   Future<void> logout() async {}

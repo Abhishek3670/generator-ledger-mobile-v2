@@ -23,6 +23,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _errorMessage;
+  bool _stayLoggedIn = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStayLoggedIn();
+  }
+
+  Future<void> _loadStayLoggedIn() async {
+    final stay = await AppRouter.tokenStorage.getStayLoggedIn();
+    if (mounted) {
+      setState(() => _stayLoggedIn = stay);
+    }
+  }
 
   @override
   void dispose() {
@@ -37,7 +51,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       try {
         await ref
             .read(authProvider.notifier)
-            .login(_usernameController.text.trim(), _passwordController.text);
+            .login(
+              _usernameController.text.trim(),
+              _passwordController.text,
+              stayLoggedIn: _stayLoggedIn,
+            );
         AppRouter.refreshAuthState();
         if (mounted) {
           final hasSplash = GoRouter.of(context).configuration.routes.any((r) {
@@ -154,6 +172,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           id: 'password',
                           obscureText: true,
                           controller: _passwordController,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Stay logged in Checkbox
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _stayLoggedIn = !_stayLoggedIn;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.functionalRadius,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: Checkbox(
+                                    key: const Key('checkbox_stay_logged_in'),
+                                    value: _stayLoggedIn,
+                                    activeColor: AppColors.primary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _stayLoggedIn = val ?? true;
+                                      });
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Stay logged in',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        
                         ),
                         if (_errorMessage != null) ...[
                           const SizedBox(height: 16),

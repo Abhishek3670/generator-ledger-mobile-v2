@@ -54,6 +54,9 @@ class TokenStorage {
   /// Key for cached user JSON used for session restoration on app start.
   static const String userKey = 'cached_user';
 
+  /// Key for "Stay logged in" flag.
+  static const String stayLoggedInKey = 'stay_logged_in';
+
   final TokenStorageBackend _backend;
 
   // ── Access token ──────────────────────────────────────────────────────────
@@ -96,6 +99,33 @@ class TokenStorage {
 
   Future<void> deleteUserJson() {
     return _backend.delete(key: userKey);
+  }
+
+  // ── Stay logged in preference ─────────────────────────────────────────────
+
+  Future<void> saveStayLoggedIn(bool stayLoggedIn) {
+    return _backend.write(
+      key: stayLoggedInKey,
+      value: stayLoggedIn ? 'true' : 'false',
+    );
+  }
+
+  Future<bool> getStayLoggedIn() async {
+    final value = await _backend.read(key: stayLoggedInKey);
+    // Defaults to true for mobile user convenience
+    return value == null || value == 'true';
+  }
+
+  Future<void> deleteStayLoggedIn() {
+    return _backend.delete(key: stayLoggedInKey);
+  }
+
+  /// Clears stored tokens on fresh startup if user did not choose to stay logged in.
+  Future<void> clearSessionIfEphemeral() async {
+    final stay = await getStayLoggedIn();
+    if (!stay) {
+      await clearAll();
+    }
   }
 
   // ── Bulk operations ───────────────────────────────────────────────────────

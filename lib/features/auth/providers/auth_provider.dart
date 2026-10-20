@@ -40,6 +40,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     // Guard: if another call already moved state away from loading, bail out.
     if (!mounted) return;
 
+    final stayLoggedIn = await _authRepository.getStayLoggedIn();
+    if (!stayLoggedIn) {
+      if (mounted) state = const AsyncValue.data(null);
+      return;
+    }
+
     final hasToken = await _authRepository.isAuthenticated();
     if (!hasToken) {
       if (mounted) state = const AsyncValue.data(null);
@@ -127,10 +133,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
   // ── Public interface ──────────────────────────────────────────────────────
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(
+    String username,
+    String password, {
+    bool stayLoggedIn = true,
+  }) async {
     state = const AsyncValue.loading();
     try {
-      final response = await _authRepository.login(username, password);
+      final response = await _authRepository.login(
+        username,
+        password,
+        stayLoggedIn: stayLoggedIn,
+      );
       state = AsyncValue.data(response.user);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);

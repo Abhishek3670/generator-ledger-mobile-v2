@@ -488,9 +488,16 @@ class _TestAuthNotifier extends AuthNotifier {
 
 class _NoopAuthRepository implements AuthRepository {
   @override
-  Future<LoginResponse> login(String username, String password) {
+  Future<LoginResponse> login(
+    String username,
+    String password, {
+    bool stayLoggedIn = true,
+  }) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<bool> getStayLoggedIn() async => true;
 
   @override
   Future<void> logout() async {}
