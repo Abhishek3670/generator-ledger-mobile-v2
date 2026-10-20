@@ -144,7 +144,7 @@ void main() {
   );
 
   testWidgets(
-    'BookingsDirectoryScreen selects month and year via MonthYearPickerDialog',
+    'BookingsDirectoryScreen selects month range via MonthYearRangePickerDialog',
     (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -161,31 +161,50 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Open Month & Year Picker Dialog
+      // Open Month Range Picker Dialog
       final pickMonthBtn = find.byKey(const ValueKey('btn_pick_month'));
       expect(pickMonthBtn, findsOneWidget);
       await tester.tap(pickMonthBtn);
       await tester.pumpAndSettle();
 
-      // Verify Dialog header
-      expect(find.text('SELECT MONTH & YEAR'), findsOneWidget);
+      // Verify Dialog header and range tabs
+      expect(find.text('SELECT MONTH RANGE'), findsOneWidget);
+      expect(find.byKey(const ValueKey('tab_range_from')), findsOneWidget);
+      expect(find.byKey(const ValueKey('tab_range_to')), findsOneWidget);
 
-      // Verify year buttons exist
-      expect(find.byKey(const ValueKey('btn_picker_prev_year')), findsOneWidget);
-      expect(find.byKey(const ValueKey('btn_picker_next_year')), findsOneWidget);
+      // Verify presets exist
+      expect(find.text('THIS MONTH'), findsOneWidget);
+      expect(find.text('NEXT 3 MONTHS'), findsOneWidget);
 
-      // Tap May (month 5)
-      final mayBtn = find.byKey(const ValueKey('btn_picker_month_5'));
-      expect(mayBtn, findsOneWidget);
-      await tester.tap(mayBtn);
+      // Tap April (month 4) for FROM
+      final aprBtn = find.byKey(const ValueKey('btn_picker_month_4'));
+      expect(aprBtn, findsOneWidget);
+      await tester.tap(aprBtn);
+      await tester.pumpAndSettle();
+
+      // Tap June (month 6) for TO
+      final junBtn = find.byKey(const ValueKey('btn_picker_month_6'));
+      expect(junBtn, findsOneWidget);
+      await tester.tap(junBtn);
+      await tester.pumpAndSettle();
+
+      // Tap APPLY RANGE button
+      final applyBtn = find.byKey(const ValueKey('btn_apply_range'));
+      expect(applyBtn, findsOneWidget);
+      await tester.ensureVisible(applyBtn);
+      await tester.tap(applyBtn);
       await tester.pumpAndSettle();
 
       // Dialog is closed
-      expect(find.text('SELECT MONTH & YEAR'), findsNothing);
+      expect(find.text('SELECT MONTH RANGE'), findsNothing);
 
-      // Selected month updates to MAY
+      // Selected month range updates to APR – JUN <currentYear>
       final currentYear = DateTime.now().year;
-      expect(find.text('MAY $currentYear'), findsOneWidget);
+      expect(find.text('APR – JUN $currentYear'), findsOneWidget);
+
+      // Vendors with bookings in April/May (Abraar, Ankit Singh) appear
+      expect(find.text('Abraar'), findsAtLeastNWidgets(1));
+      expect(find.text('Ankit Singh'), findsAtLeastNWidgets(1));
     },
   );
 

@@ -37,7 +37,9 @@ class _BookingsDirectoryScreenState
     extends ConsumerState<BookingsDirectoryScreen> with RouteAware {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  DateTime? _selectedMonth;
+  DateTime? _rangeStartMonth;
+  DateTime? _rangeEndMonth;
+
   bool _showAddModal = false;
   bool _showCancelModal = false;
   MockBooking? _editingBooking;
@@ -59,7 +61,8 @@ class _BookingsDirectoryScreenState
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _selectedMonth = DateTime(now.year, now.month);
+    _rangeStartMonth = DateTime(now.year, now.month);
+    _rangeEndMonth = DateTime(now.year, now.month);
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -88,17 +91,33 @@ class _BookingsDirectoryScreenState
     });
   }
 
-  bool _matchesMonth(Booking booking) {
-    if (_selectedMonth == null) return true;
+  String _formatRangeLabel(DateTime start, DateTime end) {
+    if (start.year == end.year && start.month == end.month) {
+      return DateFormat('MMMM yyyy').format(start).toUpperCase();
+    }
+    if (start.year == end.year) {
+      final startStr = DateFormat('MMM').format(start);
+      final endStr = DateFormat('MMM yyyy').format(end);
+      return '$startStr – $endStr'.toUpperCase();
+    }
+    final startStr = DateFormat('MMM yyyy').format(start);
+    final endStr = DateFormat('MMM yyyy').format(end);
+    return '$startStr – $endStr'.toUpperCase();
+  }
 
-    final targetYear = _selectedMonth!.year;
-    final targetMonth = _selectedMonth!.month;
+  bool _matchesMonth(Booking booking) {
+    if (_rangeStartMonth == null || _rangeEndMonth == null) return true;
+
+    final rangeStart =
+        DateTime(_rangeStartMonth!.year, _rangeStartMonth!.month, 1, 0, 0, 0);
+    final rangeEnd = DateTime(
+        _rangeEndMonth!.year, _rangeEndMonth!.month + 1, 0, 23, 59, 59, 999);
 
     if (booking.items.isNotEmpty) {
       return booking.items.any((item) {
         final itemDate = DateTime.tryParse(item.date);
         if (itemDate != null) {
-          return itemDate.year == targetYear && itemDate.month == targetMonth;
+          return !itemDate.isBefore(rangeStart) && !itemDate.isAfter(rangeEnd);
         }
         return false;
       });
@@ -106,22 +125,25 @@ class _BookingsDirectoryScreenState
 
     final start = booking.startDate;
     final end = booking.endDate;
-    final monthStart = DateTime(targetYear, targetMonth, 1);
-    final monthEnd = DateTime(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
-
-    return !start.isAfter(monthEnd) && !end.isBefore(monthStart);
+    return !start.isAfter(rangeEnd) && !end.isBefore(rangeStart);
   }
 
   Booking _filterBookingItemsToSelectedMonth(Booking booking) {
-    if (_selectedMonth == null || booking.items.isEmpty) return booking;
+    if (_rangeStartMonth == null ||
+        _rangeEndMonth == null ||
+        booking.items.isEmpty) {
+      return booking;
+    }
 
-    final targetYear = _selectedMonth!.year;
-    final targetMonth = _selectedMonth!.month;
+    final rangeStart =
+        DateTime(_rangeStartMonth!.year, _rangeStartMonth!.month, 1, 0, 0, 0);
+    final rangeEnd = DateTime(
+        _rangeEndMonth!.year, _rangeEndMonth!.month + 1, 0, 23, 59, 59, 999);
 
     final matchingItems = booking.items.where((item) {
       final itemDate = DateTime.tryParse(item.date);
       if (itemDate != null) {
-        return itemDate.year == targetYear && itemDate.month == targetMonth;
+        return !itemDate.isBefore(rangeStart) && !itemDate.isAfter(rangeEnd);
       }
       return false;
     }).toList();
@@ -132,7 +154,7 @@ class _BookingsDirectoryScreenState
 
   Widget _buildMonthFilter() {
     final now = DateTime.now();
-    final isAllSelected = _selectedMonth == null;
+    final isAllSelected = _rangeStartMonth == null || _rangeEndMonth == null;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -149,8 +171,10 @@ class _BookingsDirectoryScreenState
             icon: const Icon(Icons.chevron_left, size: 20),
             onPressed: () {
               setState(() {
-                final base = _selectedMonth ?? DateTime.now();
-                _selectedMonth = DateTime(base.year, base.month - 1);
+                final start = _rangeStartMonth ?? now;
+                final end = _rangeEndMonth ?? now;
+                _rangeStartMonth = DateTime(start.year, start.month - 1);
+                _rangeEndMonth = DateTime(end.year, end.month - 1);
               });
             },
             style: IconButton.styleFrom(
@@ -168,22 +192,30 @@ class _BookingsDirectoryScreenState
             child: InkWell(
               key: const ValueKey('btn_pick_month'),
               onTap: () async {
-                final initial = _selectedMonth ?? DateTime.now();
-                final picked = await showDialog<DateTime>(
+                final currentStart =
+                    _rangeStartMonth ?? DateTime(now.year, now.month);
+                final currentEnd =
+                    _rangeEndMonth ?? DateTime(now.year, now.month);
+                final picked = await showDialog<DateTimeRange>(
                   context: context,
-                  builder: (context) => _MonthYearPickerDialog(
-                    initialDate: initial,
+                  builder: (context) => _MonthYearRangePickerDialog(
+                    initialRange:
+                        DateTimeRange(start: currentStart, end: currentEnd),
                   ),
                 );
                 if (picked != null) {
                   setState(() {
-                    _selectedMonth = DateTime(picked.year, picked.month);
+                    _rangeStartMonth =
+                        DateTime(picked.start.year, picked.start.month);
+                    _rangeEndMonth =
+                        DateTime(picked.end.year, picked.end.month);
                   });
                 }
               },
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
@@ -200,9 +232,10 @@ class _BookingsDirectoryScreenState
                         child: Text(
                           isAllSelected
                               ? 'ALL MONTHS'
-                              : DateFormat('MMMM yyyy')
-                                  .format(_selectedMonth!)
-                                  .toUpperCase(),
+                              : _formatRangeLabel(
+                                  _rangeStartMonth!,
+                                  _rangeEndMonth!,
+                                ),
                           style: AppTypography.title.copyWith(
                             fontSize: 16,
                             color: AppColors.primary,
@@ -230,8 +263,10 @@ class _BookingsDirectoryScreenState
             icon: const Icon(Icons.chevron_right, size: 20),
             onPressed: () {
               setState(() {
-                final base = _selectedMonth ?? DateTime.now();
-                _selectedMonth = DateTime(base.year, base.month + 1);
+                final start = _rangeStartMonth ?? now;
+                final end = _rangeEndMonth ?? now;
+                _rangeStartMonth = DateTime(start.year, start.month + 1);
+                _rangeEndMonth = DateTime(end.year, end.month + 1);
               });
             },
             style: IconButton.styleFrom(
@@ -250,20 +285,24 @@ class _BookingsDirectoryScreenState
             onTap: () {
               setState(() {
                 if (isAllSelected) {
-                  _selectedMonth = DateTime(now.year, now.month);
+                  _rangeStartMonth = DateTime(now.year, now.month);
+                  _rangeEndMonth = DateTime(now.year, now.month);
                 } else {
-                  _selectedMonth = null;
+                  _rangeStartMonth = null;
+                  _rangeEndMonth = null;
                 }
               });
             },
             borderRadius: BorderRadius.circular(999),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: isAllSelected ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: isAllSelected ? AppColors.primary : AppColors.border,
+                  color:
+                      isAllSelected ? AppColors.primary : AppColors.border,
                   width: 1,
                 ),
               ),
@@ -271,8 +310,10 @@ class _BookingsDirectoryScreenState
                 'ALL',
                 style: AppTypography.labelCaps.copyWith(
                   fontSize: 11,
-                  color: isAllSelected ? Colors.white : AppColors.textSecondary,
-                  fontWeight: isAllSelected ? FontWeight.bold : FontWeight.w600,
+                  color:
+                      isAllSelected ? Colors.white : AppColors.textSecondary,
+                  fontWeight:
+                      isAllSelected ? FontWeight.bold : FontWeight.w600,
                 ),
               ),
             ),
@@ -371,8 +412,8 @@ class _BookingsDirectoryScreenState
           child: Text(
             _searchQuery.isNotEmpty
                 ? 'No matching bookings found.'
-                : (_selectedMonth != null
-                    ? 'No bookings found for ${DateFormat('MMMM yyyy').format(_selectedMonth!)}.'
+                : (_rangeStartMonth != null && _rangeEndMonth != null
+                    ? 'No bookings found for ${_formatRangeLabel(_rangeStartMonth!, _rangeEndMonth!)}.'
                     : 'No bookings found.'),
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
@@ -475,7 +516,8 @@ class _BookingsDirectoryScreenState
                         onPressed: () async {
                           final now = DateTime.now();
                           setState(() {
-                            _selectedMonth = DateTime(now.year, now.month);
+                            _rangeStartMonth = DateTime(now.year, now.month);
+                            _rangeEndMonth = DateTime(now.year, now.month);
                           });
                           ref.invalidate(allVendorBookingsProvider);
                           await ref
@@ -618,19 +660,25 @@ class _BookingsDirectoryScreenState
   }
 }
 
-/// Modal dialog allowing the user to select month and year without date picking.
-class _MonthYearPickerDialog extends StatefulWidget {
-  final DateTime initialDate;
+enum _RangeTab { from, to }
 
-  const _MonthYearPickerDialog({required this.initialDate});
+/// Modal dialog allowing the user to select a month range without date picking.
+class _MonthYearRangePickerDialog extends StatefulWidget {
+  final DateTimeRange initialRange;
+
+  const _MonthYearRangePickerDialog({required this.initialRange});
 
   @override
-  State<_MonthYearPickerDialog> createState() => _MonthYearPickerDialogState();
+  State<_MonthYearRangePickerDialog> createState() =>
+      _MonthYearRangePickerDialogState();
 }
 
-class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
-  late int _selectedYear;
-  late int _selectedMonth;
+class _MonthYearRangePickerDialogState
+    extends State<_MonthYearRangePickerDialog> {
+  late DateTime _startMonth;
+  late DateTime _endMonth;
+  late int _displayedYear;
+  _RangeTab _activeTab = _RangeTab.from;
 
   static const _months = [
     'JAN',
@@ -650,8 +698,56 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedYear = widget.initialDate.year;
-    _selectedMonth = widget.initialDate.month;
+    _startMonth = DateTime(
+      widget.initialRange.start.year,
+      widget.initialRange.start.month,
+    );
+    _endMonth = DateTime(
+      widget.initialRange.end.year,
+      widget.initialRange.end.month,
+    );
+    _displayedYear = _startMonth.year;
+  }
+
+  void _onMonthTapped(int monthNum) {
+    final tappedDate = DateTime(_displayedYear, monthNum);
+    setState(() {
+      if (_activeTab == _RangeTab.from) {
+        _startMonth = tappedDate;
+        if (_startMonth.isAfter(_endMonth)) {
+          _endMonth = _startMonth;
+        }
+        _activeTab = _RangeTab.to;
+      } else {
+        _endMonth = tappedDate;
+        if (_endMonth.isBefore(_startMonth)) {
+          _startMonth = _endMonth;
+        }
+      }
+    });
+  }
+
+  Widget _buildPresetChip(String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.labelCaps.copyWith(
+            fontSize: 10,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -664,153 +760,391 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
         borderRadius: BorderRadius.circular(AppDimensions.structuralRadius),
         side: const BorderSide(color: AppColors.border, width: 1),
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header: Title & Close Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'SELECT MONTH & YEAR',
-                  style: AppTypography.labelCaps.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  key: const ValueKey('btn_picker_close'),
-                  icon: const Icon(
-                    Icons.close,
-                    size: 20,
-                    color: AppColors.textSecondary,
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Year Navigator: [<] 2026 [>]
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius:
-                    BorderRadius.circular(AppDimensions.functionalRadius),
-                border: Border.all(color: AppColors.border, width: 1),
-              ),
-              child: Row(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header: Title & Close Button
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    key: const ValueKey('btn_picker_prev_year'),
-                    icon: const Icon(
-                      Icons.chevron_left,
-                      size: 22,
-                      color: AppColors.primary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedYear--;
-                      });
-                    },
-                    padding: const EdgeInsets.all(4),
-                    constraints: const BoxConstraints(),
-                  ),
                   Text(
-                    '$_selectedYear',
-                    style: AppTypography.title.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+                    'SELECT MONTH RANGE',
+                    style: AppTypography.labelCaps.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   IconButton(
-                    key: const ValueKey('btn_picker_next_year'),
+                    key: const ValueKey('btn_picker_close'),
                     icon: const Icon(
-                      Icons.chevron_right,
-                      size: 22,
-                      color: AppColors.primary,
+                      Icons.close,
+                      size: 20,
+                      color: AppColors.textSecondary,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedYear++;
-                      });
-                    },
-                    padding: const EdgeInsets.all(4),
+                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 10),
 
-            // Month Grid: 4 columns x 3 rows
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 12,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1.6,
+              // Presets Row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildPresetChip('THIS MONTH', () {
+                      setState(() {
+                        _startMonth = DateTime(now.year, now.month);
+                        _endMonth = DateTime(now.year, now.month);
+                        _displayedYear = now.year;
+                        _activeTab = _RangeTab.from;
+                      });
+                    }),
+                    const SizedBox(width: 6),
+                    _buildPresetChip('NEXT 3 MONTHS', () {
+                      setState(() {
+                        _startMonth = DateTime(now.year, now.month);
+                        _endMonth = DateTime(now.year, now.month + 2);
+                        _displayedYear = now.year;
+                        _activeTab = _RangeTab.to;
+                      });
+                    }),
+                    const SizedBox(width: 6),
+                    _buildPresetChip('NEXT 6 MONTHS', () {
+                      setState(() {
+                        _startMonth = DateTime(now.year, now.month);
+                        _endMonth = DateTime(now.year, now.month + 5);
+                        _displayedYear = now.year;
+                        _activeTab = _RangeTab.to;
+                      });
+                    }),
+                    const SizedBox(width: 6),
+                    _buildPresetChip('FULL YEAR', () {
+                      setState(() {
+                        _startMonth = DateTime(_displayedYear, 1);
+                        _endMonth = DateTime(_displayedYear, 12);
+                        _activeTab = _RangeTab.to;
+                      });
+                    }),
+                  ],
+                ),
               ),
-              itemBuilder: (context, index) {
-                final monthNum = index + 1;
-                final isSelected = monthNum == _selectedMonth &&
-                    _selectedYear == widget.initialDate.year;
-                final isCurrentCalendarMonth =
-                    monthNum == now.month && _selectedYear == now.year;
+              const SizedBox(height: 12),
 
-                return InkWell(
-                  key: ValueKey('btn_picker_month_$monthNum'),
-                  onTap: () {
-                    Navigator.of(context)
-                        .pop(DateTime(_selectedYear, monthNum));
-                  },
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.functionalRadius),
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : Colors.white,
-                      borderRadius: BorderRadius.circular(
-                          AppDimensions.functionalRadius),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : (isCurrentCalendarMonth
+              // FROM & TO Selection Cards
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      key: const ValueKey('tab_range_from'),
+                      onTap: () {
+                        setState(() {
+                          _activeTab = _RangeTab.from;
+                          _displayedYear = _startMonth.year;
+                        });
+                      },
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.functionalRadius),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: _activeTab == _RangeTab.from
+                              ? AppColors.surface
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(
+                              AppDimensions.functionalRadius),
+                          border: Border.all(
+                            color: _activeTab == _RangeTab.from
                                 ? AppColors.primary
-                                : AppColors.border),
-                        width: isCurrentCalendarMonth && !isSelected ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Text(
-                      _months[index],
-                      style: AppTypography.labelCaps.copyWith(
-                        fontSize: 12,
-                        color: isSelected
-                            ? Colors.white
-                            : (isCurrentCalendarMonth
-                                ? AppColors.primary
-                                : AppColors.textPrimary),
-                        fontWeight: isSelected || isCurrentCalendarMonth
-                            ? FontWeight.bold
-                            : FontWeight.w600,
+                                : AppColors.border,
+                            width: _activeTab == _RangeTab.from ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'FROM',
+                              style: AppTypography.labelCaps.copyWith(
+                                fontSize: 10,
+                                color: _activeTab == _RangeTab.from
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              DateFormat('MMM yyyy')
+                                  .format(_startMonth)
+                                  .toUpperCase(),
+                              style: AppTypography.title.copyWith(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: InkWell(
+                      key: const ValueKey('tab_range_to'),
+                      onTap: () {
+                        setState(() {
+                          _activeTab = _RangeTab.to;
+                          _displayedYear = _endMonth.year;
+                        });
+                      },
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.functionalRadius),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: _activeTab == _RangeTab.to
+                              ? AppColors.surface
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(
+                              AppDimensions.functionalRadius),
+                          border: Border.all(
+                            color: _activeTab == _RangeTab.to
+                                ? AppColors.primary
+                                : AppColors.border,
+                            width: _activeTab == _RangeTab.to ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'TO',
+                              style: AppTypography.labelCaps.copyWith(
+                                fontSize: 10,
+                                color: _activeTab == _RangeTab.to
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              DateFormat('MMM yyyy')
+                                  .format(_endMonth)
+                                  .toUpperCase(),
+                              style: AppTypography.title.copyWith(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Year Navigator: [<] 2026 [>]
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.functionalRadius),
+                  border: Border.all(color: AppColors.border, width: 1),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      key: const ValueKey('btn_picker_prev_year'),
+                      icon: const Icon(
+                        Icons.chevron_left,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _displayedYear--;
+                        });
+                      },
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(),
+                    ),
+                    Text(
+                      '$_displayedYear',
+                      style: AppTypography.title.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    IconButton(
+                      key: const ValueKey('btn_picker_next_year'),
+                      icon: const Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _displayedYear++;
+                        });
+                      },
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Month Grid: 4 columns x 3 rows
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 12,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 6,
+                  crossAxisSpacing: 6,
+                  childAspectRatio: 1.8,
+                ),
+                itemBuilder: (context, index) {
+                  final monthNum = index + 1;
+                  final monthDate = DateTime(_displayedYear, monthNum);
+
+                  final isStart = _startMonth.year == monthDate.year &&
+                      _startMonth.month == monthDate.month;
+                  final isEnd = _endMonth.year == monthDate.year &&
+                      _endMonth.month == monthDate.month;
+                  final isInRange = monthDate.isAfter(_startMonth) &&
+                      monthDate.isBefore(_endMonth);
+                  final isSelected = isStart || isEnd;
+                  final isCurrentCalMonth =
+                      monthDate.year == now.year && monthDate.month == now.month;
+
+                  Color bgColor;
+                  Color textColor;
+                  Border? border;
+
+                  if (isSelected) {
+                    bgColor = AppColors.primary;
+                    textColor = Colors.white;
+                    border = Border.all(color: AppColors.primary, width: 1);
+                  } else if (isInRange) {
+                    bgColor = AppColors.surfaceContainer;
+                    textColor = AppColors.primary;
+                    border = Border.all(color: AppColors.border, width: 1);
+                  } else {
+                    bgColor = Colors.white;
+                    textColor = isCurrentCalMonth
+                        ? AppColors.primary
+                        : AppColors.textPrimary;
+                    border = Border.all(
+                      color: isCurrentCalMonth
+                          ? AppColors.primary
+                          : AppColors.border,
+                      width: isCurrentCalMonth ? 1.5 : 1,
+                    );
+                  }
+
+                  return InkWell(
+                    key: ValueKey('btn_picker_month_$monthNum'),
+                    onTap: () => _onMonthTapped(monthNum),
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.functionalRadius),
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius: BorderRadius.circular(
+                            AppDimensions.functionalRadius),
+                        border: border,
+                      ),
+                      child: Text(
+                        _months[index],
+                        style: AppTypography.labelCaps.copyWith(
+                          fontSize: 11,
+                          color: textColor,
+                          fontWeight: isSelected || isCurrentCalMonth
+                              ? FontWeight.bold
+                              : FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 14),
+
+              // Action Buttons: CANCEL and APPLY RANGE
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    key: const ValueKey('btn_picker_cancel'),
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                    ),
+                    child: Text(
+                      'CANCEL',
+                      style: AppTypography.labelCaps.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    key: const ValueKey('btn_apply_range'),
+                    onPressed: () {
+                      Navigator.of(context).pop(
+                        DateTimeRange(start: _startMonth, end: _endMonth),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: AppColors.primaryDark,
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 8),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'APPLY RANGE',
+                      style: AppTypography.labelCaps.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
