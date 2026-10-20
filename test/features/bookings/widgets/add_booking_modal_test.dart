@@ -548,8 +548,8 @@ void main() {
 
       // Verify capacity badge and total units in summary table
       expect(find.text('45 kVA'), findsWidgets);
-      // Merged row displays '1 unit' once for this capacity group (not duplicated per date)
-      expect(find.text('1 unit'), findsOneWidget);
+      // Merged row displays total number of days (e.g. '2 days')
+      expect(find.text('2 days'), findsOneWidget);
       expect(find.text('Total Units'), findsOneWidget);
     },
   );

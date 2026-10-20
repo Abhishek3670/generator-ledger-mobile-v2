@@ -1187,7 +1187,8 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                 final sortedDates = (capacityDates[cap] ?? [])
                   ..sort((a, b) => a.compareTo(b));
                 final emptyQty = capacityEmptyDateQuantity[cap];
-                final capUnits = capacityTotalUnits[cap] ?? 1;
+                final dayCount = sortedDates.length;
+                final dayText = '$dayCount day${dayCount == 1 ? '' : 's'}';
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1280,7 +1281,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '$capUnits unit${capUnits > 1 ? 's' : ''}',
+                          dayText,
                           style: AppTypography.bodySmall.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
