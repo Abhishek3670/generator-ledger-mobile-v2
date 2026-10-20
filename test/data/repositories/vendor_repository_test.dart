@@ -58,37 +58,70 @@ void main() {
       expect(vendor.name, 'B');
     });
 
-    test('createVendor posts payload and parses response', () async {
+    test('createVendor posts retailer payload and parses response', () async {
       final apiClient = _FakeApiClient(
         response: {
-          'vendor': {
-            'vendor_id': 'VEN003',
-            'name': 'New Vendor',
-            'type': 'rental',
-          },
+          'success': true,
+          'message': 'Vendor VEN003 created successfully',
+          'vendor_id': 'VEN003',
         },
       );
       final repository = VendorRepository(apiClient: apiClient);
 
       final vendor = await repository.createVendor(
         const TestVendor(
-          id: 'VEN003',
+          id: '',
           name: 'New Vendor',
-          category: 'rental',
+          category: 'retailer',
           location: 'Agra',
           phone: '999',
         ),
       );
 
       expect(apiClient.lastPostPath, VendorRepository.vendorsPath);
-      expect(apiClient.lastPostData, containsPair('vendor_id', 'VEN003'));
+      expect(apiClient.lastPostData, containsPair('vendor_name', 'New Vendor'));
+      expect(apiClient.lastPostData, containsPair('vendor_place', 'Agra'));
+      expect(apiClient.lastPostData, containsPair('phone', '999'));
       expect(vendor.id, 'VEN003');
     });
 
-    test('updateVendor uses PATCH', () async {
+    test('createVendor posts rental payload to rental-vendors and parses response', () async {
       final apiClient = _FakeApiClient(
         response: {
-          'vendor': {'vendor_id': 'VEN004', 'name': 'Updated'},
+          'success': true,
+          'message': 'Rental vendor RV001 created successfully',
+          'rental_vendor_id': 'RV001',
+        },
+      );
+      final repository = VendorRepository(apiClient: apiClient);
+
+      final vendor = await repository.createVendor(
+        const TestVendor(
+          id: '',
+          name: 'Rental Vendor',
+          category: 'rental',
+          location: 'Delhi',
+          phone: '888',
+        ),
+      );
+
+      expect(apiClient.lastPostPath, VendorRepository.rentalVendorsPath);
+      expect(apiClient.lastPostData, containsPair('vendor_name', 'Rental Vendor'));
+      expect(apiClient.lastPostData, containsPair('vendor_place', 'Delhi'));
+      expect(vendor.id, 'RV001');
+    });
+
+    test('updateVendor uses PATCH with correct payload', () async {
+      final apiClient = _FakeApiClient(
+        response: {
+          'success': true,
+          'message': 'Vendor VEN004 updated successfully',
+          'vendor': {
+            'id': 'VEN004',
+            'name': 'Updated',
+            'place': 'Aligarh',
+            'phone': '111',
+          },
         },
       );
       final repository = VendorRepository(apiClient: apiClient);
@@ -107,16 +140,15 @@ void main() {
       expect(apiClient.lastPatchPath, '${VendorRepository.vendorsPath}/VEN004');
     });
 
-    test('deleteVendor calls DELETE endpoint', () async {
+    test('deleteVendor calls DELETE endpoint for retailer and rental', () async {
       final apiClient = _FakeApiClient();
       final repository = VendorRepository(apiClient: apiClient);
 
-      await repository.deleteVendor('VEN005');
+      await repository.deleteVendor('VEN005', category: 'retailer');
+      expect(apiClient.lastDeletePath, '${VendorRepository.vendorsPath}/VEN005');
 
-      expect(
-        apiClient.lastDeletePath,
-        '${VendorRepository.vendorsPath}/VEN005',
-      );
+      await repository.deleteVendor('RV001', category: 'rental');
+      expect(apiClient.lastDeletePath, '${VendorRepository.rentalVendorsPath}/RV001');
     });
   });
 }

@@ -282,11 +282,15 @@ class _VendorDirectoryScreenState extends ConsumerState<VendorDirectoryScreen>
               AddVendorModal(
                 initialCategory: _modalInitialCategory,
                 onClose: () => setState(() => _showAddModal = false),
-                onSave: (newVendor) {
-                  ref.read(vendorProvider.notifier).addVendor(newVendor);
+                onSave: (newVendor) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  await ref.read(vendorProvider.notifier).addVendor(newVendor);
+                  if (!mounted) return;
                   setState(() => _showAddModal = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vendor added successfully')),
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Vendor "${newVendor.name}" added successfully'),
+                    ),
                   );
                 },
               ),

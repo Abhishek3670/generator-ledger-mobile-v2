@@ -17,7 +17,7 @@ class MockVendorRepository extends VendorRepository {
   Future<List<Vendor>> getVendors() async => vendors;
 
   @override
-  Future<void> deleteVendor(String id) async {
+  Future<void> deleteVendor(String id, {String? category}) async {
     deletedIds.add(id);
     vendors.removeWhere((v) => v.id == id);
   }

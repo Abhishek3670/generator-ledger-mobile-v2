@@ -67,7 +67,7 @@ class VendorNotifier extends StateNotifier<AsyncValue<List<Vendor>>> {
   Future<void> deleteVendor(String vendorId) async {
     _deleteTimer?.cancel();
     if (_lastDeletedVendor != null) {
-      await _repository.deleteVendor(_lastDeletedVendor!.id);
+      await _repository.deleteVendor(_lastDeletedVendor!.id, category: _lastDeletedVendor!.category);
       _lastDeletedVendor = null;
     }
 
@@ -83,7 +83,7 @@ class VendorNotifier extends StateNotifier<AsyncValue<List<Vendor>>> {
     _deleteTimer = Timer(const Duration(seconds: 5), () async {
       if (_lastDeletedVendor != null && _lastDeletedVendor!.id == vendorId) {
         try {
-          await _repository.deleteVendor(vendorId);
+          await _repository.deleteVendor(vendorId, category: _lastDeletedVendor?.category);
           _lastDeletedVendor = null;
           _lastDeletedIndex = null;
         } catch (error, stackTrace) {

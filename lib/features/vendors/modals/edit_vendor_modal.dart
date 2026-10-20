@@ -5,12 +5,14 @@ import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../shared/widgets/app_button.dart';
+import 'dart:async';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../core/exceptions/api_exception.dart';
 
 class EditVendorModal extends StatefulWidget {
   final Vendor vendor;
   final VoidCallback onClose;
-  final Function(Vendor) onSave;
+  final FutureOr<void> Function(Vendor) onSave;
   final bool isVisible;
 
   const EditVendorModal({
@@ -27,6 +29,8 @@ class EditVendorModal extends StatefulWidget {
 
 class _EditVendorModalState extends State<EditVendorModal> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false;
+  String? _submissionError;
   late final TextEditingController _nameController;
   late final TextEditingController _locationController;
   late final TextEditingController _phoneController;
@@ -58,6 +62,29 @@ class _EditVendorModalState extends State<EditVendorModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_submissionError != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.errorLight,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _submissionError!,
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.danger),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           // Vendor Name
           AppTextField(
             labelText: 'NAME',
@@ -121,18 +148,43 @@ class _EditVendorModalState extends State<EditVendorModal> {
       footer: AppButton(
         label: 'SAVE',
         isFullWidth: true,
-        onPressed: () {
-          if (_formKey.currentState?.validate() ?? false) {
-            final updatedVendor = Vendor(
-              id: widget.vendor.id,
-              name: _nameController.text.trim(),
-              location: _locationController.text.trim(),
-              phone: _phoneController.text.trim(),
-              category: _selectedCategory!,
-            );
-            widget.onSave(updatedVendor);
-          }
-        },
+        isLoading: _isSubmitting,
+        onPressed: _isSubmitting
+            ? null
+            : () async {
+                if (_formKey.currentState?.validate() ?? false) {
+                  setState(() {
+                    _isSubmitting = true;
+                    _submissionError = null;
+                  });
+                  final updatedVendor = Vendor(
+                    id: widget.vendor.id,
+                    name: _nameController.text.trim(),
+                    location: _locationController.text.trim(),
+                    phone: _phoneController.text.trim(),
+                    category: _selectedCategory!,
+                  );
+                  try {
+                    await widget.onSave(updatedVendor);
+                  } on ApiException catch (e) {
+                    if (mounted) {
+                      setState(() {
+                        _submissionError = e.message;
+                        _isSubmitting = false;
+                      });
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      setState(() {
+                        _submissionError = e
+                            .toString()
+                            .replaceFirst(RegExp(r'^Exception:\s*'), '');
+                        _isSubmitting = false;
+                      });
+                    }
+                  }
+                }
+              },
         variant: AppButtonVariant.accent,
       ),
       child: formContent,

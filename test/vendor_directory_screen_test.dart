@@ -172,5 +172,5 @@ class _FakeVendorRepository extends VendorRepository {
   Future<MockVendor> updateVendor(String id, MockVendor vendor) async => vendor;
 
   @override
-  Future<void> deleteVendor(String id) async {}
+  Future<void> deleteVendor(String id, {String? category}) async {}
 }

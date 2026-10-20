@@ -8,12 +8,13 @@ import '../../../shared/models/vendor.dart';
 import '../../../shared/widgets/draggable_form_sheet.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../core/exceptions/api_exception.dart';
 import '../../../core/services/form_defaults_service.dart';
 import '../../../core/services/draft_service.dart';
 
 class AddVendorModal extends ConsumerStatefulWidget {
   final VoidCallback onClose;
-  final Function(Vendor) onSave;
+  final FutureOr<void> Function(Vendor) onSave;
   final bool isVisible;
   final String? initialCategory; // Optional: 'retailer' or 'rental'
 
@@ -31,6 +32,8 @@ class AddVendorModal extends ConsumerStatefulWidget {
 
 class _AddVendorModalState extends ConsumerState<AddVendorModal> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false;
+  String? _submissionError;
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -184,6 +187,29 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_submissionError != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.errorLight,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _submissionError!,
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.danger),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           // Vendor Name
           AppTextField(
             labelText: 'NAME',
@@ -259,20 +285,45 @@ class _AddVendorModalState extends ConsumerState<AddVendorModal> {
       footer: AppButton(
         label: 'CREATE',
         isFullWidth: true,
-        onPressed: () async {
-          if (_formKey.currentState?.validate() ?? false) {
-            final newVendor = Vendor(
-              id: 'VEN-${DateTime.now().millisecondsSinceEpoch}',
-              name: _nameController.text.trim(),
-              location: _locationController.text.trim(),
-              phone: _phoneController.text.trim(),
-              category: _selectedCategory!,
-            );
-            _autoSaveTimer?.cancel();
-            await _draftService.clearDraft('add_vendor');
-            widget.onSave(newVendor);
-          }
-        },
+        isLoading: _isSubmitting,
+        onPressed: _isSubmitting
+            ? null
+            : () async {
+                if (_formKey.currentState?.validate() ?? false) {
+                  setState(() {
+                    _isSubmitting = true;
+                    _submissionError = null;
+                  });
+                  final newVendor = Vendor(
+                    id: '',
+                    name: _nameController.text.trim(),
+                    location: _locationController.text.trim(),
+                    phone: _phoneController.text.trim(),
+                    category: _selectedCategory!,
+                  );
+                  try {
+                    await widget.onSave(newVendor);
+                    _autoSaveTimer?.cancel();
+                    await _draftService.clearDraft('add_vendor');
+                  } on ApiException catch (e) {
+                    if (mounted) {
+                      setState(() {
+                        _submissionError = e.message;
+                        _isSubmitting = false;
+                      });
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      setState(() {
+                        _submissionError = e
+                            .toString()
+                            .replaceFirst(RegExp(r'^Exception:\s*'), '');
+                        _isSubmitting = false;
+                      });
+                    }
+                  }
+                }
+              },
         variant: AppButtonVariant.accent,
       ),
       child: formContent,

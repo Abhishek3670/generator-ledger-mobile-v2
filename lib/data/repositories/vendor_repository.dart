@@ -41,23 +41,49 @@ class VendorRepository {
   }
 
   Future<Vendor> createVendor(Vendor vendor) async {
+    final isRental = vendor.category.toLowerCase() == 'rental';
+    final endpoint = isRental ? rentalVendorsPath : vendorsPath;
+
     return _apiClient.post<Vendor>(
-      vendorsPath,
-      data: vendor.toMap(),
-      fromJson: (json) => _parseVendor(json),
+      endpoint,
+      data: vendor.toCreatePayload(),
+      fromJson: (json) => _parseCreateResponse(json, vendor),
     );
   }
 
   Future<Vendor> updateVendor(String id, Vendor vendor) async {
+    final isRental = vendor.category.toLowerCase() == 'rental' ||
+        id.startsWith('RV') ||
+        id.startsWith('RNV');
+    final endpoint = isRental ? '$rentalVendorsPath/$id' : '$vendorsPath/$id';
+
     return _apiClient.patch<Vendor>(
-      '$vendorsPath/$id',
-      data: vendor.toMap(),
+      endpoint,
+      data: vendor.toUpdatePayload(),
       fromJson: (json) => _parseVendor(json),
     );
   }
 
-  Future<void> deleteVendor(String id) async {
-    await _apiClient.delete<void>('$vendorsPath/$id', fromJson: (_) {});
+  Future<void> deleteVendor(String id, {String? category}) async {
+    final isRental = (category?.toLowerCase() == 'rental') ||
+        id.startsWith('RV') ||
+        id.startsWith('RNV');
+    final endpoint = isRental ? '$rentalVendorsPath/$id' : '$vendorsPath/$id';
+    await _apiClient.delete<void>(endpoint, fromJson: (_) {});
+  }
+
+  Vendor _parseCreateResponse(dynamic json, Vendor original) {
+    if (json is Map<String, dynamic>) {
+      if (json['vendor'] is Map<String, dynamic>) {
+        return Vendor.fromMap(json['vendor'] as Map<String, dynamic>);
+      }
+      final createdId = (json['vendor_id'] ?? json['rental_vendor_id'] ?? json['id'] ?? '').toString();
+      if (createdId.isNotEmpty) {
+        return original.copyWith(id: createdId);
+      }
+      return Vendor.fromMap(json);
+    }
+    return original;
   }
 
   List<Vendor> _parseVendorList(dynamic json) {
