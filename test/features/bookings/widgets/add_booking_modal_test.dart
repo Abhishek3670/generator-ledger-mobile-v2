@@ -495,7 +495,7 @@ void main() {
   );
 
   testWidgets(
-    'Order Summary displays individual dates grouped by capacity',
+    'Order Summary displays individual dates with merged total units per capacity',
     (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'last_selected_capacity': ['45'],
@@ -517,8 +517,39 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // Open date picker and select 2 dates
+      final datePickerTrigger = find.ancestor(
+        of: find.byIcon(Icons.calendar_today_outlined).first,
+        matching: find.byType(InkWell),
+      );
+      await tester.ensureVisible(datePickerTrigger.first);
+      await tester.tap(datePickerTrigger.first);
+      await tester.pumpAndSettle();
+
+      final clearAll = find.text('Clear All');
+      if (clearAll.evaluate().isNotEmpty) {
+        await tester.tap(clearAll);
+        await tester.pumpAndSettle();
+      }
+
+      final day15Finder = find.widgetWithText(GestureDetector, '15');
+      final day18Finder = find.widgetWithText(GestureDetector, '18');
+      if (day15Finder.evaluate().isNotEmpty) {
+        await tester.tap(day15Finder.first);
+        await tester.pumpAndSettle();
+      }
+      if (day18Finder.evaluate().isNotEmpty) {
+        await tester.tap(day18Finder.first);
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
       // Verify capacity badge and total units in summary table
       expect(find.text('45 kVA'), findsWidgets);
+      // Merged row displays '1 unit' once for this capacity group (not duplicated per date)
+      expect(find.text('1 unit'), findsOneWidget);
       expect(find.text('Total Units'), findsOneWidget);
     },
   );

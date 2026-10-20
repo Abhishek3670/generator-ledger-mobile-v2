@@ -1135,7 +1135,8 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
     // Group individual dates by capacity
     final List<String> capacityOrder = [];
-    final Map<String, Map<DateTime, int>> capacityDateMap = {};
+    final Map<String, List<DateTime>> capacityDates = {};
+    final Map<String, int> capacityTotalUnits = {};
     final Map<String, int> capacityEmptyDateQuantity = {};
 
     for (final req in _requirements) {
@@ -1146,16 +1147,22 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       if (!capacityOrder.contains(cap)) {
         capacityOrder.add(cap);
       }
+      capacityTotalUnits[cap] =
+          (capacityTotalUnits[cap] ?? 0) + req.quantity;
 
       if (req.selectedDates.isEmpty) {
         capacityEmptyDateQuantity[cap] =
             (capacityEmptyDateQuantity[cap] ?? 0) + req.quantity;
       } else {
-        capacityDateMap.putIfAbsent(cap, () => <DateTime, int>{});
-        final dateMap = capacityDateMap[cap]!;
+        capacityDates.putIfAbsent(cap, () => <DateTime>[]);
         for (final date in req.selectedDates) {
           final normalized = DateTime(date.year, date.month, date.day);
-          dateMap[normalized] = (dateMap[normalized] ?? 0) + req.quantity;
+          if (!capacityDates[cap]!.any((d) =>
+              d.year == normalized.year &&
+              d.month == normalized.month &&
+              d.day == normalized.day)) {
+            capacityDates[cap]!.add(normalized);
+          }
         }
       }
     }
@@ -1177,16 +1184,16 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
               children: List.generate(capacityOrder.length, (gIndex) {
                 final cap = capacityOrder[gIndex];
                 final isLast = gIndex == capacityOrder.length - 1;
-                final dateMap = capacityDateMap[cap] ?? {};
-                final sortedDates = dateMap.keys.toList()
+                final sortedDates = (capacityDates[cap] ?? [])
                   ..sort((a, b) => a.compareTo(b));
                 final emptyQty = capacityEmptyDateQuantity[cap];
+                final capUnits = capacityTotalUnits[cap] ?? 1;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1213,7 +1220,6 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ...sortedDates.map((date) {
-                                final qty = dateMap[date]!;
                                 return Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 2.0),
@@ -1238,21 +1244,12 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '$qty unit${qty > 1 ? 's' : ''}',
-                                        style: AppTypography.bodySmall
-                                            .copyWith(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 );
                               }),
-                              if (emptyQty != null && emptyQty > 0)
+                              if (sortedDates.isEmpty &&
+                                  (emptyQty != null && emptyQty > 0))
                                 Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 2.0),
@@ -1275,20 +1272,19 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '$emptyQty unit${emptyQty > 1 ? 's' : ''}',
-                                        style: AppTypography.bodySmall
-                                            .copyWith(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ),
                             ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$capUnits unit${capUnits > 1 ? 's' : ''}',
+                          style: AppTypography.bodySmall.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
