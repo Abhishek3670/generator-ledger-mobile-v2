@@ -5,6 +5,14 @@ All notable changes to the generator-ledger-mobile-v2 project will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-10-20
+
+### Fixed
+- **Generators Header RenderFlex Overflow** — Wrapped `InventoryGroupSection` title row in `Expanded` and title `Text` in `Flexible` with ellipsis to eliminate 33px overflow
+- **Bottom Navigation System Overlap** — Removed fixed height on `AppBottomNavBar` & `AdminBottomNavBar`; added `SafeArea(top: false)` with 64px content height to eliminate overlap with Android system navigation buttons
+- **Content Obscured by FloatingSearchFAB** — Added 88px bottom scroll clearance in `GeneratorsDirectoryScreen` so content is not obscured by pinned FAB
+- **Regression Tests** — Added unit and widget tests verifying SafeArea in navbars, title ellipsis, and scroll clearance
+
 ## [1.1.2] - 2026-10-16
 
 ### Added
