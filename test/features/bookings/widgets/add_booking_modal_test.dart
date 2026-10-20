@@ -553,6 +553,71 @@ void main() {
       expect(find.text('Total Units'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'AddBookingModal shows emergency stock dialog on 409 retailer_out_of_stock and retries with suggested emergency generator',
+    (WidgetTester tester) async {
+      int attempts = 0;
+      Booking? finalSavedBooking;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _providerOverrides(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(
+                lockedVendorId: 'VEN011',
+                onClose: _dummyClose,
+                onSave: (bookings) async {
+                  attempts++;
+                  if (attempts == 1) {
+                    throw const ApiException(
+                      statusCode: 409,
+                      message: 'Retailer gensets unavailable',
+                      data: {
+                        'error_code': 'retailer_out_of_stock',
+                        'affected_dates': [
+                          {
+                            'item_index': 0,
+                            'date': '2026-11-17',
+                            'capacity_kva': 30,
+                            'suggested_generator_id': 'EMG-30-01',
+                          }
+                        ]
+                      },
+                    );
+                  }
+                  finalSavedBooking = bookings.first;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final createButton = find.text('Create Booking').last;
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      // Verify emergency stock dialog appears
+      expect(find.text('Emergency Stock Available'), findsOneWidget);
+      expect(find.textContaining('EMG-30-01'), findsOneWidget);
+
+      // Tap Use Emergency Stock
+      final useEmergencyButton = find.text('Use Emergency Stock');
+      expect(useEmergencyButton, findsOneWidget);
+      await tester.tap(useEmergencyButton);
+      await tester.pumpAndSettle();
+
+      // Verify second attempt was called with EMG-30-01
+      expect(attempts, 2);
+      expect(finalSavedBooking, isNotNull);
+      expect(finalSavedBooking!.items.first.generatorId, 'EMG-30-01');
+      expect(finalSavedBooking!.items.first.isEmergency, isTrue);
+    },
+  );
 }
 
 void _dummyClose() {}

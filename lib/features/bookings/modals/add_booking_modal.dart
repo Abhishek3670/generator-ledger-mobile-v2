@@ -423,30 +423,22 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         req.selectedCapacities.isNotEmpty ? req.selectedCapacities.first : '50',
       );
 
-      final matchingGens = generators.where((g) {
-        if (req.assignmentMode == 'id') {
-          return g.id == req.selectedGeneratorId;
-        }
-        final gCap = int.tryParse(g.capacity.replaceAll(RegExp(r'[^0-9]'), ''));
-        return gCap == capNum;
-      }).toList();
-
       for (final date in req.selectedDates) {
         final dateStr = DateFormat('yyyy-MM-dd').format(date);
         for (int q = 0; q < req.quantity; q++) {
-          final genId = (q < matchingGens.length)
-              ? matchingGens[q].id
-              : (matchingGens.isNotEmpty
-                    ? matchingGens.first.id
-                    : 'AUTO-ASSIGN');
-          allGeneratorIds.add(genId);
+          final genId = req.assignmentMode == 'id'
+              ? (req.selectedGeneratorId ?? '')
+              : '';
+          if (genId.isNotEmpty) {
+            allGeneratorIds.add(genId);
+          }
           allItems.add(
             BookingItem(
               generatorId: genId,
               capacityKva: capNum,
               startDt: dateStr,
               endDt: dateStr,
-              itemStatus: 'confirmed',
+              itemStatus: 'Confirmed',
               isEmergency: false,
               remarks: _notesController.text.trim(),
             ),
@@ -476,7 +468,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     final baseTime = DateTime.now().millisecondsSinceEpoch;
     final primaryGenId = allGeneratorIds.isNotEmpty
         ? allGeneratorIds.first
-        : 'AUTO-ASSIGN';
+        : '';
 
     final allSelectedDates = _requirements
         .expand((r) => r.selectedDates)
@@ -496,7 +488,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       generators: allGeneratorIds.isNotEmpty ? allGeneratorIds : [primaryGenId],
       startDate: overallStartDate,
       endDate: overallEndDate,
-      status: 'confirmed',
+      status: 'Confirmed',
       notes: _notesController.text.trim(),
       capacity: capacityText,
       items: allItems,
@@ -523,6 +515,18 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       }
     } on ApiException catch (e) {
       if (mounted) {
+        final errData = e.data;
+        if (e.statusCode == 409 &&
+            errData != null &&
+            errData['error_code'] == 'retailer_out_of_stock') {
+          final affected = (errData['affected_dates'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .toList();
+          if (affected != null && affected.isNotEmpty) {
+            _promptEmergencyStockFallback(newBooking, affected);
+            return;
+          }
+        }
         setState(() {
           _submissionError = e.message;
           _isSubmitting = false;
@@ -538,6 +542,137 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
           _isSubmitting = false;
         });
       }
+    }
+  }
+
+  Future<void> _promptEmergencyStockFallback(
+    Booking originalBooking,
+    List<Map<String, dynamic>> affectedDates,
+  ) async {
+    setState(() => _isSubmitting = false);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: AppColors.warning),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Emergency Stock Available',
+                  style: TextStyle(
+                    fontFamily: 'SpaceGrotesk',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Retailer stock is unavailable for the selected dates. Would you like to proceed with the following suggested emergency genset(s)?',
+                style: TextStyle(fontSize: 13, color: Color(0xFF475569)),
+              ),
+              const SizedBox(height: 12),
+              ...affectedDates.map((aff) {
+                final date = aff['date']?.toString() ?? '';
+                final cap = aff['capacity_kva']?.toString() ?? '';
+                final genId = aff['suggested_generator_id']?.toString() ?? 'Emergency Genset';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.bolt, size: 14, color: AppColors.accent),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$date: ',
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                      ),
+                      Text(
+                        '$genId ($cap kVA)',
+                        style: const TextStyle(fontSize: 12, color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: AppColors.primary,
+                shape: const StadiumBorder(),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Use Emergency Stock'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      setState(() => _isSubmitting = true);
+      final updatedItems = List<BookingItem>.from(originalBooking.items);
+      for (final aff in affectedDates) {
+        final idx = aff['item_index'] as int?;
+        final suggestedId = aff['suggested_generator_id']?.toString();
+        if (idx != null && idx >= 0 && idx < updatedItems.length && suggestedId != null) {
+          final old = updatedItems[idx];
+          updatedItems[idx] = BookingItem(
+            generatorId: suggestedId,
+            capacityKva: old.capacityKva,
+            startDt: old.startDt,
+            endDt: old.endDt,
+            itemStatus: 'Confirmed',
+            isEmergency: true,
+            remarks: old.remarks,
+          );
+        }
+      }
+
+      final retryBooking = originalBooking.copyWith(items: updatedItems);
+      try {
+        await widget.onSave([retryBooking]);
+        _autoSaveTimer?.cancel();
+        await _draftService.clearDraft('add_booking');
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
+      } on ApiException catch (e) {
+        if (mounted) {
+          setState(() {
+            _submissionError = e.message;
+            _isSubmitting = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _submissionError = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+            _isSubmitting = false;
+          });
+        }
+      }
+    } else {
+      setState(() {
+        _submissionError =
+            'Retailer gensets unavailable. Emergency stock was not accepted.';
+      });
     }
   }
 

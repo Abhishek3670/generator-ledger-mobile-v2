@@ -3,11 +3,13 @@ class ApiException implements Exception {
     this.statusCode,
     required this.message,
     this.originalError,
+    this.data,
   });
 
   final int? statusCode;
   final String message;
   final Object? originalError;
+  final Map<String, dynamic>? data;
 
   factory ApiException.network([Object? originalError]) {
     return ApiException(

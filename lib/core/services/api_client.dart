@@ -301,10 +301,15 @@ class ApiClient {
       );
     }
 
+    final responseData = error.response?.data is Map<String, dynamic>
+        ? error.response!.data as Map<String, dynamic>
+        : null;
+
     return ApiException(
       statusCode: statusCode,
       message: _extractErrorMessage(error.response?.data),
       originalError: error,
+      data: responseData,
     );
   }
 
