@@ -7,6 +7,7 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/connectivity_service.dart';
 import '../../../shared/models/vendor.dart';
+import '../../../shared/models/booking.dart';
 import '../../../data/mock/mock_bookings.dart';
 import '../../../shared/widgets/floating_search_fab.dart';
 import '../../../shared/widgets/section_header.dart';
@@ -83,129 +84,87 @@ class _BookingsDirectoryScreenState
     });
   }
 
-  Widget _buildBookingContent(List<Vendor> vendors, List<MockBooking> filteredBookings) {
-    final allVendorBookingsState = ref.watch(allVendorBookingsProvider);
+  Widget _buildBookingContent(
+    List<Vendor> vendors,
+    Map<String, List<Booking>> allBookingsMap,
+  ) {
+    final vendorWidgets = <Widget>[];
 
-    return allVendorBookingsState.when(
-      data: (allBookingsMap) {
-        final vendorWidgets = <Widget>[];
+    for (final vendor in vendors) {
+      final bookings = allBookingsMap[vendor.id] ?? [];
+      final filtered = bookings.where((booking) {
+        if (_searchQuery.isEmpty) return true;
+        return booking.vendorName.toLowerCase().contains(_searchQuery) ||
+            booking.vendorId.toLowerCase().contains(_searchQuery) ||
+            booking.generatorId.toLowerCase().contains(_searchQuery);
+      }).toList();
 
-        for (final vendor in vendors) {
-          final bookings = allBookingsMap[vendor.id] ?? [];
-          final filtered = bookings.where((booking) {
-            if (_searchQuery.isEmpty) return true;
-            return booking.vendorName.toLowerCase().contains(_searchQuery) ||
-                booking.vendorId.toLowerCase().contains(_searchQuery) ||
-                booking.generatorId.toLowerCase().contains(_searchQuery);
-          }).toList();
+      if (filtered.isEmpty) continue;
 
-          if (filtered.isEmpty) continue;
-
-          vendorWidgets.add(
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: VendorBookingGroup(
-                vendor: vendor,
-                bookings: filtered,
-                slidableResetCounter: _slidableResetCounter,
-                onBookingTap: (booking) {
-                  setState(() {
-                    _viewingBooking = booking;
-                  });
-                },
-                onModify: (booking) {
-                  setState(() {
-                    _editingBooking = booking;
-                  });
-                },
-                onDelete: (booking) {
-                  setState(() {
-                    _selectedBookingForCancel = booking;
-                    _showCancelModal = true;
-                  });
-                },
-              ),
-            ),
-          );
-        }
-
-        if (vendorWidgets.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 32,
-              horizontal: 16,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(
-                AppDimensions.functionalRadius,
-              ),
-              border: Border.all(color: AppColors.border, width: 1),
-            ),
-            child: Center(
-              child: Text(
-                'No matching bookings found.',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: vendorWidgets,
-        );
-      },
-      loading: () => Column(
-        children: List.generate(4, (index) => const Padding(
-          padding: EdgeInsets.only(bottom: 16.0),
-          child: SkeletonCard(height: 120),
-        )),
-      ),
-      error: (error, stack) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32.0),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load bookings',
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(allVendorBookingsProvider),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: const StadiumBorder(),
-                ),
-                child: const Text('Retry'),
-              ),
-            ],
+      vendorWidgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20.0),
+          child: VendorBookingGroup(
+            vendor: vendor,
+            bookings: filtered,
+            slidableResetCounter: _slidableResetCounter,
+            onBookingTap: (booking) {
+              setState(() {
+                _viewingBooking = booking;
+              });
+            },
+            onModify: (booking) {
+              setState(() {
+                _editingBooking = booking;
+              });
+            },
+            onDelete: (booking) {
+              setState(() {
+                _selectedBookingForCancel = booking;
+                _showCancelModal = true;
+              });
+            },
           ),
         ),
-      ),
+      );
+    }
+
+    if (vendorWidgets.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: 32,
+          horizontal: 16,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(
+            AppDimensions.functionalRadius,
+          ),
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
+        child: Center(
+          child: Text(
+            'No matching bookings found.',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: vendorWidgets,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bookingState = ref.watch(bookingProvider);
+    final allVendorBookingsState = ref.watch(allVendorBookingsProvider);
     final connectivity = ref.watch(connectivityProvider);
-    final bookings = bookingState.valueOrNull ?? [];
     final vendors = List<Vendor>.from(ref.watch(vendorProvider).valueOrNull ?? [])
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    final filteredBookings = bookings.where((booking) {
-      if (_searchQuery.isEmpty) return true;
-      return booking.vendorName.toLowerCase().contains(_searchQuery) ||
-          booking.vendorId.toLowerCase().contains(_searchQuery) ||
-          booking.generatorId.toLowerCase().contains(_searchQuery);
-    }).toList();
 
     // Detect tab changes to close swipe actions
     try {
@@ -274,17 +233,19 @@ class _BookingsDirectoryScreenState
                     ),
                     const SizedBox(height: 24),
 
-                    bookingState.when(
-                      data: (_) => _buildBookingContent(vendors, filteredBookings),
+                    allVendorBookingsState.when(
+                      data: (allBookingsMap) =>
+                          _buildBookingContent(vendors, allBookingsMap),
                       loading: () => Column(
                         children: List.generate(4, (index) => const Padding(
                           padding: EdgeInsets.only(bottom: 16.0),
-                          child: SkeletonCard(height: 80),
+                          child: SkeletonCard(height: 120),
                         )),
                       ),
                       error: (error, stack) => ErrorScreen(
                         message: error.toString(),
-                        onRetry: () => ref.read(bookingProvider.notifier).loadBookings(),
+                        onRetry: () =>
+                            ref.read(allVendorBookingsProvider.notifier).loadBookings(),
                       ),
                     ),
                   ],

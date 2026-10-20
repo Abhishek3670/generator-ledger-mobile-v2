@@ -66,6 +66,18 @@ class AllVendorBookingsNotifier extends StateNotifier<AsyncValue<Map<String, Lis
     if (data == null) return [];
     return data[vendorId] ?? [];
   }
+
+  /// Optimistically removes a booking from the cached batch data.
+  void removeBooking(String bookingId) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final updated = <String, List<Booking>>{};
+    for (final entry in current.entries) {
+      updated[entry.key] =
+          entry.value.where((b) => b.id != bookingId).toList();
+    }
+    state = AsyncValue.data(updated);
+  }
 }
 
 class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
@@ -213,18 +225,20 @@ class BookingNotifier extends StateNotifier<AsyncValue<List<Booking>>> {
       _lastDeletedBooking = null;
     }
 
-    final index = _cachedBookings.indexWhere((b) => b.id == bookingId);
-    if (index == -1) return;
-
-    _lastDeletedBooking = _cachedBookings[index];
-    _lastDeletedIndex = index;
+    // Immediately remove from allVendorBookingsProvider for instant UI response
+    _ref.read(allVendorBookingsProvider.notifier).removeBooking(bookingId);
 
     // Immediately cancel OS notifications BEFORE 5s undo timer starts
     unawaited(_reminder?.cancelRemindersForBooking(bookingId));
     unawaited(_reminder?.cancelNotificationOnly(bookingId));
 
-    _cachedBookings = List<Booking>.from(_cachedBookings)..removeAt(index);
-    state = AsyncValue.data(_cachedBookings);
+    final index = _cachedBookings.indexWhere((b) => b.id == bookingId);
+    if (index != -1) {
+      _lastDeletedBooking = _cachedBookings[index];
+      _lastDeletedIndex = index;
+      _cachedBookings = List<Booking>.from(_cachedBookings)..removeAt(index);
+      state = AsyncValue.data(_cachedBookings);
+    }
 
     _deleteTimer = Timer(const Duration(seconds: 5), () async {
       if (_lastDeletedBooking != null && _lastDeletedBooking!.id == bookingId) {
