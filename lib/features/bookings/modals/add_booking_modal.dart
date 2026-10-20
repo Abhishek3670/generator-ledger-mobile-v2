@@ -298,7 +298,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         for (final bookings in allBookingsMap.values) {
           for (final booking in bookings) {
             for (final item in booking.items) {
-              if (item.startDt.split(' ')[0] == dateStr &&
+              if (item.date == dateStr &&
                   item.generatorId == genId &&
                   item.itemStatus.toLowerCase() != 'cancelled') {
                 return 0;
@@ -331,7 +331,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       for (final bookings in allBookingsMap.values) {
         for (final booking in bookings) {
           for (final item in booking.items) {
-            if (item.startDt.split(' ')[0] == dateStr &&
+            if (item.date == dateStr &&
                 item.capacityKva == capNum &&
                 item.itemStatus.toLowerCase() != 'cancelled') {
               bookedUnits++;
@@ -466,9 +466,6 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     }
 
     final baseTime = DateTime.now().millisecondsSinceEpoch;
-    final primaryGenId = allGeneratorIds.isNotEmpty
-        ? allGeneratorIds.first
-        : '';
 
     final allSelectedDates = _requirements
         .expand((r) => r.selectedDates)
@@ -485,7 +482,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       bookingId: 'BK-$baseTime-0',
       vendorId: _selectedVendorId!,
       vendorName: selectedVendor.name,
-      generators: allGeneratorIds.isNotEmpty ? allGeneratorIds : [primaryGenId],
+      generators: allGeneratorIds,
       startDate: overallStartDate,
       endDate: overallEndDate,
       status: 'Confirmed',
@@ -1270,8 +1267,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
     // Group individual dates by capacity
     final List<String> capacityOrder = [];
-    final Map<String, List<DateTime>> capacityDates = {};
-    final Map<String, int> capacityTotalUnits = {};
+    final Map<String, Set<DateTime>> capacityDates = {};
     final Map<String, int> capacityEmptyDateQuantity = {};
 
     for (final req in _requirements) {
@@ -1282,22 +1278,14 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       if (!capacityOrder.contains(cap)) {
         capacityOrder.add(cap);
       }
-      capacityTotalUnits[cap] =
-          (capacityTotalUnits[cap] ?? 0) + req.quantity;
 
       if (req.selectedDates.isEmpty) {
         capacityEmptyDateQuantity[cap] =
             (capacityEmptyDateQuantity[cap] ?? 0) + req.quantity;
       } else {
-        capacityDates.putIfAbsent(cap, () => <DateTime>[]);
+        final dates = capacityDates.putIfAbsent(cap, () => <DateTime>{});
         for (final date in req.selectedDates) {
-          final normalized = DateTime(date.year, date.month, date.day);
-          if (!capacityDates[cap]!.any((d) =>
-              d.year == normalized.year &&
-              d.month == normalized.month &&
-              d.day == normalized.day)) {
-            capacityDates[cap]!.add(normalized);
-          }
+          dates.add(DateTime(date.year, date.month, date.day));
         }
       }
     }
@@ -1319,7 +1307,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
               children: List.generate(capacityOrder.length, (gIndex) {
                 final cap = capacityOrder[gIndex];
                 final isLast = gIndex == capacityOrder.length - 1;
-                final sortedDates = (capacityDates[cap] ?? [])
+                final sortedDates = (capacityDates[cap]?.toList() ?? [])
                   ..sort((a, b) => a.compareTo(b));
                 final emptyQty = capacityEmptyDateQuantity[cap];
                 final dayCount = sortedDates.length;

@@ -39,12 +39,11 @@ class BookingItem {
   String get date => startDt.split(RegExp(r'[ T]'))[0];
 
   Map<String, dynamic> toMap() {
-    final dateStr = startDt.isNotEmpty ? startDt.split(RegExp(r'[ T]'))[0] : '';
     final hasGenId = generatorId.isNotEmpty &&
         generatorId != 'AUTO-ASSIGN' &&
         generatorId != 'N/A';
     return {
-      'date': dateStr,
+      'date': date,
       if (hasGenId) 'generator_id': generatorId,
       if (capacityKva != null) 'capacity_kva': capacityKva,
       if (remarks.isNotEmpty) 'remarks': remarks,
@@ -324,7 +323,7 @@ class Booking {
     final grouped = <String, List<BookingItem>>{};
     for (final item in items) {
       if (item.startDt.isEmpty) continue;
-      final dateKey = item.startDt.split(' ')[0];
+      final dateKey = item.date;
       grouped.putIfAbsent(dateKey, () => []).add(item);
     }
     return Map.fromEntries(
