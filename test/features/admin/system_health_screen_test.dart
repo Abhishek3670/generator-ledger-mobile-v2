@@ -59,6 +59,89 @@ void main() {
     // Verify status badge
     expect(find.text('Healthy'), findsOneWidget);
   });
+
+  testWidgets('SystemHealthScreen renders on standard phone viewport (360x800) without overflow', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockHealth = SystemHealth(
+      cpu: 45.2,
+      memory: 67.8,
+      temperature: 32.1,
+      dbConnection: 'healthy',
+      appVersion: '4.1.0',
+      lastChecked: DateTime(2026, 10, 20, 20, 44, 15),
+      cpuTrend: const [40.0, 42.0, 45.2],
+      memoryTrend: const [65.0, 66.5, 67.8],
+      temperatureTrend: const [30.0, 31.0, 32.1],
+    );
+
+    final fakeRepository = _FakeSystemHealthRepository(mockHealth);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          systemHealthRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: SystemHealthScreen()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Verify elements
+    expect(find.text('Live Server Metrics'), findsOneWidget);
+    expect(find.text('APPLICATION STATUS'), findsOneWidget);
+    expect(find.text('Haptic Feedback'), findsOneWidget);
+    expect(find.text('Provide tactile feedback for taps and actions.'), findsOneWidget);
+
+    // Verify no overflow
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('SystemHealthScreen renders on small viewport (320x640) without overflow', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockHealth = SystemHealth(
+      cpu: 45.2,
+      memory: 67.8,
+      temperature: 32.1,
+      dbConnection: 'healthy',
+      appVersion: '4.1.0',
+      lastChecked: DateTime(2026, 10, 20, 20, 44, 15),
+      cpuTrend: const [40.0, 42.0, 45.2],
+      memoryTrend: const [65.0, 66.5, 67.8],
+      temperatureTrend: const [30.0, 31.0, 32.1],
+    );
+
+    final fakeRepository = _FakeSystemHealthRepository(mockHealth);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          systemHealthRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: SystemHealthScreen()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Live Server Metrics'), findsOneWidget);
+    expect(find.text('Haptic Feedback'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _FakeSystemHealthRepository extends SystemHealthRepository {

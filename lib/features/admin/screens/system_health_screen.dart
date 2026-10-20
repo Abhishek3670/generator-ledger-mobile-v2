@@ -56,11 +56,13 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                   children: [
                     const Icon(Icons.wifi_off, color: AppColors.warningText, size: 16),
                     const SizedBox(width: 8),
-                    Text(
-                      'No internet connection - Monitoring Offline',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.warningText,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        'No internet connection - Monitoring Offline',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.warningText,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -144,6 +146,7 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,20 +162,28 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                                     ),
                                   ],
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'LAST CHECKED',
-                                      style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      '${health.lastChecked.month}/${health.lastChecked.day}/${health.lastChecked.year}, '
-                                      '${health.lastChecked.hour.toString().padLeft(2, '0')}:${health.lastChecked.minute.toString().padLeft(2, '0')}:${health.lastChecked.second.toString().padLeft(2, '0')}',
-                                      style: AppTypography.bodySmall.copyWith(fontFamily: 'Courier', fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        'LAST CHECKED',
+                                        style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary, fontSize: 10),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '${health.lastChecked.month}/${health.lastChecked.day}/${health.lastChecked.year}, '
+                                        '${health.lastChecked.hour.toString().padLeft(2, '0')}:${health.lastChecked.minute.toString().padLeft(2, '0')}:${health.lastChecked.second.toString().padLeft(2, '0')}',
+                                        style: AppTypography.label.copyWith(
+                                          fontFamily: 'Courier',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -261,20 +272,23 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Haptic Feedback',
-                                      style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Provide tactile feedback for taps and actions.',
-                                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
-                                    ),
-                                  ],
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Haptic Feedback',
+                                        style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Provide tactile feedback for taps and actions.',
+                                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                const SizedBox(width: 12),
                                 Switch(
                                   value: HapticService.isEnabled,
                                   activeThumbColor: AppColors.accent,
@@ -314,9 +328,13 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                                   'Title:',
                                   style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
                                 ),
-                                Text(
-                                  'Generator Booking Ledger',
-                                  style: AppTypography.bodySmall,
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    'Generator Booking Ledger',
+                                    style: AppTypography.bodySmall,
+                                    textAlign: TextAlign.end,
+                                  ),
                                 ),
                               ],
                             ),
@@ -328,9 +346,13 @@ class _SystemHealthScreenState extends ConsumerState<SystemHealthScreen> {
                                   'Version:',
                                   style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
                                 ),
-                                Text(
-                                  health.appVersion,
-                                  style: AppTypography.bodySmall,
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    health.appVersion,
+                                    style: AppTypography.bodySmall,
+                                    textAlign: TextAlign.end,
+                                  ),
                                 ),
                               ],
                             ),
