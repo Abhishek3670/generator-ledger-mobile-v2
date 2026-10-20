@@ -18,6 +18,7 @@ import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/data/repositories/generator_repository.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
+import 'package:ledger/shared/widgets/draggable_form_sheet.dart';
 
 void main() {
   testWidgets('AddBookingModal renders successfully and shows new elements', (
@@ -43,14 +44,16 @@ void main() {
       findsNWidgets(2),
     ); // Title and save button
 
-    // Verify subcomponent labels
+    // Verify subcomponent labels (numbered step headers removed)
     expect(find.text('Vendor *'), findsOneWidget);
-    expect(find.text('Generator Schedules'), findsOneWidget);
     expect(find.text('Capacity (kVA)'), findsOneWidget);
     expect(find.text('Quantity'), findsOneWidget);
     expect(find.text('Booking Dates'), findsOneWidget);
-    expect(find.text('Order Summary'), findsOneWidget);
-    expect(find.text('Additional Notes'), findsOneWidget);
+    expect(find.text('Total Units'), findsOneWidget);
+    expect(find.text('Optional Notes'), findsOneWidget);
+    expect(find.text('Vendor Details'), findsNothing);
+    expect(find.text('Generator Schedules'), findsNothing);
+    expect(find.text('Additional Notes'), findsNothing);
 
     // Verify presence of child widgets
     expect(find.byType(AutocompleteField<Vendor>), findsOneWidget);
@@ -129,6 +132,61 @@ void main() {
 
     // Check capacity selection is pre-selected
     expect(find.text('Capacity (kVA)'), findsOneWidget);
+  });
+
+  testWidgets(
+    'Capacity dropdown only shows capacities existing in generator database',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _providerOverrides(),
+          child: const MaterialApp(
+            home: Scaffold(
+              body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open dropdown
+      final dropdownFinder = find.byType(DropdownButton<String>);
+      expect(dropdownFinder, findsOneWidget);
+      await tester.ensureVisible(dropdownFinder);
+      await tester.tap(dropdownFinder);
+      await tester.pumpAndSettle();
+
+      // In _FakeGeneratorRepository: mockGenerators has 45 kVA, 100 kVA, 125 kVA
+      expect(find.text('45 kVA'), findsWidgets);
+      expect(find.text('100 kVA'), findsWidgets);
+      expect(find.text('125 kVA'), findsWidgets);
+
+      // Non-existent capacities like 50 kVA, 82 kVA, 160 kVA must NOT be in the dropdown
+      expect(find.text('50 kVA'), findsNothing);
+      expect(find.text('82 kVA'), findsNothing);
+      expect(find.text('160 kVA'), findsNothing);
+    },
+  );
+
+  testWidgets('Vendor field is configured in pinnedHeader to stick on scroll', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _providerOverrides(),
+        child: const MaterialApp(
+          home: Scaffold(
+            body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final sheetFinder = find.byType(DraggableFormSheet);
+    expect(sheetFinder, findsOneWidget);
+    final sheet = tester.widget<DraggableFormSheet>(sheetFinder);
+    expect(sheet.pinnedHeader, isNotNull);
   });
 
   testWidgets(

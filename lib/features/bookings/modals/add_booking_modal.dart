@@ -172,12 +172,31 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
 
   void _applyDefaults() {
     final defaults = ref.read(formDefaultsServiceProvider).getBookingDefaults();
+    final generators = ref.read(generatorProvider).valueOrNull ?? [];
+    final dbCapacities =
+        generators
+            .map((g) => g.capacity.replaceAll(RegExp(r'[^0-9.]'), ''))
+            .where((c) => c.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort(
+            (a, b) =>
+                (double.tryParse(a) ?? 0).compareTo(double.tryParse(b) ?? 0),
+          );
+
+    final initialCapacity =
+        (defaults.lastCapacities != null &&
+            defaults.lastCapacities!.isNotEmpty &&
+            dbCapacities.contains(defaults.lastCapacities!.first))
+        ? defaults.lastCapacities!
+        : (dbCapacities.isNotEmpty ? [dbCapacities.first] : ['50']);
+
     setState(() {
       _requirements = [
         BookingRequirement(
           id: 'req_1',
           selectedDates: [defaults.startDate],
-          selectedCapacities: defaults.lastCapacities ?? ['50'],
+          selectedCapacities: initialCapacity,
         ),
       ];
       if (widget.lockedVendorId != null) {
@@ -557,64 +576,6 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
       ),
     );
     return result ?? false;
-  }
-
-  Widget _buildStepHeader({
-    required String stepNumber,
-    required String title,
-    String? subtitle,
-    Widget? trailing,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: const BoxDecoration(
-              color: Color(0xFFDBEAFE),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              stepNumber,
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1E3A8A),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Spacer(),
-          if (trailing != null)
-            Flexible(child: trailing)
-          else if (subtitle != null)
-            Flexible(
-              child: Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.end,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 
   String _formatDateRange(List<DateTime> dates) {
@@ -1210,78 +1171,30 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     final allBookingsMap =
         ref.watch(allVendorBookingsProvider).valueOrNull ?? {};
 
-    final loadedCaps = availableGenerators
-        .map((g) => g.capacity.replaceAll(RegExp(r'[^0-9.]'), ''))
-        .where((c) => c.isNotEmpty)
-        .toSet();
-    final defaultCaps = {
-      '15',
-      '20',
-      '25',
-      '30',
-      '40',
-      '45',
-      '50',
-      '62.5',
-      '75',
-      '82.5',
-      '100',
-      '125',
-      '160',
-      '200',
-      '250',
-    };
-    final availableCapacities = <String>{...defaultCaps, ...loadedCaps}.toList()
-      ..sort(
-        (a, b) => (double.tryParse(a) ?? 0).compareTo(double.tryParse(b) ?? 0),
-      );
-
-    final totalUnits = _requirements.fold<int>(
-      0,
-      (sum, req) => sum + req.quantity,
-    );
+    final availableCapacities =
+        availableGenerators
+            .map((g) => g.capacity.replaceAll(RegExp(r'[^0-9.]'), ''))
+            .where((c) => c.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort(
+            (a, b) =>
+                (double.tryParse(a) ?? 0).compareTo(double.tryParse(b) ?? 0),
+          );
 
     return DraggableFormSheet(
       title: 'Create Booking',
       category: 'bookings',
       onClose: widget.onClose,
       onDismissAttempt: _onDismissAttempt,
-      footer: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _isSubmitting ? null : _submitForm,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent,
-            foregroundColor: AppColors.primary,
-            elevation: 0,
-            shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-          child: _isSubmitting
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
-                  ),
-                )
-              : Text(
-                  'Create Booking',
-                  style: AppTypography.labelCaps.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-        ),
-      ),
-      child: Column(
+      pinnedHeader: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Submission Error Alert Box
+          // Submission Error Alert Box (pinned at top)
           if (_submissionError != null) ...[
             Container(
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppColors.danger.withValues(alpha: 0.1),
@@ -1325,12 +1238,7 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             ),
           ],
 
-          // 1. Vendor Selection
-          _buildStepHeader(
-            stepNumber: '1',
-            title: 'Vendor Details',
-            subtitle: 'Select client or vendor',
-          ),
+          // Sticky Vendor Selection
           AutocompleteField<Vendor>(
             items: vendors,
             initialValue: _selectedVendorId != null
@@ -1353,18 +1261,45 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             errorText: _vendorError,
             enabled: widget.lockedVendorId == null,
           ),
-          const SizedBox(height: 12),
-
-          // Existing Bookings
-          _buildExistingBookingsSection(bookings, _selectedVendorId),
-          const SizedBox(height: 20),
-
-          // 2. Generator Schedules
-          _buildStepHeader(
-            stepNumber: '2',
-            title: 'Generator Schedules',
-            subtitle: 'Add one or more generator requirements',
+        ],
+      ),
+      footer: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: _isSubmitting ? null : _submitForm,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            elevation: 0,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
+          child: _isSubmitting
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                )
+              : Text(
+                  'Create Booking',
+                  style: AppTypography.labelCaps.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Existing Bookings Section
+          _buildExistingBookingsSection(bookings, _selectedVendorId),
+          const SizedBox(height: 16),
+
+          // Generator Schedules
           for (int i = 0; i < _requirements.length; i++)
             _buildRequirementCard(
               i,
@@ -1383,10 +1318,13 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
           OutlinedButton.icon(
             onPressed: () {
               setState(() {
+                final nextCap = availableCapacities.isNotEmpty
+                    ? availableCapacities.first
+                    : '50';
                 _requirements.add(
                   BookingRequirement(
                     id: 'req_${DateTime.now().millisecondsSinceEpoch}',
-                    selectedCapacities: ['20'],
+                    selectedCapacities: [nextCap],
                     quantity: 1,
                     selectedDates: _requirements.isNotEmpty
                         ? List.of(_requirements.last.selectedDates)
@@ -1405,29 +1343,20 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // 3. Order Summary
-          _buildStepHeader(
-            stepNumber: '3',
-            title: 'Order Summary',
-            trailing: Text(
-              'Total: $totalUnits unit${totalUnits != 1 ? 's' : ''}',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-          ),
+          // Order Summary Card
           _buildOrderSummary(),
 
-          // 4. Notes
-          _buildStepHeader(
-            stepNumber: '4',
-            title: 'Additional Notes',
-            subtitle: 'Optional',
+          // Optional Notes
+          Text(
+            'Optional Notes',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
+          const SizedBox(height: 6),
           _buildFieldWrapper(
             focusNode: _notesFocusNode,
             hasFocus: _notesHasFocus,

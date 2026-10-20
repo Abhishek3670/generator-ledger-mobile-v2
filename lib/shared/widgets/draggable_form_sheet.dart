@@ -16,6 +16,9 @@ class DraggableFormSheet extends StatefulWidget {
   /// The uppercase category label displayed above the title (e.g., "BOOKINGS").
   final String category;
 
+  /// Optional pinned header widget displayed above the scrollable content.
+  final Widget? pinnedHeader;
+
   /// The main form content.
   final Widget child;
 
@@ -37,6 +40,7 @@ class DraggableFormSheet extends StatefulWidget {
     super.key,
     required this.title,
     required this.category,
+    this.pinnedHeader,
     required this.child,
     this.footer,
     required this.onClose,
@@ -49,7 +53,8 @@ class DraggableFormSheet extends StatefulWidget {
 }
 
 class _DraggableFormSheetState extends State<DraggableFormSheet> {
-  final DraggableScrollableController _sheetController = DraggableScrollableController();
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
   bool _isDismissing = false;
 
   @override
@@ -122,7 +127,8 @@ class _DraggableFormSheetState extends State<DraggableFormSheet> {
           child: DraggableScrollableSheet(
             controller: _sheetController,
             initialChildSize: 0.6,
-            minChildSize: 0.2, // slightly below 0.3 to allow drag-down detection
+            minChildSize:
+                0.2, // slightly below 0.3 to allow drag-down detection
             maxChildSize: 0.9,
             snap: true,
             snapSizes: const [0.3, 0.6, 0.9],
@@ -200,7 +206,7 @@ class _DraggableFormSheetState extends State<DraggableFormSheet> {
                             onPressed: () async {
                               if (!_isDismissing) {
                                 _isDismissing = true;
-                                  await _handleDismissAttempt();
+                                await _handleDismissAttempt();
                               }
                             },
                             icon: const Icon(
@@ -216,6 +222,25 @@ class _DraggableFormSheetState extends State<DraggableFormSheet> {
                       height: 1,
                       thickness: 1,
                     ),
+
+                    // Pinned header widget (stays sticky when scrolling down)
+                    if (widget.pinnedHeader != null) ...[
+                      Container(
+                        color: AppColors.background,
+                        padding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          12.0,
+                          16.0,
+                          8.0,
+                        ),
+                        child: widget.pinnedHeader!,
+                      ),
+                      const Divider(
+                        color: AppColors.border,
+                        height: 1,
+                        thickness: 1,
+                      ),
+                    ],
 
                     // Scrollable content area wrapping the form child
                     Expanded(
