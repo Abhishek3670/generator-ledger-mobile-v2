@@ -73,14 +73,16 @@ class AdminBottomNavBar extends StatelessWidget {
                             size: 20,
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            item.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.labelCaps.copyWith(
-                              fontSize: 9,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                              color: isSelected ? AppColors.onTertiaryFixed : AppColors.slate400,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              item.label,
+                              maxLines: 1,
+                              style: AppTypography.labelCaps.copyWith(
+                                fontSize: 9,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                color: isSelected ? AppColors.onTertiaryFixed : AppColors.slate400,
+                              ),
                             ),
                           ),
                         ],

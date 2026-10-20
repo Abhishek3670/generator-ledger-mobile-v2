@@ -115,12 +115,15 @@ class _VendorGroupSectionState extends State<VendorGroupSection> {
                   borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
                   border: Border.all(color: borderColor, width: 1),
                 ),
-                child: Text(
-                  '${widget.vendors.length}',
-                  style: AppTypography.labelCaps.copyWith(
-                    color: countBadgeColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${widget.vendors.length}',
+                    style: AppTypography.labelCaps.copyWith(
+                      color: countBadgeColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
               ),

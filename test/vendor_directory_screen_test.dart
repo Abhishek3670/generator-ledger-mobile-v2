@@ -129,6 +129,36 @@ void main() {
       expect(textWidget.overflow, equals(TextOverflow.ellipsis));
     },
   );
+
+  testWidgets(
+    'VendorGroupSection handles extreme system font scaling (2.5x) without overflow',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: const TextScaler.linear(2.5),
+            ),
+            child: child!,
+          ),
+          home: const Scaffold(
+            body: SizedBox(
+              width: 320,
+              child: VendorGroupSection(
+                title: 'Retailer Vendor',
+                description: 'Test description',
+                category: 'retailer',
+                vendors: [],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 class _FakeVendorRepository extends VendorRepository {

@@ -137,12 +137,15 @@ class _InventoryGroupSectionState extends State<InventoryGroupSection> {
                   borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
                   border: Border.all(color: borderColor, width: 1),
                 ),
-                child: Text(
-                  '${widget.generators.length}',
-                  style: AppTypography.labelCaps.copyWith(
-                    color: countBadgeColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${widget.generators.length}',
+                    style: AppTypography.labelCaps.copyWith(
+                      color: countBadgeColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
               ),

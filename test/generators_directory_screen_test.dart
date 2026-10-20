@@ -164,6 +164,36 @@ void main() {
       expect(sizedBoxFinder, findsOneWidget);
     },
   );
+
+  testWidgets(
+    'InventoryGroupSection handles extreme system font scaling (2.5x) without overflow',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: const TextScaler.linear(2.5),
+            ),
+            child: child!,
+          ),
+          home: const Scaffold(
+            body: SizedBox(
+              width: 320,
+              child: InventoryGroupSection(
+                title: 'Retailer Genset',
+                description: 'Test description',
+                category: 'retailer',
+                generators: [],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 class _FakeGeneratorRepository extends GeneratorRepository {

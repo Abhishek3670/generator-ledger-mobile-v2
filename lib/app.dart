@@ -14,6 +14,18 @@ class LedgerApp extends StatelessWidget {
       theme: AppTheme.lightTheme(),
       routerConfig: AppRouter.router,
       scaffoldMessengerKey: AppRouter.scaffoldMessengerKey,
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: mediaQuery.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.25,
+            ),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

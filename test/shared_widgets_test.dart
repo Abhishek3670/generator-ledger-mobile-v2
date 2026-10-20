@@ -99,6 +99,24 @@ void main() {
     expect(sizedBoxFinder, findsOneWidget);
   });
 
+  testWidgets('AppBottomNavBar renders cleanly with 2.5x system text scaling without overflow', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: const TextScaler.linear(2.5),
+          ),
+          child: child!,
+        ),
+        home: Scaffold(
+          bottomNavigationBar: AppBottomNavBar(currentIndex: 0, onTap: (_) {}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('BackdropBlurOverlay renders successfully when visible', (
     tester,
   ) async {
