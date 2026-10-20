@@ -18,8 +18,6 @@ import 'package:ledger/data/repositories/booking_repository.dart';
 import 'package:ledger/data/repositories/generator_repository.dart';
 import 'package:ledger/data/repositories/vendor_repository.dart';
 import 'package:ledger/features/bookings/modals/add_booking_modal.dart';
-import 'package:ledger/shared/widgets/assignment_mode_toggle.dart';
-import 'package:ledger/shared/widgets/inline_calendar.dart';
 
 void main() {
   testWidgets('AddBookingModal renders successfully and shows new elements', (
@@ -47,14 +45,16 @@ void main() {
 
     // Verify subcomponent labels
     expect(find.text('Vendor *'), findsOneWidget);
-    expect(find.text('GENERATOR ASSIGNMENT'), findsOneWidget);
-    expect(find.text('BOOKING DATES'), findsOneWidget);
-    expect(find.text('Optional Notes'), findsOneWidget);
+    expect(find.text('Generator Schedules'), findsOneWidget);
+    expect(find.text('Capacity (kVA)'), findsOneWidget);
+    expect(find.text('Quantity'), findsOneWidget);
+    expect(find.text('Booking Dates'), findsOneWidget);
+    expect(find.text('Order Summary'), findsOneWidget);
+    expect(find.text('Additional Notes'), findsOneWidget);
 
     // Verify presence of child widgets
     expect(find.byType(AutocompleteField<Vendor>), findsOneWidget);
-    expect(find.byType(AssignmentModeToggle), findsOneWidget);
-    expect(find.byType(InlineCalendar), findsOneWidget);
+    expect(find.text('Add Another Genset / Schedule'), findsOneWidget);
 
     // Verify presence of "EXISTING BOOKINGS" info card fallback
     expect(
@@ -66,11 +66,19 @@ void main() {
   });
 
   testWidgets(
-    'AddBookingModal toggles generator assignment view conditional fields',
+    'AddBookingModal displays generator requirement card with capacity and availability',
     (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({
+        'last_selected_capacity': ['100'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+
       await tester.pumpWidget(
         ProviderScope(
-          overrides: _providerOverrides(),
+          overrides: [
+            ..._providerOverrides(),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
           child: const MaterialApp(
             home: Scaffold(
               body: AddBookingModal(onClose: _dummyClose, onSave: _dummySave),
@@ -80,20 +88,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Initially mode is 'capacity' -> shows 'Capacity (kVA)' chips and hides 'GENERATOR' dropdown
+      expect(find.text('Generator Requirement'), findsOneWidget);
       expect(find.text('Capacity (kVA)'), findsOneWidget);
-      expect(find.text('GENERATOR'), findsNothing);
-
-      // Tap on the Switch to toggle
-      final switchFinder = find.byType(Switch);
-      expect(switchFinder, findsOneWidget);
-      await tester.ensureVisible(switchFinder);
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
-
-      // Mode is now 'id' -> shows 'GENERATOR' dropdown field and hides 'Capacity (kVA)'
-      expect(find.text('GENERATOR'), findsOneWidget);
-      expect(find.text('Capacity (kVA)'), findsNothing);
+      expect(find.text('Quantity'), findsOneWidget);
+      expect(find.text('Booking Dates'), findsOneWidget);
+      expect(
+        find.textContaining('available on selected date(s)'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -158,7 +160,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final closeButtonFinder = find.byIcon(Icons.close);
+      final closeButtonFinder = find.byIcon(Icons.close).first;
       expect(closeButtonFinder, findsOneWidget);
       await tester.tap(closeButtonFinder);
       await tester.pumpAndSettle();
@@ -195,14 +197,14 @@ void main() {
       await tester.tap(addRequirementButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('ITEM #2'), findsOneWidget);
+      expect(find.text('Generator Requirement'), findsNWidgets(2));
 
       final deleteButton = find.byIcon(Icons.delete_outline);
-      expect(deleteButton, findsOneWidget);
-      await tester.tap(deleteButton);
+      expect(deleteButton, findsNWidgets(2));
+      await tester.tap(deleteButton.last);
       await tester.pumpAndSettle();
 
-      expect(find.text('ITEM #2'), findsNothing);
+      expect(find.text('Generator Requirement'), findsOneWidget);
     },
   );
 
@@ -221,7 +223,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('QUANTITY'), findsOneWidget);
+    expect(find.text('Quantity'), findsOneWidget);
     expect(find.text('1'), findsAtLeastNWidgets(1));
 
     final addQtyFinder = find.byIcon(Icons.add);

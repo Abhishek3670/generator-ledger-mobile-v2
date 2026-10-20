@@ -9,9 +9,6 @@ import '../../../shared/models/booking.dart';
 import '../../../shared/models/vendor.dart';
 import '../../../shared/models/generator.dart';
 import '../../../shared/widgets/draggable_form_sheet.dart';
-import '../../../shared/widgets/assignment_mode_toggle.dart';
-import '../../../shared/widgets/capacity_chip_selector.dart';
-import '../../../shared/widgets/inline_calendar.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../core/providers/booking_provider.dart';
@@ -562,116 +559,500 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     return result ?? false;
   }
 
-  Widget _buildQuantitySection(BookingRequirement req, int availableStock) {
+  Widget _buildStepHeader({
+    required String stepNumber,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: const BoxDecoration(
+              color: Color(0xFFDBEAFE),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              stepNumber,
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1E3A8A),
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Spacer(),
+          if (trailing != null)
+            Flexible(child: trailing)
+          else if (subtitle != null)
+            Flexible(
+              child: Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateRange(List<DateTime> dates) {
+    if (dates.isEmpty) return 'Select dates';
+    if (dates.length == 1) {
+      return DateFormat('MMM d, yyyy').format(dates.first);
+    }
+    final first = dates.first;
+    final last = dates.last;
+    if (first.year == last.year) {
+      if (first.month == last.month && first.day == last.day) {
+        return DateFormat('MMM d, yyyy').format(first);
+      }
+      return '${DateFormat('MMM d').format(first)} – ${DateFormat('MMM d, yyyy').format(last)}';
+    } else {
+      return '${DateFormat('MMM d, yyyy').format(first)} – ${DateFormat('MMM d, yyyy').format(last)}';
+    }
+  }
+
+  Future<void> _pickDateRange(BookingRequirement req) async {
+    final now = DateTime.now();
+    final initialRange = req.selectedDates.isNotEmpty
+        ? DateTimeRange(
+            start: req.selectedDates.first,
+            end: req.selectedDates.last,
+          )
+        : DateTimeRange(start: now, end: now);
+
+    final picked = await showDateRangePicker(
+      context: context,
+      initialDateRange: initialRange,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppColors.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final dates = <DateTime>[];
+      var cur = DateTime(
+        picked.start.year,
+        picked.start.month,
+        picked.start.day,
+      );
+      final end = DateTime(picked.end.year, picked.end.month, picked.end.day);
+      while (!cur.isAfter(end)) {
+        dates.add(cur);
+        cur = cur.add(const Duration(days: 1));
+      }
+      setState(() {
+        req.selectedDates = dates;
+      });
+      _onFormChanged();
+    }
+  }
+
+  Widget _buildRequirementCard(
+    int index,
+    BookingRequirement req,
+    List<Generator> availableGenerators,
+    int availableStock,
+    List<String> availableCapacities,
+  ) {
     final hasShortage = availableStock >= 0 && req.quantity > availableStock;
+    final currentCap = req.selectedCapacities.isNotEmpty
+        ? req.selectedCapacities.first
+        : '50';
+    final dropdownCaps = availableCapacities.contains(currentCap)
+        ? availableCapacities
+        : [currentCap, ...availableCapacities];
+    final dateText = _formatDateRange(req.selectedDates);
+
     return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
+        color: hasShortage ? const Color(0xFFFEF2F2) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: hasShortage ? AppColors.danger : AppColors.outlineVariant,
+          color: hasShortage
+              ? const Color(0xFFFCA5A5)
+              : const Color(0xFFE2E8F0),
           width: 1,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                'QUANTITY',
-                style: AppTypography.labelCaps.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+              Container(
+                width: 22,
+                height: 22,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE2E8F0),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${index + 1}',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                    fontSize: 12,
+                  ),
                 ),
               ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  Icon(
-                    availableStock < 0
-                        ? Icons.info_outline
-                        : (hasShortage
-                              ? Icons.warning_amber_rounded
-                              : Icons.check_circle_outline),
-                    size: 12,
-                    color: availableStock < 0
-                        ? AppColors.textSecondary
-                        : (hasShortage ? AppColors.danger : AppColors.success),
+              const SizedBox(width: 8),
+              Text(
+                'Generator Requirement',
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              if (_requirements.length > 1)
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _requirements.removeAt(index);
+                    });
+                    _onFormChanged();
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFFFECACA),
+                        width: 1,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.delete_outline,
+                      size: 16,
+                      color: Color(0xFFEF4444),
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 320;
+              final capacityWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    availableStock < 0
-                        ? 'Stock verified on submit'
-                        : (hasShortage
-                              ? 'Only $availableStock free on date(s)'
-                              : '$availableStock available on date(s)'),
+                    'Capacity (kVA)',
                     style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
                       fontSize: 11,
-                      color: availableStock < 0
-                          ? AppColors.textSecondary
-                          : (hasShortage
-                                ? AppColors.danger
-                                : AppColors.success),
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: currentCap,
+                        isExpanded: true,
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 18,
+                          color: Color(0xFF64748B),
+                        ),
+                        style: AppTypography.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          fontSize: 12,
+                        ),
+                        items: dropdownCaps.map((c) {
+                          return DropdownMenuItem<String>(
+                            value: c,
+                            child: Text(
+                              '$c kVA',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (newCap) {
+                          if (newCap != null) {
+                            setState(() {
+                              req.selectedCapacities = [newCap];
+                            });
+                            _onFormChanged();
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ],
-              ),
-            ],
-          ),
-          const Spacer(),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(9999),
-              border: Border.all(color: AppColors.outlineVariant, width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove, size: 16),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  splashRadius: 16,
-                  onPressed: req.quantity > 1
-                      ? () {
-                          setState(() => req.quantity--);
-                          _onFormChanged();
-                        }
-                      : null,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    '${req.quantity}',
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+              );
+
+              final quantityWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Quantity',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add, size: 16),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          borderRadius: const BorderRadius.horizontal(
+                            left: Radius.circular(8),
+                          ),
+                          onTap: req.quantity > 1
+                              ? () {
+                                  setState(() => req.quantity--);
+                                  _onFormChanged();
+                                }
+                              : null,
+                          child: SizedBox(
+                            width: 28,
+                            height: 38,
+                            child: Icon(
+                              Icons.remove,
+                              size: 14,
+                              color: req.quantity > 1
+                                  ? AppColors.primary
+                                  : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 32,
+                          height: 28,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: hasShortage
+                                ? const Color(0xFFFEE2E2)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${req.quantity}',
+                            style: AppTypography.bodySmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          borderRadius: const BorderRadius.horizontal(
+                            right: Radius.circular(8),
+                          ),
+                          onTap: () {
+                            setState(() => req.quantity++);
+                            _onFormChanged();
+                          },
+                          child: const SizedBox(
+                            width: 28,
+                            height: 38,
+                            child: Icon(
+                              Icons.add,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  splashRadius: 16,
-                  onPressed: () {
-                    setState(() => req.quantity++);
-                    _onFormChanged();
-                  },
+                ],
+              );
+
+              final datesWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Booking Dates',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  InkWell(
+                    onTap: () => _pickDateRange(req),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 14,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              dateText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.bodySmall.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                                color: req.selectedDates.isEmpty
+                                    ? AppColors.textSecondary
+                                    : AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          if (req.selectedDates.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  req.selectedDates = [];
+                                });
+                                _onFormChanged();
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 2.0),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: capacityWidget),
+                    const SizedBox(width: 8),
+                    quantityWidget,
+                    const SizedBox(width: 8),
+                    Expanded(flex: 4, child: datesWidget),
+                  ],
+                );
+              } else {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: capacityWidget),
+                        const SizedBox(width: 8),
+                        quantityWidget,
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    datesWidget,
+                  ],
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                availableStock < 0
+                    ? Icons.info_outline
+                    : (hasShortage ? Icons.error : Icons.check_circle),
+                size: 14,
+                color: availableStock < 0
+                    ? AppColors.textSecondary
+                    : (hasShortage
+                          ? const Color(0xFFDC2626)
+                          : const Color(0xFF059669)),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  availableStock < 0
+                      ? 'Availability verified on submit'
+                      : (hasShortage
+                            ? 'Only $availableStock available on selected date(s)'
+                            : '$availableStock available on selected date(s)'),
+                  style: AppTypography.bodySmall.copyWith(
+                    fontSize: 12,
+                    color: availableStock < 0
+                        ? AppColors.textSecondary
+                        : (hasShortage
+                              ? const Color(0xFFDC2626)
+                              : const Color(0xFF059669)),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -679,271 +1060,140 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
   }
 
   Widget _buildOrderSummary() {
-    final Map<String, List<String>> breakdown = {};
-    int totalUnits = 0;
-    for (final req in _requirements) {
-      final cap = req.selectedCapacities.isNotEmpty
-          ? req.selectedCapacities.first
-          : '50';
-      final label = '${req.quantity}× $cap kVA';
-      for (final d in req.selectedDates) {
-        final dStr = DateFormat('dd MMM yyyy').format(d);
-        breakdown.putIfAbsent(dStr, () => []).add(label);
-        totalUnits += req.quantity;
-      }
-    }
-
-    if (totalUnits <= 1 && breakdown.length <= 1) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.receipt_long_outlined,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'ORDER SCHEDULE BREAKDOWN',
-                style: AppTypography.labelCaps.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ...breakdown.entries.map(
-            (e) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '• ${e.key}: ',
-                    style: AppTypography.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      e.value.join(', '),
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Divider(height: 16),
-          Text(
-            'Total: $totalUnits genset reservation(s) across ${breakdown.length} date(s)',
-            style: AppTypography.bodySmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
+    final totalUnits = _requirements.fold<int>(
+      0,
+      (sum, req) => sum + req.quantity,
     );
-  }
 
-  Widget _buildAdditionalRequirementCard(
-    int index,
-    BookingRequirement req,
-    List<Generator> availableGenerators,
-    int availableStock,
-  ) {
-    final hasShortage = req.quantity > availableStock;
     return Container(
-      margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: hasShortage ? AppColors.danger : AppColors.outlineVariant,
-          width: hasShortage ? 1.5 : 1,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            offset: Offset(0, 1),
-            blurRadius: 2,
-            color: AppColors.shadowSoft,
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
+          Expanded(
+            child: Column(
+              children: List.generate(_requirements.length, (i) {
+                final req = _requirements[i];
+                final cap = req.selectedCapacities.isNotEmpty
+                    ? req.selectedCapacities.first
+                    : '50';
+                final dateStr = _formatDateRange(req.selectedDates);
+                final isLast = i == _requirements.length - 1;
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 13,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            dateStr,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6.0),
+                          child: Text(
+                            '|',
+                            style: TextStyle(
+                              color: Color(0xFFE2E8F0),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '$cap kVA',
+                          style: AppTypography.bodySmall.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6.0),
+                          child: Text(
+                            '|',
+                            style: TextStyle(
+                              color: Color(0xFFE2E8F0),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${req.quantity} unit${req.quantity > 1 ? 's' : ''}',
+                          style: AppTypography.bodySmall.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'ITEM #${index + 1}',
-                      style: AppTypography.labelCaps.copyWith(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (hasShortage) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      'Over-capacity',
-                      style: AppTypography.labelCaps.copyWith(
-                        color: AppColors.danger,
-                        fontSize: 10,
-                      ),
-                    ),
+                    if (!isLast)
+                      const Divider(height: 14, color: Color(0xFFF1F5F9)),
                   ],
-                ],
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  size: 20,
-                  color: AppColors.danger,
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () {
-                  setState(() {
-                    _requirements.removeAt(index);
-                  });
-                  _onFormChanged();
-                },
-              ),
-            ],
+                );
+              }),
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildFieldLabel('Capacity (kVA)'),
-          const SizedBox(height: 8),
-          CapacityChipSelector(
-            capacities: const [
-              '15',
-              '20',
-              '30',
-              '45',
-              '50',
-              '82',
-              '100',
-              '125',
-              '160',
-            ],
-            selectedCapacities: req.selectedCapacities,
-            isMultiSelect: false,
-            onCapacitiesChanged: (caps) {
-              setState(() {
-                req.selectedCapacities = caps;
-              });
-              _onFormChanged();
-            },
-          ),
-          _buildQuantitySection(req, availableStock),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'BOOKING DATES',
-                style: AppTypography.labelCaps.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    req.isCalendarExpanded = !req.isCalendarExpanded;
-                  });
-                },
-                icon: Icon(
-                  req.isCalendarExpanded
-                      ? Icons.expand_less
-                      : Icons.expand_more,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                label: Text(
-                  req.isCalendarExpanded ? 'Collapse' : 'Change Dates',
+          const SizedBox(width: 12),
+          Container(
+            width: 104,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Total Units',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E3A8A),
                   ),
                 ),
-              ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.calendar_today,
-                  size: 14,
-                  color: AppColors.textSecondary,
+                const SizedBox(height: 4),
+                Text(
+                  '$totalUnits',
+                  style: AppTypography.display.copyWith(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                    height: 1.1,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    req.selectedDates.isEmpty
-                        ? 'No dates selected'
-                        : 'Selected: ${req.selectedDates.map((d) => DateFormat('MMM d').format(d)).join(', ')} (${req.selectedDates.length} day${req.selectedDates.length > 1 ? 's' : ''})',
-                    style: AppTypography.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  'Across ${_requirements.length} schedule${_requirements.length > 1 ? 's' : ''}',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodySmall.copyWith(
+                    fontSize: 10,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-          if (req.isCalendarExpanded) ...[
-            const SizedBox(height: 8),
-            InlineCalendar(
-              selectionMode: CalendarSelectionMode.multi,
-              selectedDates: req.selectedDates,
-              onDatesChanged: (dates) {
-                setState(() {
-                  req.selectedDates = dates;
-                });
-                _onFormChanged();
-              },
-            ),
-          ],
         ],
       ),
     );
@@ -960,11 +1210,35 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
     final allBookingsMap =
         ref.watch(allVendorBookingsProvider).valueOrNull ?? {};
 
-    final firstReq = _requirements.first;
-    final firstAvailableStock = _calculateAvailableUnits(
-      firstReq,
-      availableGenerators,
-      allBookingsMap,
+    final loadedCaps = availableGenerators
+        .map((g) => g.capacity.replaceAll(RegExp(r'[^0-9.]'), ''))
+        .where((c) => c.isNotEmpty)
+        .toSet();
+    final defaultCaps = {
+      '15',
+      '20',
+      '25',
+      '30',
+      '40',
+      '45',
+      '50',
+      '62.5',
+      '75',
+      '82.5',
+      '100',
+      '125',
+      '160',
+      '200',
+      '250',
+    };
+    final availableCapacities = <String>{...defaultCaps, ...loadedCaps}.toList()
+      ..sort(
+        (a, b) => (double.tryParse(a) ?? 0).compareTo(double.tryParse(b) ?? 0),
+      );
+
+    final totalUnits = _requirements.fold<int>(
+      0,
+      (sum, req) => sum + req.quantity,
     );
 
     return DraggableFormSheet(
@@ -1052,6 +1326,11 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
           ],
 
           // 1. Vendor Selection
+          _buildStepHeader(
+            stepNumber: '1',
+            title: 'Vendor Details',
+            subtitle: 'Select client or vendor',
+          ),
           AutocompleteField<Vendor>(
             items: vendors,
             initialValue: _selectedVendorId != null
@@ -1074,148 +1353,31 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             errorText: _vendorError,
             enabled: widget.lockedVendorId == null,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
 
-          // 2. Existing Bookings
+          // Existing Bookings
           _buildExistingBookingsSection(bookings, _selectedVendorId),
           const SizedBox(height: 20),
 
-          // 3. Generator Assignment Mode (Primary Item)
-          _buildSectionHeader('GENERATOR ASSIGNMENT'),
-          const SizedBox(height: 8),
-          AssignmentModeToggle(
-            currentMode: firstReq.assignmentMode,
-            onModeChanged: (mode) {
-              setState(() {
-                firstReq.assignmentMode = mode;
-                _generatorError = null;
-              });
-              _onFormChanged();
-            },
+          // 2. Generator Schedules
+          _buildStepHeader(
+            stepNumber: '2',
+            title: 'Generator Schedules',
+            subtitle: 'Add one or more generator requirements',
           ),
-          const SizedBox(height: 20),
-
-          // 4. Conditional Assignment Fields (Primary Item)
-          if (firstReq.assignmentMode == 'id') ...[
-            AutocompleteField<Generator>(
-              items: availableGenerators,
-              initialValue: firstReq.selectedGeneratorId != null
-                  ? availableGenerators.firstWhere(
-                      (g) => g.id == firstReq.selectedGeneratorId,
-                      orElse: () => availableGenerators.first,
-                    )
-                  : null,
-              displayStringForOption: (Generator gen) =>
-                  '${gen.id} (${gen.capacity} - ${gen.category})',
-              searchFields: (Generator gen) => [
-                gen.id,
-                gen.capacity,
-                gen.category,
-              ],
-              onSelected: (Generator? gen) {
-                setState(() {
-                  firstReq.selectedGeneratorId = gen?.id;
-                  _generatorError = null;
-                });
-                _onFormChanged();
-              },
-              hintText: 'Type generator ID or capacity...',
-              labelText: 'GENERATOR',
-              errorText: _generatorError,
-            ),
-          ] else ...[
-            _buildFieldLabel('Capacity (kVA)'),
-            const SizedBox(height: 8),
-            CapacityChipSelector(
-              capacities: const [
-                '15',
-                '20',
-                '30',
-                '45',
-                '50',
-                '82',
-                '100',
-                '125',
-                '160',
-              ],
-              selectedCapacities: firstReq.selectedCapacities,
-              isMultiSelect: true,
-              onCapacitiesChanged: (caps) {
-                setState(() {
-                  firstReq.selectedCapacities = caps;
-                });
-                _onFormChanged();
-              },
-            ),
-          ],
-
-          // Quantity Stepper (Primary Item)
-          _buildQuantitySection(firstReq, firstAvailableStock),
-          const SizedBox(height: 20),
-
-          // 5. Booking Dates (Primary Item)
-          _buildSectionHeader('BOOKING DATES'),
-          const SizedBox(height: 8),
-          InlineCalendar(
-            selectionMode: CalendarSelectionMode.multi,
-            selectedDates: firstReq.selectedDates,
-            onDatesChanged: (dates) {
-              setState(() {
-                firstReq.selectedDates = dates;
-                _dateError = null;
-              });
-              _onFormChanged();
-            },
-          ),
-          if (_dateError != null) _buildValidationError(_dateError!),
-
-          // Date selection feedback display
-          if (firstReq.selectedDates.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Selected: ${firstReq.selectedDates.map((d) => DateFormat('MMM d').format(d)).join(', ')} (${firstReq.selectedDates.length} days)',
-                      style: AppTypography.bodySmall.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          // 6. Additional Requirements List
-          if (_requirements.length > 1) ...[
-            for (int i = 1; i < _requirements.length; i++)
-              _buildAdditionalRequirementCard(
-                i,
+          for (int i = 0; i < _requirements.length; i++)
+            _buildRequirementCard(
+              i,
+              _requirements[i],
+              availableGenerators,
+              _calculateAvailableUnits(
                 _requirements[i],
                 availableGenerators,
-                _calculateAvailableUnits(
-                  _requirements[i],
-                  availableGenerators,
-                  allBookingsMap,
-                ),
+                allBookingsMap,
               ),
-          ],
-
-          const SizedBox(height: 16),
+              availableCapacities,
+            ),
+          const SizedBox(height: 4),
 
           // Add Requirement Action Button
           OutlinedButton.icon(
@@ -1238,20 +1400,34 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
             label: const Text('Add Another Genset / Schedule'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.outlineVariant),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
               shape: const StadiumBorder(),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
           ),
+          const SizedBox(height: 20),
 
-          // 7. Order Schedule Breakdown Summary
+          // 3. Order Summary
+          _buildStepHeader(
+            stepNumber: '3',
+            title: 'Order Summary',
+            trailing: Text(
+              'Total: $totalUnits unit${totalUnits != 1 ? 's' : ''}',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ),
           _buildOrderSummary(),
 
-          const SizedBox(height: 12),
-
-          // 8. Notes
-          _buildFieldLabel('Optional Notes'),
-          const SizedBox(height: 8),
+          // 4. Notes
+          _buildStepHeader(
+            stepNumber: '4',
+            title: 'Additional Notes',
+            subtitle: 'Optional',
+          ),
           _buildFieldWrapper(
             focusNode: _notesFocusNode,
             hasFocus: _notesHasFocus,
@@ -1275,36 +1451,6 @@ class _AddBookingModalState extends ConsumerState<AddBookingModal> {
         color: AppColors.primary,
         letterSpacing: 2.2,
         fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
-  Widget _buildFieldLabel(String label) {
-    return Text(
-      label,
-      style: AppTypography.bodySmall.copyWith(
-        color: AppColors.primary,
-        fontWeight: FontWeight.w500,
-      ),
-    );
-  }
-
-  Widget _buildValidationError(String error) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6.0),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, size: 14, color: AppColors.danger),
-          const SizedBox(width: 4),
-          Text(
-            error,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.danger,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }
