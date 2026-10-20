@@ -128,6 +128,47 @@ void main() {
       expect((items[1] as Map)['date'], '2026-11-18');
     });
 
+    test('createBooking omits generator_id when booking by capacity (empty generatorId)', () async {
+      final apiClient = _FakeApiClient(
+        response: {
+          'booking_id': 'BK-CAP-01',
+          'success': true,
+        },
+      );
+      final repository = BookingRepository(apiClient: apiClient);
+
+      await repository.createBooking(
+        Booking.withGenerators(
+          bookingId: 'BK-CAP-01',
+          vendorId: 'VEN001',
+          vendorName: 'TEST',
+          generators: [],
+          startDate: DateTime(2026, 11, 18),
+          endDate: DateTime(2026, 11, 19),
+          status: 'Confirmed',
+          notes: '',
+          capacity: '30 kVA',
+          items: [
+            BookingItem(
+              generatorId: '',
+              capacityKva: 30,
+              startDt: '2026-11-18',
+              itemStatus: 'Confirmed',
+              isEmergency: false,
+              remarks: '',
+            ),
+          ],
+        ),
+      );
+
+      final postData = apiClient.lastPostData as Map<String, dynamic>;
+      final items = postData['items'] as List;
+      final itemMap = items.first as Map<String, dynamic>;
+      expect(itemMap['date'], '2026-11-18');
+      expect(itemMap['capacity_kva'], 30);
+      expect(itemMap.containsKey('generator_id'), isFalse);
+    });
+
     test('updateBooking uses PATCH and deleteBooking uses DELETE', () async {
       final apiClient = _FakeApiClient(
         response: {

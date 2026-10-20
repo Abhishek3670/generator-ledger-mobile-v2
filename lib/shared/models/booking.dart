@@ -40,15 +40,14 @@ class BookingItem {
 
   Map<String, dynamic> toMap() {
     final dateStr = startDt.isNotEmpty ? startDt.split(RegExp(r'[ T]'))[0] : '';
+    final hasGenId = generatorId.isNotEmpty &&
+        generatorId != 'AUTO-ASSIGN' &&
+        generatorId != 'N/A';
     return {
-      'generator_id': generatorId,
-      if (capacityKva != null) 'capacity_kva': capacityKva,
       'date': dateStr,
-      'start_dt': startDt,
-      'end_dt': endDt,
-      'item_status': itemStatus,
-      'is_emergency': isEmergency,
-      'remarks': remarks,
+      if (hasGenId) 'generator_id': generatorId,
+      if (capacityKva != null) 'capacity_kva': capacityKva,
+      if (remarks.isNotEmpty) 'remarks': remarks,
     };
   }
 }
@@ -230,15 +229,27 @@ class Booking {
     } else {
       // Construct items from generators list (used when creating bookings)
       final capacityNum = int.tryParse(capacity.replaceAll(RegExp(r'[^0-9]'), ''));
-      apiItems = generators
-          .where((g) => g.isNotEmpty && g != 'N/A')
-          .map((genId) => {
-                'generator_id': genId,
-                if (capacityNum != null) 'capacity_kva': capacityNum,
-                'date': startDate.toIso8601String().split('T')[0],
-                'remarks': notes,
-              })
+      final validGenIds = generators
+          .where((g) => g.isNotEmpty && g != 'N/A' && g != 'AUTO-ASSIGN')
           .toList();
+      if (validGenIds.isNotEmpty) {
+        apiItems = validGenIds
+            .map((genId) => {
+                  'generator_id': genId,
+                  if (capacityNum != null) 'capacity_kva': capacityNum,
+                  'date': startDate.toIso8601String().split('T')[0],
+                  if (notes.isNotEmpty) 'remarks': notes,
+                })
+            .toList();
+      } else {
+        apiItems = [
+          {
+            'date': startDate.toIso8601String().split('T')[0],
+            if (capacityNum != null) 'capacity_kva': capacityNum,
+            if (notes.isNotEmpty) 'remarks': notes,
+          }
+        ];
+      }
     }
 
     return {
