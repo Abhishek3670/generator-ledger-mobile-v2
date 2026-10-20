@@ -125,18 +125,39 @@ class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
         children: [
           // Details Grid (Status, Booked)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border, width: 1),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildRowDetail('STATUS', StatusBadge(label: widget.booking.status, type: _getStatusType(widget.booking.status))),
-                _buildRowDetail('BOOKED', Text(DateFormat('yyyy-MM-dd').format(widget.booking.date), style: AppTypography.bodySmall)),
-              ],
+            child: SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _buildRowDetail(
+                    'STATUS',
+                    StatusBadge(
+                      label: widget.booking.status,
+                      type: _getStatusType(widget.booking.status),
+                    ),
+                  ),
+                  _buildRowDetail(
+                    'BOOKED',
+                    Text(
+                      DateFormat('yyyy-MM-dd').format(widget.booking.date),
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -214,7 +235,7 @@ class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              SizedBox(width: 100, child: Text('DATE', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
+              SizedBox(width: 110, child: Text('DATE', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 200, child: Text('GENERATORS', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 100, child: Text('CAPACITY', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
               SizedBox(width: 140, child: Text('STATUS', style: AppTypography.labelCaps.copyWith(color: AppColors.textSecondary))),
@@ -231,7 +252,7 @@ class _BookingDetailModalState extends ConsumerState<BookingDetailModal> {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  SizedBox(width: 100, child: Text(date, style: AppTypography.bodySmall)),
+                  SizedBox(width: 110, child: Text(date, style: AppTypography.bodySmall, maxLines: 1)),
                   SizedBox(width: 200, child: Text(item.generatorId, style: AppTypography.bodySmall.copyWith(color: item.isEmergency ? AppColors.danger : null), overflow: TextOverflow.ellipsis)),
                   SizedBox(width: 100, child: Text(capacityStr, style: AppTypography.bodySmall)),
                   SizedBox(width: 140, child: Align(alignment: Alignment.centerLeft, child: StatusBadge(label: item.itemStatus, type: _getStatusType(item.itemStatus)))),
