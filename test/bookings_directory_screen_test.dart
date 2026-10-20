@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:ledger/core/providers/booking_provider.dart';
 import 'package:ledger/core/providers/vendor_provider.dart';
 import 'package:ledger/data/mock/mock_bookings.dart';
@@ -15,7 +16,7 @@ import 'package:ledger/shared/widgets/floating_search_fab.dart';
 
 void main() {
   testWidgets(
-    'BookingsDirectoryScreen renders successfully with all elements',
+    'BookingsDirectoryScreen renders successfully with all elements and defaults to current month',
     (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -40,13 +41,105 @@ void main() {
         findsOneWidget,
       );
 
-      // Verify FloatingSearchFAB and bottom navbar are active
+      // Verify FloatingSearchFAB is active
       expect(find.byType(FloatingSearchFAB), findsOneWidget);
 
-      // Verify Vendor groups render (e.g. Abraar and Ankit Singh)
-      expect(find.byType(VendorBookingGroup), findsAtLeastNWidgets(2));
+      // Verify Month Filter defaults to current month
+      final currentMonthStr =
+          DateFormat('MMMM yyyy').format(DateTime.now()).toUpperCase();
+      expect(find.text(currentMonthStr), findsOneWidget);
+
+      // Verify current month vendor groups render
+      expect(find.byType(VendorBookingGroup), findsAtLeastNWidgets(1));
+      expect(find.text('Global Rentals Ltd'), findsAtLeastNWidgets(1));
+
+      // Verify vendors not in current month are filtered out
+      expect(find.text('Abraar'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'BookingsDirectoryScreen toggles between current month and all months',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bookingRepositoryProvider.overrideWithValue(
+              _FakeBookingRepository(),
+            ),
+            vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: BookingsDirectoryScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially only current month is visible
+      expect(find.text('Abraar'), findsNothing);
+
+      // Tap "ALL" toggle
+      final allButton = find.byKey(const ValueKey('btn_toggle_all_months'));
+      expect(allButton, findsOneWidget);
+      await tester.tap(allButton);
+      await tester.pumpAndSettle();
+
+      // Verify ALL MONTHS indicator and all vendors appear
+      expect(find.text('ALL MONTHS'), findsOneWidget);
       expect(find.text('Abraar'), findsAtLeastNWidgets(1));
       expect(find.text('Ankit Singh'), findsAtLeastNWidgets(1));
+
+      // Tap "ALL" toggle again to return to current month
+      await tester.tap(allButton);
+      await tester.pumpAndSettle();
+
+      final currentMonthStr =
+          DateFormat('MMMM yyyy').format(DateTime.now()).toUpperCase();
+      expect(find.text(currentMonthStr), findsOneWidget);
+      expect(find.text('Abraar'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'BookingsDirectoryScreen navigates months and resets to current month',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bookingRepositoryProvider.overrideWithValue(
+              _FakeBookingRepository(),
+            ),
+            vendorRepositoryProvider.overrideWithValue(_FakeVendorRepository()),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: BookingsDirectoryScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      final prevMonth = DateTime(now.year, now.month - 1);
+      final prevMonthStr = DateFormat('MMMM yyyy').format(prevMonth).toUpperCase();
+
+      // Navigate to previous month
+      final prevButton = find.byKey(const ValueKey('btn_prev_month'));
+      expect(prevButton, findsOneWidget);
+      await tester.tap(prevButton);
+      await tester.pumpAndSettle();
+
+      // Verify previous month title and reset button
+      expect(find.text(prevMonthStr), findsOneWidget);
+      final resetButton = find.byKey(const ValueKey('btn_reset_current_month'));
+      expect(resetButton, findsOneWidget);
+
+      // Tap reset to current month
+      await tester.tap(resetButton);
+      await tester.pumpAndSettle();
+
+      final currentMonthStr = DateFormat('MMMM yyyy').format(now).toUpperCase();
+      expect(find.text(currentMonthStr), findsOneWidget);
     },
   );
 
@@ -66,28 +159,28 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Initially multiple vendor booking groups should exist
-    expect(find.text('Abraar'), findsAtLeastNWidgets(1));
-    expect(find.text('Ankit Singh'), findsAtLeastNWidgets(1));
+    // Verify current month vendors exist
+    expect(find.text('Global Rentals Ltd'), findsAtLeastNWidgets(1));
+    expect(find.text('Apex Logistics'), findsAtLeastNWidgets(1));
 
-    // Enter search text "Abraar"
+    // Enter search text "Global"
     final searchInput = find.byType(TextField);
     expect(searchInput, findsOneWidget);
 
-    await tester.enterText(searchInput, 'Abraar');
+    await tester.enterText(searchInput, 'Global');
     await tester.pump();
 
-    // Verify Ankit Singh is filtered out, and Abraar is still displayed
-    expect(find.text('Abraar'), findsAtLeastNWidgets(1));
-    expect(find.text('Ankit Singh'), findsNothing);
+    // Verify Apex Logistics is filtered out, and Global Rentals Ltd is still displayed
+    expect(find.text('Global Rentals Ltd'), findsAtLeastNWidgets(1));
+    expect(find.text('Apex Logistics'), findsNothing);
 
     // Clear search query
     await tester.enterText(searchInput, '');
     await tester.pump();
 
     // Both should reappear
-    expect(find.text('Abraar'), findsAtLeastNWidgets(1));
-    expect(find.text('Ankit Singh'), findsAtLeastNWidgets(1));
+    expect(find.text('Global Rentals Ltd'), findsAtLeastNWidgets(1));
+    expect(find.text('Apex Logistics'), findsAtLeastNWidgets(1));
   });
 }
 

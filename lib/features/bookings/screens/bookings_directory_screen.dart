@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/theme/app_typography.dart';
@@ -36,6 +37,7 @@ class _BookingsDirectoryScreenState
     extends ConsumerState<BookingsDirectoryScreen> with RouteAware {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  DateTime? _selectedMonth;
   bool _showAddModal = false;
   bool _showCancelModal = false;
   MockBooking? _editingBooking;
@@ -56,6 +58,8 @@ class _BookingsDirectoryScreenState
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    _selectedMonth = DateTime(now.year, now.month);
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -84,6 +88,237 @@ class _BookingsDirectoryScreenState
     });
   }
 
+  bool _matchesMonth(Booking booking) {
+    if (_selectedMonth == null) return true;
+
+    final targetYear = _selectedMonth!.year;
+    final targetMonth = _selectedMonth!.month;
+
+    if (booking.items.isNotEmpty) {
+      return booking.items.any((item) {
+        final itemDate = DateTime.tryParse(item.date);
+        if (itemDate != null) {
+          return itemDate.year == targetYear && itemDate.month == targetMonth;
+        }
+        return false;
+      });
+    }
+
+    final start = booking.startDate;
+    final end = booking.endDate;
+    final monthStart = DateTime(targetYear, targetMonth, 1);
+    final monthEnd = DateTime(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
+
+    return !start.isAfter(monthEnd) && !end.isBefore(monthStart);
+  }
+
+  Booking _filterBookingItemsToSelectedMonth(Booking booking) {
+    if (_selectedMonth == null || booking.items.isEmpty) return booking;
+
+    final targetYear = _selectedMonth!.year;
+    final targetMonth = _selectedMonth!.month;
+
+    final matchingItems = booking.items.where((item) {
+      final itemDate = DateTime.tryParse(item.date);
+      if (itemDate != null) {
+        return itemDate.year == targetYear && itemDate.month == targetMonth;
+      }
+      return false;
+    }).toList();
+
+    if (matchingItems.isEmpty) return booking;
+    return booking.copyWith(items: matchingItems);
+  }
+
+  Widget _buildMonthFilter() {
+    final now = DateTime.now();
+    final isCurrentMonth = _selectedMonth != null &&
+        _selectedMonth!.year == now.year &&
+        _selectedMonth!.month == now.month;
+    final isAllSelected = _selectedMonth == null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.modalRadius),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                key: const ValueKey('btn_prev_month'),
+                tooltip: 'Previous month',
+                icon: const Icon(Icons.chevron_left, size: 20),
+                onPressed: () {
+                  setState(() {
+                    final base = _selectedMonth ?? DateTime.now();
+                    _selectedMonth = DateTime(base.year, base.month - 1);
+                  });
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.surface,
+                  foregroundColor: AppColors.primary,
+                  shape: const CircleBorder(
+                    side: BorderSide(color: AppColors.border, width: 1),
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  minimumSize: const Size(34, 34),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: InkWell(
+                  key: const ValueKey('btn_pick_month'),
+                  onTap: () async {
+                    final initial = _selectedMonth ?? DateTime.now();
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: initial,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2035),
+                      helpText: 'SELECT MONTH',
+                      initialDatePickerMode: DatePickerMode.year,
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedMonth = DateTime(picked.year, picked.month);
+                      });
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.calendar_month,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              isAllSelected
+                                  ? 'ALL MONTHS'
+                                  : DateFormat('MMMM yyyy')
+                                      .format(_selectedMonth!)
+                                      .toUpperCase(),
+                              style: AppTypography.title.copyWith(
+                                fontSize: 16,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.arrow_drop_down,
+                          size: 18,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                key: const ValueKey('btn_next_month'),
+                tooltip: 'Next month',
+                icon: const Icon(Icons.chevron_right, size: 20),
+                onPressed: () {
+                  setState(() {
+                    final base = _selectedMonth ?? DateTime.now();
+                    _selectedMonth = DateTime(base.year, base.month + 1);
+                  });
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.surface,
+                  foregroundColor: AppColors.primary,
+                  shape: const CircleBorder(
+                    side: BorderSide(color: AppColors.border, width: 1),
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  minimumSize: const Size(34, 34),
+                ),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                key: const ValueKey('btn_toggle_all_months'),
+                onTap: () {
+                  setState(() {
+                    if (isAllSelected) {
+                      _selectedMonth = DateTime(now.year, now.month);
+                    } else {
+                      _selectedMonth = null;
+                    }
+                  });
+                },
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isAllSelected ? AppColors.primary : AppColors.surface,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: isAllSelected ? AppColors.primary : AppColors.border,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    'ALL',
+                    style: AppTypography.labelCaps.copyWith(
+                      fontSize: 11,
+                      color: isAllSelected ? Colors.white : AppColors.textSecondary,
+                      fontWeight: isAllSelected ? FontWeight.bold : FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (!isCurrentMonth && !isAllSelected)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: GestureDetector(
+                key: const ValueKey('btn_reset_current_month'),
+                onTap: () {
+                  setState(() {
+                    _selectedMonth = DateTime(now.year, now.month);
+                  });
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.replay, size: 12, color: AppColors.textSecondary),
+                    const SizedBox(width: 4),
+                    Text(
+                      'RESET TO CURRENT MONTH',
+                      style: AppTypography.labelCaps.copyWith(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBookingContent(
     List<Vendor> vendors,
     Map<String, List<Booking>> allBookingsMap,
@@ -92,12 +327,39 @@ class _BookingsDirectoryScreenState
 
     for (final vendor in vendors) {
       final bookings = allBookingsMap[vendor.id] ?? [];
-      final filtered = bookings.where((booking) {
-        if (_searchQuery.isEmpty) return true;
-        return booking.vendorName.toLowerCase().contains(_searchQuery) ||
-            booking.vendorId.toLowerCase().contains(_searchQuery) ||
-            booking.generatorId.toLowerCase().contains(_searchQuery);
-      }).toList();
+      final filtered = <Booking>[];
+      for (final booking in bookings) {
+        if (!_matchesMonth(booking)) continue;
+        final displayBooking = _filterBookingItemsToSelectedMonth(booking);
+        if (_searchQuery.isNotEmpty) {
+          final query = _searchQuery;
+          final matchesVendorName =
+              displayBooking.vendorName.toLowerCase().contains(query);
+          final matchesVendorId =
+              displayBooking.vendorId.toLowerCase().contains(query);
+          final matchesGenId =
+              displayBooking.generatorId.toLowerCase().contains(query);
+          final matchesBookingId =
+              displayBooking.bookingId.toLowerCase().contains(query);
+          final matchesAnyGen = displayBooking.generators
+              .any((g) => g.toLowerCase().contains(query));
+          final matchesRemarks = displayBooking.notes
+                  .toLowerCase()
+                  .contains(query) ||
+              displayBooking.items
+                  .any((i) => i.remarks.toLowerCase().contains(query));
+
+          if (!matchesVendorName &&
+              !matchesVendorId &&
+              !matchesGenId &&
+              !matchesBookingId &&
+              !matchesAnyGen &&
+              !matchesRemarks) {
+            continue;
+          }
+        }
+        filtered.add(displayBooking);
+      }
 
       if (filtered.isEmpty) continue;
 
@@ -144,7 +406,11 @@ class _BookingsDirectoryScreenState
         ),
         child: Center(
           child: Text(
-            'No matching bookings found.',
+            _searchQuery.isNotEmpty
+                ? 'No matching bookings found.'
+                : (_selectedMonth != null
+                    ? 'No bookings found for ${DateFormat('MMMM yyyy').format(_selectedMonth!)}.'
+                    : 'No bookings found.'),
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -231,7 +497,9 @@ class _BookingsDirectoryScreenState
                       description:
                           'Review active reservations and manage vendor schedules.',
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    _buildMonthFilter(),
+                    const SizedBox(height: 20),
 
                     allVendorBookingsState.when(
                       data: (allBookingsMap) =>
